@@ -6,7 +6,7 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.1.2-2563eb)
+![Version](https://img.shields.io/badge/version-v1.1.3-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## 简要说明
@@ -16,6 +16,7 @@
 | 不同期刊的审稿标准并不相同 | 先确认目标期刊、文章类型和投稿阶段，再确定相应的审稿要求 |
 | 过早润色可能掩盖尚未解决的科学问题 | 独立科学审稿完成前不修改原稿 |
 | 单一审稿视角可能遗漏重要问题 | 安排至少 5 个独立审稿角色；高水平期刊或高风险研究可增加第 6 个角色 |
+| 同一篇稿件多次交给通用大模型，审稿意见可能前后不一致，甚至相互矛盾 | 固定稿件版本、期刊要求和角色职责；各角色先独立审稿，再按统一规则汇总并记录分歧 |
 | 文献存在并不代表它支持当前表述 | 分别核对文献真实性、引用格式及其对具体论断的支持程度 |
 | 输出文件可能不符合正式投稿的排版习惯 | 检查标题、章节、正文样式，并逐页查看 DOCX 或 PDF 的实际效果 |
 | 材料不足时无法判断稿件是否已具备投稿条件 | 关键证据缺失时明确判定为未通过或暂时无法评估（`FAIL` / `NOT ASSESSABLE`） |
@@ -120,7 +121,7 @@ flowchart TB
     style S3 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
 ```
 
-第 6 步包含至少 5 个分工不同、相互独立的审稿角色，分别负责期刊匹配、领域科学、研究设计、统计与可重复性，以及文献对具体表述的支持。对于高水平期刊或复杂、高风险研究，可增加第 6 个专项角色。所有角色基于同一版本稿件独立形成初审意见，之后再统一汇总。
+第 6 步包含至少 5 个分工不同、相互独立的审稿角色，分别负责期刊匹配、领域科学、研究设计、统计与可重复性，以及文献对具体表述的支持。对于高水平期刊或复杂、高风险研究，可增加第 6 个专项角色。所有角色基于同一版本稿件独立形成初审意见，之后再统一汇总。这种先独立、后汇总的安排可以减少角色间的相互影响，也避免系统在尚未形成独立意见时反复改变结论。
 
 [查看完整技术架构、角色配置和返回规则](docs/ARCHITECTURE.md)
 

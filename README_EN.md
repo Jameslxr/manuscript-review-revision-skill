@@ -6,7 +6,7 @@ This Codex skill supports scientific manuscript review and revision. It first co
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.1.2-2563eb)
+![Version](https://img.shields.io/badge/version-v1.1.3-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -16,6 +16,7 @@ This Codex skill supports scientific manuscript review and revision. It first co
 | Review criteria vary across journals | Confirms the target journal, article type, and submission stage before setting the review criteria |
 | Editing too early can obscure unresolved scientific issues | Keeps the manuscript unchanged until the independent scientific review is complete |
 | A single review perspective can miss important problems | Uses at least five independent reviewer roles and may add a sixth for high-tier journals or high-risk studies |
+| Repeated reviews of the same manuscript by a general-purpose model may be inconsistent or internally contradictory | Fixes the manuscript version, journal requirements, and reviewer responsibilities; reviewers work independently before disagreements are recorded and synthesized under common rules |
 | An existing reference may not support the statement where it is cited | Checks reference validity, citation format, and support for the specific statement separately |
 | Generated files may not follow standard manuscript conventions | Checks headings, sections, body styles, and the rendered DOCX or PDF pages |
 | Submission readiness cannot be judged when key evidence is missing | Reports the manuscript as failed or not assessable (`FAIL` / `NOT ASSESSABLE`) |
@@ -120,7 +121,7 @@ flowchart TB
     style S3 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
 ```
 
-Step 6 assigns at least five independent reviewer roles with separate responsibilities: journal fit, domain science, study design, statistics and reproducibility, and citation support. A sixth specialist may be added for a high-tier journal or a complex, high-risk study. Each reviewer forms an initial assessment from the same manuscript version before the reviews are combined.
+Step 6 assigns at least five independent reviewer roles with separate responsibilities: journal fit, domain science, study design, statistics and reproducibility, and citation support. A sixth specialist may be added for a high-tier journal or a complex, high-risk study. Each reviewer forms an initial assessment from the same manuscript version before the reviews are combined. This independent-first design reduces cross-role influence and prevents the combined review from changing direction before each role has recorded its own assessment.
 
 [Read the full technical architecture](docs/ARCHITECTURE.md)
 
