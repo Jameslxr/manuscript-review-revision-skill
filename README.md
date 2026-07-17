@@ -8,7 +8,7 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 
-- **当前版本：** `v1.0.0`
+- **当前版本：** `v1.0.1`
 - **发布状态：** 可复用的 GitHub 版本；仓库可见性由仓库所有者控制
 - **许可证：** MIT
 
