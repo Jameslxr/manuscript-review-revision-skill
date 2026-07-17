@@ -8,15 +8,78 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 
-- **当前版本：** `v1.0.1`
+- **当前版本：** `v1.0.2`
 - **发布状态：** 可复用的 GitHub 版本；仓库可见性由仓库所有者控制
 - **许可证：** MIT
 
-<p align="center">
-  <img src="docs/assets/manuscript-skill-long-flowchart-zh.jpg" alt="面向不同目标期刊的科研论文审稿、改稿与投稿前检查 Skill 完整流程图" width="900">
-</p>
+## Workflow architecture
 
-完整流程图：[JPG](docs/assets/manuscript-skill-long-flowchart-zh.jpg) · [PDF](docs/assets/manuscript-skill-long-flowchart-zh.pdf) · [SVG](docs/assets/manuscript-skill-long-flowchart-zh.svg)
+下图是执行状态图：节点对应真实阶段，菱形节点对应不可绕过的 Gate，虚线分支表示按期刊档次和研究风险条件触发的第 6 个审稿 Agent。图由 GitHub 原生 Mermaid 渲染，不依赖低分辨率位图。
+
+```mermaid
+flowchart TD
+    START["Invocation + manuscript package"]
+
+    subgraph INTAKE["A · JOURNAL CALIBRATION AND INPUT FREEZE"]
+        TARGET{"Exact target journal fixed?"}
+        RECOMMEND["Verified Top-5 recommendation<br/>scope · quality · evidence · feasibility"]
+        SELECT["Author selects primary target"]
+        PROFILE["Live journal profile<br/>official sources · article type · submission stage"]
+        FREEZE["Freeze input<br/>inventory · version closure · SHA-256"]
+    end
+
+    subgraph REVIEW["B · INDEPENDENT SCIENTIFIC REVIEW"]
+        ROUTER["Panel router<br/>journal tier × article type × study risk"]
+        CORE["Core panel — 5 independent agents<br/>journal priority · domain science · study design<br/>statistics/reproducibility · claim/evidence/reference"]
+        SIXTH["Conditional sixth agent<br/>adversarial OR figure/narrative/reporting"]
+        SYNTH["Root synthesis<br/>cross-review matrix · conflict adjudication"]
+        POSTURE{"Review posture"}
+    end
+
+    subgraph REVISION["C · AUTHOR-GATED REVISION"]
+        PAUSE["Pause for author decision"]
+        AUTH{"Explicit revision authorization?"}
+        REVISE["Scientific revision<br/>blocking → major → claims → figures → language → format"]
+        CLOSURE["Evidence closure<br/>reference audit · figure/text consistency · DOCX audit"]
+        MATERIAL{"Material claim, method, statistic,<br/>figure, or reference change?"}
+    end
+
+    subgraph RELEASE["D · FAIL-CLOSED RELEASE"]
+        RELEASE_GATE{"Submission release gate"}
+        PASS["RELEASE PASS"]
+        FAIL["RELEASE FAIL"]
+        NA["RELEASE NOT ASSESSABLE"]
+        STOP["READ-ONLY STOP"]
+    end
+
+    START --> TARGET
+    TARGET -- "No" --> RECOMMEND --> SELECT --> PROFILE
+    TARGET -- "Yes" --> PROFILE
+    PROFILE --> FREEZE --> ROUTER
+
+    ROUTER --> CORE
+    ROUTER -. "high-tier / complex / claim-critical" .-> SIXTH
+    CORE --> SYNTH
+    SIXTH --> SYNTH
+    SYNTH --> POSTURE
+
+    POSTURE -- "PROCEED_TO_REVISION" --> AUTH
+    POSTURE -- "MAJOR_SCIENTIFIC_REWORK_REQUIRED" --> PAUSE
+    POSTURE -- "RETARGET_RECOMMENDED" --> SELECT
+    POSTURE -- "NOT_ASSESSABLE" --> STOP
+    PAUSE --> AUTH
+
+    AUTH -- "No" --> STOP
+    AUTH -- "Yes" --> REVISE --> CLOSURE --> MATERIAL
+    MATERIAL -- "Yes: re-open review" --> ROUTER
+    MATERIAL -- "No" --> RELEASE_GATE
+
+    RELEASE_GATE --> PASS
+    RELEASE_GATE --> FAIL
+    RELEASE_GATE --> NA
+```
+
+关键状态均有机器可检查的中间产物：`01_journal_profile.json`、`03_review_panel_plan.json`、`05_review_verdict.md`、`06_reference_audit.tsv` 和 `08_release_gate.md`。
 
 ## 快速安装
 
@@ -286,8 +349,7 @@ Nature Skills 属于条件能力，不会因为目标期刊档次较高就自动
 ├── LICENSE
 ├── requirements.txt
 ├── docs/
-│   ├── VALIDATION.md
-│   └── assets/
+│   └── VALIDATION.md
 └── manuscript-review-revision/
     ├── SKILL.md
     ├── agents/
