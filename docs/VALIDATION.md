@@ -35,6 +35,21 @@ The current suite contains six representative tests covering:
 python3 -m py_compile manuscript-review-revision/scripts/*.py
 ```
 
+## Release-documentation checks
+
+```bash
+python3 manuscript-review-revision/scripts/validate_release_docs.py
+```
+
+This check confirms that:
+
+- the Chinese and English README files link to each other;
+- both README files have the same number of top-level sections and Mermaid diagrams;
+- the displayed version is synchronized;
+- every local Markdown link resolves;
+- the two release README files remain at or below 200 lines so that detailed
+  implementation material stays in `docs/`.
+
 ## Manual forward test
 
 The initial release was also exercised with a synthetic hepatocellular
