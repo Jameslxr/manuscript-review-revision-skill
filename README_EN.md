@@ -2,42 +2,42 @@
 
 [中文说明](README.md)
 
-A **journal-aware, review-first, author-gated** Codex skill for scientific manuscripts. It calibrates an independent 5–6-agent review panel to the target journal before allowing scientific revision, reference verification, language work, or formal manuscript formatting.
+This Codex skill supports scientific manuscript review and revision. It first confirms the target journal and assigns 5–6 independent reviewer roles suited to that journal. Scientific revision, reference checking, language editing, and submission formatting begin only after the review is complete and the author explicitly approves revision.
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.1.1-2563eb)
+![Version](https://img.shields.io/badge/version-v1.1.2-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
-## What It Solves
+## Summary
 
-| Common failure | How this skill responds |
+| Review consideration | Approach |
 |---|---|
-| Every manuscript is judged against the same flagship-journal standard | Verifies the target journal, article type, and submission stage before calibrating review criteria |
-| AI starts polishing before resolving scientific problems | Keeps the manuscript read-only until independent review is complete |
-| One model misses issues or reinforces its own view | Uses at least five independent review roles and adds a sixth for high-tier or high-risk work |
-| A real paper is cited for a claim it does not support | Separates reference reality, formatting, and claim-level evidence support |
-| Word output looks like a colored business report | Audits headings, sections, body styles, and rendered manuscript pages |
-| Incomplete evidence still receives a ready-to-submit label | Returns `FAIL` or `NOT ASSESSABLE` when critical evidence is missing |
+| Review criteria vary across journals | Confirms the target journal, article type, and submission stage before setting the review criteria |
+| Editing too early can obscure unresolved scientific issues | Keeps the manuscript unchanged until the independent scientific review is complete |
+| A single review perspective can miss important problems | Uses at least five independent reviewer roles and may add a sixth for high-tier journals or high-risk studies |
+| An existing reference may not support the statement where it is cited | Checks reference validity, citation format, and support for the specific statement separately |
+| Generated files may not follow standard manuscript conventions | Checks headings, sections, body styles, and the rendered DOCX or PDF pages |
+| Submission readiness cannot be judged when key evidence is missing | Reports the manuscript as failed or not assessable (`FAIL` / `NOT ASSESSABLE`) |
 
-## What To Use It For
+## Main Uses
 
 - independent pre-submission review and editorial-screening risk assessment;
-- verified Top-5 journal recommendation when the target is uncertain;
-- review-panel calibration by journal tier and manuscript type;
-- study-design, statistics, reproducibility, figure, and claim-reference auditing;
-- tracked, clean, and logged revisions after explicit author authorization;
-- current official-journal DOCX/PDF and submission-package checks;
-- traceable revision packages based on real reviewer comments.
+- recommendation of five suitable journals when the target has not been selected;
+- reviewer-role selection based on journal level and manuscript type;
+- review of study design, statistics, reproducibility, figures, and citation support;
+- tracked and clean manuscripts with a revision log after explicit author authorization;
+- DOCX/PDF and submission-package checks against current official journal requirements;
+- structured response and revision materials based on actual reviewer comments.
 
-## Typical Requests
+## Invocation Examples
 
 | Scenario | Example |
 |---|---|
 | Target journal known | `Use $manuscript-review-revision. Target: Journal of Hepatology. Review first; do not revise.` |
-| Target journal unknown | `Use $manuscript-review-revision. The target is uncertain; recommend a verified Top 5.` |
+| Target journal unknown | `Use $manuscript-review-revision. The target is uncertain; recommend five candidate journals.` |
 | Review only | `Run scientific-review only and pause after synthesis.` |
-| Reference audit | `Run reference-audit and verify reality, format, and direct claim support.` |
+| Reference audit | `Run reference-audit and check whether each reference is valid, correctly formatted, and supports the cited statement.` |
 | Authorize revision | `I reviewed 05_review_verdict.md and authorize revise-manuscript.` |
 
 If no target journal is supplied, the first response asks only:
@@ -46,7 +46,7 @@ If no target journal is supplied, the first response asks only:
 What is the target journal? If it is not yet decided, reply: “Uncertain; recommend journals.”
 ```
 
-## What You Need To Provide
+## Required Materials
 
 - the full manuscript or sections to review;
 - the target journal, or permission to recommend one;
@@ -55,24 +55,24 @@ What is the target journal? If it is not yet decided, reply: “Uncertain; recom
 - constraints such as no new experiments, diagnosis only, or review only;
 - for revision responses: the editor letter, reviewer comments, and current manuscript.
 
-Missing material is not silently invented. Items that cannot be judged reliably are marked `NOT ASSESSABLE`.
+The skill does not invent missing material. Items that cannot be judged reliably are marked `NOT ASSESSABLE`.
 
-## At A Glance: From Upload To Submission Preparation
+## Workflow
 
-**How to read it:** orange boxes require your decision; blue boxes are run by the skill; green means ready for submission preparation; gray or red means pause or continue working.
+Orange boxes require a decision from the author. Blue boxes show work performed by the skill. Green means that submission preparation can begin; gray or red means that the process must pause or continue.
 
 ```mermaid
 flowchart TB
-    START(["1 · You upload the manuscript<br/>and available supporting files"])
+    START(["1 · Upload the manuscript<br/>and available supporting files"])
     TARGET{"2 · Is the target<br/>journal decided?"}
-    REC["3A · The skill recommends 5 journals<br/>from topic, quality, and evidence"]
-    PICK["3B · You select 1 target journal"]
-    RULES["4 · The skill reads the journal website<br/>and confirms current requirements"]
+    REC["3A · Recommend 5 journals based on<br/>topic, manuscript quality, and evidence"]
+    PICK["3B · The author selects 1 target journal"]
+    RULES["4 · Review the journal website<br/>and confirm current requirements"]
     CHECK["5 · Check that materials are complete<br/>text · figures · legends · supplements · references"]
     REVIEW["6 · At least 5 reviewers with different roles<br/>independently assess the same manuscript version"]
     SUMMARY["7 · Combine the reviews<br/>must fix · important · minor · cannot yet assess"]
-    REPORT["8 · Give you the complete review report<br/>without changing the manuscript"]
-    AUTH{"9 · Do you authorize<br/>manuscript revision?"}
+    REPORT["8 · Provide the complete review report<br/>without changing the manuscript"]
+    AUTH{"9 · Does the author authorize<br/>manuscript revision?"}
     STOP(["No: stop<br/>preserve the manuscript and review report"])
     REVISE["10 · Revise in order<br/>science → evidence → language → journal format"]
     VERIFY["11 · Recheck every item<br/>citation support · figure-text agreement · format"]
@@ -81,19 +81,19 @@ flowchart TB
     RETURN["No: list unresolved issues<br/>and continue revision"]
     MISSING(["Insufficient material: pause<br/>and state exactly what is missing"])
 
-    subgraph S1["Stage 1 · Decide where to submit"]
+    subgraph S1["Stage 1 · Select the target journal"]
         direction LR
         START --> TARGET
         TARGET -- "Decided" --> RULES
         TARGET -- "Not decided" --> REC --> PICK --> RULES
     end
 
-    subgraph S2["Stage 2 · Review first and give you the report"]
+    subgraph S2["Stage 2 · Complete independent review and provide the report"]
         direction LR
         CHECK --> REVIEW --> SUMMARY --> REPORT --> AUTH
     end
 
-    subgraph S3["Stage 3 · Revise only after you authorize it"]
+    subgraph S3["Stage 3 · Revise after author approval"]
         direction LR
         REVISE --> VERIFY --> READY
         READY -- "Resolved" --> PASS
@@ -120,22 +120,22 @@ flowchart TB
     style S3 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
 ```
 
-Step 6 does not ask five reviewers to repeat the same task. They separately cover journal fit, domain science, study design, statistics and reproducibility, and whether references truly support the cited statements. A sixth specialist is added for high-tier journals or complex, high-risk studies. Every reviewer sees the same frozen manuscript version and cannot see the others' initial conclusions before submitting their own.
+Step 6 assigns at least five independent reviewer roles with separate responsibilities: journal fit, domain science, study design, statistics and reproducibility, and citation support. A sixth specialist may be added for a high-tier journal or a complex, high-risk study. Each reviewer forms an initial assessment from the same manuscript version before the reviews are combined.
 
 [Read the full technical architecture](docs/ARCHITECTURE.md)
 
-## Outputs
+## Output Files
 
-| Phase | Main artifacts |
+| Stage | Main files |
 |---|---|
-| Journal calibration | `00_input_inventory.json`, `01_journal_profile.json` |
+| Journal requirements | `00_input_inventory.json`, `01_journal_profile.json` |
 | Independent review | `reviews/reviewer_01.md` through `reviewer_05.md` or higher |
-| Synthesis | `04_cross_review_matrix.tsv`, `05_review_verdict.md` |
+| Review synthesis | `04_cross_review_matrix.tsv`, `05_review_verdict.md` |
 | Reference audit | `06_reference_audit.tsv` |
 | Authorized revision | tracked manuscript, clean manuscript, `revision_log.tsv` |
-| Submission gate | `07_format_audit.json`, `08_release_gate.md` |
+| Pre-submission check | `07_format_audit.json`, `08_release_gate.md` |
 
-## Boundaries
+## Limitations
 
 - Full review does not begin until the target journal is fixed.
 - Fewer than five actual independent agent tasks cannot be reported as a completed multi-agent review.
@@ -145,7 +145,7 @@ Step 6 does not ask five reviewers to repeat the same task. They separately cove
 - `RELEASE PASS` does not predict editorial decisions or acceptance.
 - Unpublished manuscripts, patient information, and restricted data remain subject to institutional and confidentiality rules.
 
-## Quick Install
+## Installation
 
 ```bash
 git clone https://github.com/Jameslxr/manuscript-review-revision-skill.git
@@ -164,9 +164,9 @@ Use $manuscript-review-revision. I uploaded a manuscript.
 
 Do not overwrite an existing install path without checking whether it is an older copy or symlink. More examples are in the [usage guide](docs/USAGE.md).
 
-## Maturity And Validation
+## Current Status And Validation
 
-Maturity is currently **Beta**. The workflow structure and selected fail-closed controls have automated tests, and the full panel path has been exercised with a synthetic hepatocellular-carcinoma manuscript. This does not prove that every domain judgment, journal page, or citation-support decision will be correct for every real manuscript.
+The current release is **Beta**. The workflow and its main risk controls are covered by automated tests, and the complete 6-agent process has been exercised with a simulated hepatocellular-carcinoma manuscript. These tests show that the workflow operates as designed; they do not guarantee that every domain judgment, journal-page interpretation, or citation-support decision will be correct for every manuscript.
 
 Current automated coverage includes:
 
@@ -186,4 +186,4 @@ Current automated coverage includes:
 - [Design basis and attribution](ATTRIBUTION.md)
 - [Skill execution entrypoint](manuscript-review-revision/SKILL.md)
 
-This project was informed by the modular organization and source-first design of [Nature Skills](https://github.com/Yuan1z0825/nature-skills), while independently implementing journal-aware multi-agent review and author-gated revision. It is not affiliated with Nature Portfolio, Springer Nature, or the Nature Skills maintainers.
+This project draws on the modular organization and preference for primary sources used in [Nature Skills](https://github.com/Yuan1z0825/nature-skills). Its journal-specific reviewer selection, independent multi-agent review, and author-approved revision process were implemented separately. The project is not affiliated with Nature Portfolio, Springer Nature, or the Nature Skills maintainers.
