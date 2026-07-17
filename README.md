@@ -8,15 +8,90 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 
-- **当前版本：** `v1.0.1`
+- **当前版本：** `v1.0.2`
 - **发布状态：** 可复用的 GitHub 版本；仓库可见性由仓库所有者控制
 - **许可证：** MIT
 
-<p align="center">
-  <img src="docs/assets/manuscript-skill-long-flowchart-zh.jpg" alt="面向不同目标期刊的科研论文审稿、改稿与投稿前检查 Skill 完整流程图" width="900">
-</p>
+## 专业工作流架构
 
-完整流程图：[JPG](docs/assets/manuscript-skill-long-flowchart-zh.jpg) · [PDF](docs/assets/manuscript-skill-long-flowchart-zh.pdf) · [SVG](docs/assets/manuscript-skill-long-flowchart-zh.svg)
+### 1. 受控稿件生命周期
+
+主图只保留系统边界和不可绕过的 Gate。阶段编号与实际输出文件一一对应；具体角色、工具和检查项由后文配置表定义。
+
+```mermaid
+flowchart TB
+    subgraph REVIEW["A · 期刊校准与独立科学审稿"]
+        direction LR
+        J1["01 期刊校准<br/>已知：官网建档<br/>未知：Top 5 推荐"]
+        J2["02 输入冻结<br/>版本 · 清单 · SHA-256"]
+        J3["03 动态审稿 Panel<br/>固定五席 + 条件第六席"]
+        J4["04 主审综合<br/>冲突裁决 · 严重度排序"]
+        J1 --> J2 --> J3 --> J4
+    end
+
+    subgraph REVISION["B · 作者授权、修改与投稿门禁"]
+        direction LR
+        J5{"05 作者 Gate"}
+        J6["06 分层修改<br/>科学 → 证据 → 语言 → 格式"]
+        J7["07 证据闭环与复审"]
+        J8{"08 Release Gate"}
+        OUT["PASS<br/>FAIL<br/>NOT ASSESSABLE"]
+        STOP["未授权：只读停止"]
+        J5 -- "授权" --> J6 --> J7 --> J8 --> OUT
+        J5 -. "未授权" .-> STOP
+    end
+
+    REVIEW ==>|审稿结论| REVISION
+
+    classDef phase fill:#F8FAFC,stroke:#475569,stroke-width:1.5px,color:#0F172A;
+    classDef review fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
+    classDef gate fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
+    classDef terminal fill:#FFFFFF,stroke:#64748B,stroke-width:1.5px,color:#0F172A;
+
+    class J1,J2,J6,J7 phase;
+    class J3,J4 review;
+    class J5,J8 gate;
+    class OUT,STOP terminal;
+    style REVIEW fill:#FBFDFF,stroke:#93C5FD,stroke-width:1px
+    style REVISION fill:#FFFCF7,stroke:#F5C77A,stroke-width:1px
+```
+
+三条返回规则不画成长距离交叉线，以保持架构图可读：
+
+- **R1 · 更换目标期刊：** 返回 `01 期刊校准`，重新抓取并锁定期刊规则。
+- **R2 · 实质性内容变更：** 只要 claim、方法、统计、图表或参考文献发生实质变化，返回 `03 多 Agent 独立科学审稿`。
+- **R3 · 投稿门禁失败：** 返回 `06 分层修改与复审`；问题关闭前不得标记为可投稿。
+
+### 2. 动态多 Agent 审稿引擎
+
+审稿不是由一个通用提示词完成。路由器按目标期刊档次、文章类型和研究风险配置审稿席位；各 Agent 对同一冻结稿件独立输出，之后才允许主审合并。
+
+```mermaid
+flowchart LR
+    ROUTER["Panel Router<br/>期刊档次 × 文章类型 × 研究风险"]
+    CORE["固定五席 A1–A5<br/>独立审稿 · 不共享初始结论"]
+    A6["条件第六席 A6<br/>对抗审稿 / 图表叙事 / 报告规范"]
+    MATRIX["交叉审稿矩阵<br/>去重 · 保留分歧 · 证据锚定"]
+    VERDICT{"主审裁决"}
+
+    ROUTER --> CORE --> MATRIX --> VERDICT
+    ROUTER -. "高档期刊 / 高风险研究" .-> A6
+    A6 -.-> MATRIX
+
+    classDef router fill:#0F2747,stroke:#0F2747,stroke-width:2px,color:#FFFFFF;
+    classDef agent fill:#F8FAFC,stroke:#475569,stroke-width:1.5px,color:#0F172A;
+    classDef conditional fill:#F5F3FF,stroke:#7C3AED,stroke-width:1.5px,color:#3B0764;
+    classDef synthesis fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
+    classDef gate fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
+
+    class ROUTER router;
+    class CORE agent;
+    class A6 conditional;
+    class MATRIX synthesis;
+    class VERDICT gate;
+```
+
+关键状态均有机器可检查的中间产物：`01_journal_profile.json`、`03_review_panel_plan.json`、`05_review_verdict.md`、`06_reference_audit.tsv` 和 `08_release_gate.md`。
 
 ## 快速安装
 
@@ -286,8 +361,7 @@ Nature Skills 属于条件能力，不会因为目标期刊档次较高就自动
 ├── LICENSE
 ├── requirements.txt
 ├── docs/
-│   ├── VALIDATION.md
-│   └── assets/
+│   └── VALIDATION.md
 └── manuscript-review-revision/
     ├── SKILL.md
     ├── agents/
