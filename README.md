@@ -12,71 +12,98 @@
 - **发布状态：** 可复用的 GitHub 版本；仓库可见性由仓库所有者控制
 - **许可证：** MIT
 
-## Workflow architecture
+## 专业工作流架构
 
-下图是执行状态图：节点对应真实阶段，菱形节点对应不可绕过的 Gate，虚线分支表示按期刊档次和研究风险条件触发的第 6 个审稿 Agent。图由 GitHub 原生 Mermaid 渲染，不依赖低分辨率位图。
+### 1. 稿件生命周期
+
+首页只展示不可省略的主链路。每个编号对应一个可审计阶段，菱形节点表示必须由作者或门禁规则作出的决定。
 
 ```mermaid
-flowchart TD
-    START["Invocation + manuscript package"]
+flowchart LR
+    START(["稿件进入"]) --> TARGET{"目标期刊<br/>是否明确？"}
+    TARGET -- "否" --> TOP5["Top 5 期刊推荐<br/>匹配度 · 档次 · 证据 · 可行性"]
+    TARGET -- "是" --> J1["01 期刊校准<br/>官网规则与文章类型"]
+    TOP5 --> J1
+    J1 --> J2["02 输入冻结<br/>版本 · 清单 · SHA-256"]
+    J2 --> J3["03 多 Agent<br/>独立科学审稿"]
+    J3 --> J4["04 主审汇总<br/>冲突裁决与优先级"]
+    J4 --> J5{"05 作者是否<br/>授权修改？"}
+    J5 -- "授权" --> J6["06 分层修改与复审<br/>科学 → 证据 → 语言 → 格式"]
+    J5 -- "不授权" --> STOP(["只读停止"])
+    J6 --> J7{"07 投稿门禁"}
+    J7 -- "PASS" --> PASS(["可投稿"])
+    J7 -- "FAIL" --> FAIL(["阻断并返回整改"])
+    J7 -- "NOT ASSESSABLE" --> HOLD(["证据不足，暂停"])
 
-    subgraph INTAKE["A · JOURNAL CALIBRATION AND INPUT FREEZE"]
-        TARGET{"Exact target journal fixed?"}
-        RECOMMEND["Verified Top-5 recommendation<br/>scope · quality · evidence · feasibility"]
-        SELECT["Author selects primary target"]
-        PROFILE["Live journal profile<br/>official sources · article type · submission stage"]
-        FREEZE["Freeze input<br/>inventory · version closure · SHA-256"]
+    classDef phase fill:#F8FAFC,stroke:#334155,stroke-width:1.5px,color:#0F172A;
+    classDef review fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
+    classDef gate fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
+    classDef success fill:#ECFDF5,stroke:#059669,stroke-width:2px,color:#064E3B;
+    classDef blocked fill:#FEF2F2,stroke:#DC2626,stroke-width:2px,color:#7F1D1D;
+    classDef neutral fill:#F8FAFC,stroke:#94A3B8,stroke-width:1.5px,color:#334155;
+
+    class J1,J2,J4,J6 phase;
+    class TOP5,J3 review;
+    class TARGET,J5,J7 gate;
+    class PASS success;
+    class FAIL blocked;
+    class START,STOP,HOLD neutral;
+```
+
+三条返回规则不画成长距离交叉线，以保持主图可读：
+
+- **R1 · 更换目标期刊：** 返回 `01 期刊校准`，重新抓取并锁定期刊规则。
+- **R2 · 实质性内容变更：** 只要 claim、方法、统计、图表或参考文献发生实质变化，返回 `03 多 Agent 独立科学审稿`。
+- **R3 · 投稿门禁失败：** 返回 `06 分层修改与复审`；问题关闭前不得标记为可投稿。
+
+### 2. 多 Agent 审稿引擎
+
+审稿不是由一个通用提示词完成。路由器先按目标期刊档次、文章类型和研究风险配置审稿席位；各 Agent 独立输出后，才由主审进行交叉核验和冲突裁决。
+
+```mermaid
+flowchart TB
+    ROUTER["审稿路由器<br/>期刊档次 × 文章类型 × 研究风险"]
+
+    subgraph PANEL["固定五席：独立并行，不共享初始结论"]
+        direction LR
+        A1["A1<br/>期刊与编辑视角"]
+        A2["A2<br/>领域科学与创新性"]
+        A3["A3<br/>研究设计与方法学"]
+        A4["A4<br/>统计与可重复性"]
+        A5["A5<br/>Claim–证据–引文核查"]
     end
 
-    subgraph REVIEW["B · INDEPENDENT SCIENTIFIC REVIEW"]
-        ROUTER["Panel router<br/>journal tier × article type × study risk"]
-        CORE["Core panel — 5 independent agents<br/>journal priority · domain science · study design<br/>statistics/reproducibility · claim/evidence/reference"]
-        SIXTH["Conditional sixth agent<br/>adversarial OR figure/narrative/reporting"]
-        SYNTH["Root synthesis<br/>cross-review matrix · conflict adjudication"]
-        POSTURE{"Review posture"}
-    end
+    A6["A6 · 条件席位<br/>高档期刊 / 高风险研究触发<br/>对抗审稿、图表叙事或报告规范"]
+    MATRIX["交叉审稿矩阵<br/>问题去重 · 分歧保留 · 严重度排序"]
+    VERDICT{"主审裁决"}
+    V1["进入作者授权阶段"]
+    V2["需要重大科学返工"]
+    V3["建议更换目标期刊"]
+    V4["材料不足，无法评估"]
 
-    subgraph REVISION["C · AUTHOR-GATED REVISION"]
-        PAUSE["Pause for author decision"]
-        AUTH{"Explicit revision authorization?"}
-        REVISE["Scientific revision<br/>blocking → major → claims → figures → language → format"]
-        CLOSURE["Evidence closure<br/>reference audit · figure/text consistency · DOCX audit"]
-        MATERIAL{"Material claim, method, statistic,<br/>figure, or reference change?"}
-    end
+    ROUTER --> A1 & A2 & A3 & A4 & A5
+    ROUTER -. "条件触发" .-> A6
+    A1 & A2 & A3 & A4 & A5 --> MATRIX
+    A6 -.-> MATRIX
+    MATRIX --> VERDICT
+    VERDICT --> V1
+    VERDICT --> V2
+    VERDICT --> V3
+    VERDICT --> V4
 
-    subgraph RELEASE["D · FAIL-CLOSED RELEASE"]
-        RELEASE_GATE{"Submission release gate"}
-        PASS["RELEASE PASS"]
-        FAIL["RELEASE FAIL"]
-        NA["RELEASE NOT ASSESSABLE"]
-        STOP["READ-ONLY STOP"]
-    end
+    classDef router fill:#0F2747,stroke:#0F2747,stroke-width:2px,color:#FFFFFF;
+    classDef agent fill:#F8FAFC,stroke:#475569,stroke-width:1.5px,color:#0F172A;
+    classDef conditional fill:#F5F3FF,stroke:#7C3AED,stroke-width:1.5px,color:#3B0764;
+    classDef synthesis fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
+    classDef gate fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
+    classDef outcome fill:#FFFFFF,stroke:#64748B,stroke-width:1.25px,color:#0F172A;
 
-    START --> TARGET
-    TARGET -- "No" --> RECOMMEND --> SELECT --> PROFILE
-    TARGET -- "Yes" --> PROFILE
-    PROFILE --> FREEZE --> ROUTER
-
-    ROUTER --> CORE
-    ROUTER -. "high-tier / complex / claim-critical" .-> SIXTH
-    CORE --> SYNTH
-    SIXTH --> SYNTH
-    SYNTH --> POSTURE
-
-    POSTURE -- "PROCEED_TO_REVISION" --> AUTH
-    POSTURE -- "MAJOR_SCIENTIFIC_REWORK_REQUIRED" --> PAUSE
-    POSTURE -- "RETARGET_RECOMMENDED" --> SELECT
-    POSTURE -- "NOT_ASSESSABLE" --> STOP
-    PAUSE --> AUTH
-
-    AUTH -- "No" --> STOP
-    AUTH -- "Yes" --> REVISE --> CLOSURE --> MATERIAL
-    MATERIAL -- "Yes: re-open review" --> ROUTER
-    MATERIAL -- "No" --> RELEASE_GATE
-
-    RELEASE_GATE --> PASS
-    RELEASE_GATE --> FAIL
-    RELEASE_GATE --> NA
+    class ROUTER router;
+    class A1,A2,A3,A4,A5 agent;
+    class A6 conditional;
+    class MATRIX synthesis;
+    class VERDICT gate;
+    class V1,V2,V3,V4 outcome;
 ```
 
 关键状态均有机器可检查的中间产物：`01_journal_profile.json`、`03_review_panel_plan.json`、`05_review_verdict.md`、`06_reference_audit.tsv` 和 `08_release_gate.md`。
