@@ -1,0 +1,41 @@
+.DS_Store
+Thumbs.db
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+
+# Local review runs and confidential manuscripts
+review_runs/
+runs/
+outputs/
+work/
+*.docx
+*.doc
+
+# Standard workflow artifacts should live outside the source repository
+00_input_inventory.json
+01_journal_profile.json
+02_shared_fact_base.md
+03_review_panel_plan.json
+04_cross_review_matrix.tsv
+05_review_verdict.md
+06_reference_audit.tsv
+07_format_audit.json
+08_release_gate.md
+revision/
+reviews/
+
+# Earlier email/export working files are retained locally but not published
+email_materials/

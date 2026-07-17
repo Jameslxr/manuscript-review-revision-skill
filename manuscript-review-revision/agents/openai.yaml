@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manuscript Review & Revision"
+  short_description: "Journal-aware review, revision, formatting, and evidence audit"
+  default_prompt: "Use $manuscript-review-revision to review this manuscript against its target journal before making any revisions."
