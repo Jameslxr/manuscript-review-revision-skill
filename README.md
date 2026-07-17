@@ -60,27 +60,24 @@
 ## 工作方式
 
 ```mermaid
-flowchart TB
-    J["01 期刊校准<br/>已知：官网建档<br/>未知：Top 5 推荐"]
-    F["02 输入冻结<br/>清单 · 版本 · SHA-256"]
-    P["03 独立审稿 Panel<br/>固定五席 + 条件第六席"]
-    S["04 主审综合<br/>保留分歧 · 严重度排序"]
-    A{"05 作者授权？"}
-    R["06 科学修改<br/>证据 → 语言 → 格式"]
-    C["07 证据闭环与复审"]
-    G{"08 投稿门禁"}
+flowchart LR
+    J["A · 期刊校准<br/>已知：官网建档<br/>未知：Top 5 推荐"]
+    P["B · 独立科学审稿<br/>固定五席 + 条件第六席"]
+    A{"C · 作者授权？"}
+    R["D · 修改与复审<br/>科学 → 证据 → 语言 → 格式"]
+    G{"E · 投稿门禁"}
     O["PASS / FAIL /<br/>NOT ASSESSABLE"]
     STOP["未授权：只读停止"]
 
-    J --> F --> P --> S --> A
-    A -- "授权" --> R --> C --> G --> O
+    J --> P --> A
+    A -- "授权" --> R --> G --> O
     A -. "未授权" .-> STOP
 
     classDef review fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
     classDef gate fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
     classDef phase fill:#F8FAFC,stroke:#475569,stroke-width:1.5px,color:#0F172A;
-    class J,F,R,C phase;
-    class P,S review;
+    class J,R phase;
+    class P review;
     class A,G gate;
 ```
 

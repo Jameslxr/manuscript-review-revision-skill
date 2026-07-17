@@ -60,27 +60,24 @@ Missing material is not silently invented. Items that cannot be judged reliably 
 ## Workflow
 
 ```mermaid
-flowchart TB
-    J["01 Journal calibration<br/>Known: official profile<br/>Unknown: Top-5 recommendation"]
-    F["02 Input freeze<br/>inventory · version · SHA-256"]
-    P["03 Independent panel<br/>five core + conditional sixth"]
-    S["04 Root synthesis<br/>retain disagreement · rank severity"]
-    A{"05 Author gate"}
-    R["06 Scientific revision<br/>evidence → language → format"]
-    C["07 Evidence closure and re-review"]
-    G{"08 Submission gate"}
+flowchart LR
+    J["A · Journal calibration<br/>known: official profile<br/>unknown: Top-5 recommendation"]
+    P["B · Independent review<br/>five core + conditional sixth"]
+    A{"C · Author gate"}
+    R["D · Revision and re-review<br/>science → evidence → language → format"]
+    G{"E · Submission gate"}
     O["PASS / FAIL /<br/>NOT ASSESSABLE"]
     STOP["No authorization:<br/>read-only stop"]
 
-    J --> F --> P --> S --> A
-    A -- "authorized" --> R --> C --> G --> O
+    J --> P --> A
+    A -- "authorized" --> R --> G --> O
     A -. "not authorized" .-> STOP
 
     classDef review fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
     classDef gate fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
     classDef phase fill:#F8FAFC,stroke:#475569,stroke-width:1.5px,color:#0F172A;
-    class J,F,R,C phase;
-    class P,S review;
+    class J,R phase;
+    class P review;
     class A,G gate;
 ```
 
