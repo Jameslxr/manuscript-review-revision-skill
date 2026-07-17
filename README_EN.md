@@ -6,7 +6,7 @@ A **journal-aware, review-first, author-gated** Codex skill for scientific manus
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.1.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.1.1-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## What It Solves
@@ -57,31 +57,70 @@ What is the target journal? If it is not yet decided, reply: “Uncertain; recom
 
 Missing material is not silently invented. Items that cannot be judged reliably are marked `NOT ASSESSABLE`.
 
-## Workflow
+## At A Glance: From Upload To Submission Preparation
+
+**How to read it:** orange boxes require your decision; blue boxes are run by the skill; green means ready for submission preparation; gray or red means pause or continue working.
 
 ```mermaid
-flowchart LR
-    J["A · Journal calibration<br/>known: official profile<br/>unknown: Top-5 recommendation"]
-    P["B · Independent review<br/>five core + conditional sixth"]
-    A{"C · Author gate"}
-    R["D · Revision and re-review<br/>science → evidence → language → format"]
-    G{"E · Submission gate"}
-    O["PASS / FAIL /<br/>NOT ASSESSABLE"]
-    STOP["No authorization:<br/>read-only stop"]
+flowchart TB
+    START(["1 · You upload the manuscript<br/>and available supporting files"])
+    TARGET{"2 · Is the target<br/>journal decided?"}
+    REC["3A · The skill recommends 5 journals<br/>from topic, quality, and evidence"]
+    PICK["3B · You select 1 target journal"]
+    RULES["4 · The skill reads the journal website<br/>and confirms current requirements"]
+    CHECK["5 · Check that materials are complete<br/>text · figures · legends · supplements · references"]
+    REVIEW["6 · At least 5 reviewers with different roles<br/>independently assess the same manuscript version"]
+    SUMMARY["7 · Combine the reviews<br/>must fix · important · minor · cannot yet assess"]
+    REPORT["8 · Give you the complete review report<br/>without changing the manuscript"]
+    AUTH{"9 · Do you authorize<br/>manuscript revision?"}
+    STOP(["No: stop<br/>preserve the manuscript and review report"])
+    REVISE["10 · Revise in order<br/>science → evidence → language → journal format"]
+    VERIFY["11 · Recheck every item<br/>citation support · figure-text agreement · format"]
+    READY{"12 · Are all critical<br/>issues resolved?"}
+    PASS(["Yes: prepare for submission"])
+    RETURN["No: list unresolved issues<br/>and continue revision"]
+    MISSING(["Insufficient material: pause<br/>and state exactly what is missing"])
 
-    J --> P --> A
-    A -- "authorized" --> R --> G --> O
-    A -. "not authorized" .-> STOP
+    subgraph S1["Stage 1 · Decide where to submit"]
+        direction LR
+        START --> TARGET
+        TARGET -- "Decided" --> RULES
+        TARGET -- "Not decided" --> REC --> PICK --> RULES
+    end
 
-    classDef review fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
-    classDef gate fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
-    classDef phase fill:#F8FAFC,stroke:#475569,stroke-width:1.5px,color:#0F172A;
-    class J,R phase;
-    class P review;
-    class A,G gate;
+    subgraph S2["Stage 2 · Review first and give you the report"]
+        direction LR
+        CHECK --> REVIEW --> SUMMARY --> REPORT --> AUTH
+    end
+
+    subgraph S3["Stage 3 · Revise only after you authorize it"]
+        direction LR
+        REVISE --> VERIFY --> READY
+        READY -- "Resolved" --> PASS
+        READY -- "Issues remain" --> RETURN --> REVISE
+        READY -- "Cannot assess" --> MISSING
+    end
+
+    RULES --> CHECK
+    AUTH -- "No" --> STOP
+    AUTH -- "Yes" --> REVISE
+
+    classDef user fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
+    classDef skill fill:#EFF6FF,stroke:#2563EB,stroke-width:1.5px,color:#0F172A;
+    classDef success fill:#ECFDF5,stroke:#059669,stroke-width:2px,color:#064E3B;
+    classDef stop fill:#F8FAFC,stroke:#64748B,stroke-width:1.5px,color:#334155;
+    classDef problem fill:#FEF2F2,stroke:#DC2626,stroke-width:1.5px,color:#7F1D1D;
+    class TARGET,PICK,AUTH,READY user;
+    class REC,RULES,CHECK,REVIEW,SUMMARY,REPORT,REVISE,VERIFY skill;
+    class PASS success;
+    class START,STOP,MISSING stop;
+    class RETURN problem;
+    style S1 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
+    style S2 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
+    style S3 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
 ```
 
-The panel router uses **journal tier × manuscript type × study risk**. Five core roles cover journal/editorial fit, domain science, study design, statistics/reproducibility, and claim–evidence–reference integrity. A sixth role is conditionally added for adversarial review, figure/narrative integrity, or reporting standards.
+Step 6 does not ask five reviewers to repeat the same task. They separately cover journal fit, domain science, study design, statistics and reproducibility, and whether references truly support the cited statements. A sixth specialist is added for high-tier journals or complex, high-risk studies. Every reviewer sees the same frozen manuscript version and cannot see the others' initial conclusions before submitting their own.
 
 [Read the full technical architecture](docs/ARCHITECTURE.md)
 

@@ -6,7 +6,7 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.1.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.1.1-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## 30 秒判断：它解决什么问题
@@ -57,31 +57,70 @@
 
 材料不完整不会被自动补写。无法可靠判断的项目会明确标记为 `NOT ASSESSABLE`。
 
-## 工作方式
+## 一眼看懂：从上传稿件到准备投稿
+
+**读图方法：** 橙色框需要你选择；蓝色框由 Skill 执行；绿色表示可以进入投稿准备；灰色或红色表示暂停或继续处理。
 
 ```mermaid
-flowchart LR
-    J["A · 期刊校准<br/>已知：官网建档<br/>未知：Top 5 推荐"]
-    P["B · 独立科学审稿<br/>固定五席 + 条件第六席"]
-    A{"C · 作者授权？"}
-    R["D · 修改与复审<br/>科学 → 证据 → 语言 → 格式"]
-    G{"E · 投稿门禁"}
-    O["PASS / FAIL /<br/>NOT ASSESSABLE"]
-    STOP["未授权：只读停止"]
+flowchart TB
+    START(["1 · 你上传稿件和已有材料"])
+    TARGET{"2 · 已经确定<br/>目标期刊了吗？"}
+    REC["3A · Skill 根据研究主题、质量和证据<br/>推荐 5 本候选期刊"]
+    PICK["3B · 你选择 1 本目标期刊"]
+    RULES["4 · Skill 阅读该期刊官网<br/>确认文章类型和最新投稿要求"]
+    CHECK["5 · 检查材料是否齐全<br/>正文 · 图表 · 图注 · 补充材料 · 参考文献"]
+    REVIEW["6 · 至少 5 个不同职责的审稿角色<br/>分别独立检查同一版本稿件"]
+    SUMMARY["7 · 汇总审稿意见<br/>分为必须解决 · 重要 · 次要 · 暂时无法判断"]
+    REPORT["8 · 先把完整审稿报告交给你<br/>此时不修改原稿"]
+    AUTH{"9 · 你是否同意<br/>开始改稿？"}
+    STOP(["不同意：停止<br/>保留原稿和审稿报告"])
+    REVISE["10 · 按顺序修改<br/>科学问题 → 证据 → 表达 → 期刊格式"]
+    VERIFY["11 · 逐项复查<br/>文献支持原句 · 图文一致 · 格式合规"]
+    READY{"12 · 所有关键问题<br/>都解决了吗？"}
+    PASS(["是：可以准备投稿"])
+    RETURN["否：列出未解决问题<br/>返回继续修改"]
+    MISSING(["材料不足：暂停<br/>明确告诉你还缺什么"])
 
-    J --> P --> A
-    A -- "授权" --> R --> G --> O
-    A -. "未授权" .-> STOP
+    subgraph S1["第一段 · 先确定投哪本期刊"]
+        direction LR
+        START --> TARGET
+        TARGET -- "已确定" --> RULES
+        TARGET -- "未确定" --> REC --> PICK --> RULES
+    end
 
-    classDef review fill:#EAF2FF,stroke:#2563EB,stroke-width:2px,color:#0F172A;
-    classDef gate fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
-    classDef phase fill:#F8FAFC,stroke:#475569,stroke-width:1.5px,color:#0F172A;
-    class J,R phase;
-    class P review;
-    class A,G gate;
+    subgraph S2["第二段 · 先审稿，只把报告交给你"]
+        direction LR
+        CHECK --> REVIEW --> SUMMARY --> REPORT --> AUTH
+    end
+
+    subgraph S3["第三段 · 你同意后才改稿"]
+        direction LR
+        REVISE --> VERIFY --> READY
+        READY -- "全部解决" --> PASS
+        READY -- "仍有问题" --> RETURN --> REVISE
+        READY -- "无法判断" --> MISSING
+    end
+
+    RULES --> CHECK
+    AUTH -- "不同意" --> STOP
+    AUTH -- "同意" --> REVISE
+
+    classDef user fill:#FFF7ED,stroke:#D97706,stroke-width:2px,color:#0F172A;
+    classDef skill fill:#EFF6FF,stroke:#2563EB,stroke-width:1.5px,color:#0F172A;
+    classDef success fill:#ECFDF5,stroke:#059669,stroke-width:2px,color:#064E3B;
+    classDef stop fill:#F8FAFC,stroke:#64748B,stroke-width:1.5px,color:#334155;
+    classDef problem fill:#FEF2F2,stroke:#DC2626,stroke-width:1.5px,color:#7F1D1D;
+    class TARGET,PICK,AUTH,READY user;
+    class REC,RULES,CHECK,REVIEW,SUMMARY,REPORT,REVISE,VERIFY skill;
+    class PASS success;
+    class START,STOP,MISSING stop;
+    class RETURN problem;
+    style S1 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
+    style S2 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
+    style S3 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
 ```
 
-Panel Router 使用三个输入：**目标期刊档次 × 文章类型 × 研究风险**。五个固定角色覆盖期刊与编辑视角、领域科学、研究设计、统计与可重复性、Claim–Evidence–Reference；第六席按风险配置为对抗审稿、图表叙事或报告规范审查。
+第 6 步不是让 5 个角色重复做同一件事：他们分别检查期刊匹配、领域科学、研究设计、统计与可重复性、文献是否真正支持原句。高档期刊或复杂、高风险研究会增加第 6 个专项角色。所有角色检查同一个冻结版本，并且在提交各自初审意见前看不到其他角色的结论。
 
 [查看完整技术架构、角色配置和返回规则](docs/ARCHITECTURE.md)
 
