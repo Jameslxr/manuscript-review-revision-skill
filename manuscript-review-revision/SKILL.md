@@ -1,7 +1,7 @@
 ---
 name: manuscript-review-revision
 description: |
-  Run a journal-aware, review-first workflow for scientific manuscripts, including target-journal confirmation or Top-5 journal recommendation, live official-author-guideline research, at least five independent reviewer agents, scientific and statistical review, claim-reference verification, reviewer-response drafting, revision, formal DOCX/PDF manuscript formatting, and fail-closed release auditing. Use when the user asks to review, revise, polish, format, submit, retarget, recommend journals for, verify references in, or respond to reviewers about a biomedical or scientific manuscript. Always establish the exact target journal before full review; never revise or cosmetically polish before the independent review gate is complete and the user authorizes revision.
+  Run a platform-independent, journal-aware, review-first workflow for scientific manuscripts, including target-journal confirmation or Top-5 journal recommendation, live official-author-guideline research, at least five independent reviewer agents, scientific and statistical review, claim-reference verification, reviewer-response drafting, revision, formal DOCX/PDF manuscript formatting, and fail-closed release auditing. Use in Codex, Claude Code, or another compatible Agent Skills host when the user asks to review, revise, polish, format, submit, retarget, recommend journals for, verify references in, or respond to reviewers about a biomedical or scientific manuscript. Always establish the exact target journal before full review; never revise or cosmetically polish before the independent review gate is complete and the user authorizes revision.
 ---
 
 # Manuscript Review & Revision
@@ -17,6 +17,21 @@ Treat review, revision, and formatting as separate phases. Use this non-negotiab
 - Do not invent experiments, analyses, citations, journal rules, reviewer identities, line numbers, or completed changes.
 - Use `PASS`, `FAIL`, or `NOT ASSESSABLE` for critical gates.
 - Explain findings in the user's language while preserving exact manuscript text, filenames, identifiers, and journal wording.
+
+## Host capability contract
+
+Load [references/platform-compatibility.md](references/platform-compatibility.md)
+before using tools or bundled scripts.
+
+- Resolve the directory containing this `SKILL.md` as `SKILL_ROOT`; never assume
+  the current working directory is the Skill directory.
+- Map each required behavior to the capabilities available in the current host.
+  Tool names are examples, not requirements.
+- For full review, use the host's real non-fork subagent/delegation mechanism
+  with a fresh isolated context for every reviewer.
+- Record actual host-provided Agent task IDs when available.
+- If a required capability is unavailable, mark the affected gate
+  `NOT ASSESSABLE`; do not imitate a completed capability in one conversation.
 
 ## Step 0: establish the target journal
 
@@ -42,7 +57,7 @@ Record:
 Create `00_input_inventory.json` and `01_journal_profile.json`. Validate the latter with:
 
 ```bash
-python scripts/validate_journal_profile.py 01_journal_profile.json
+python3 "$SKILL_ROOT/scripts/validate_journal_profile.py" 01_journal_profile.json
 ```
 
 Do not silently combine manuscript, figures, or supplements from different versions.
@@ -68,7 +83,8 @@ If the user supplies a target and manuscript but no mode, default to `scientific
 
 Load [references/multi-agent-review.md](references/multi-agent-review.md) and [references/journal-tier-rubrics.md](references/journal-tier-rubrics.md) completely.
 
-- Spawn at least five actual independent reviewer agents when agent tools are available.
+- Spawn at least five actual independent reviewer agents with the host's
+  non-fork, isolated subagent/delegation mechanism when available.
 - Use five reviewer agents plus a root synthesis; do not count the root synthesis as a reviewer.
 - For high-tier or complex manuscripts, add a sixth specialist or adversarial reviewer.
 - Run agents in waves when concurrency is limited; never reduce the reviewer count to fit one wave.
@@ -80,7 +96,7 @@ Load [references/multi-agent-review.md](references/multi-agent-review.md) and [r
 Create `02_shared_fact_base.md`, `03_review_panel_plan.json`, and `reviews/reviewer_01.md` through `reviews/reviewer_05.md` or higher. Validate:
 
 ```bash
-python scripts/validate_review_panel.py 03_review_panel_plan.json
+python3 "$SKILL_ROOT/scripts/validate_review_panel.py" 03_review_panel_plan.json
 ```
 
 ## Step 4: synthesize, decide, and pause
@@ -120,7 +136,7 @@ Preserve the original. Produce a tracked/review copy, a clean revised copy, and 
 Load [references/reference-integrity.md](references/reference-integrity.md). Build `06_reference_audit.tsv` with one row per atomic claim-citation relationship, then run:
 
 ```bash
-python scripts/validate_reference_audit.py 06_reference_audit.tsv
+python3 "$SKILL_ROOT/scripts/validate_reference_audit.py" 06_reference_audit.tsv
 ```
 
 Metadata verification and semantic support are separate. A real paper can still be the wrong citation. A related title, metadata-only result, or review article does not establish direct support.
@@ -133,10 +149,10 @@ Load [references/manuscript-formatting.md](references/manuscript-formatting.md).
 - When no color is explicitly required, use black title, headings, subheadings, and body text.
 - Do not use report-style covers, colored heading themes, cards, callouts, banners, icons, decorative rules, or business-document styling in the submission manuscript.
 - Keep audit reports separate from the clean manuscript.
-- For DOCX, use the bundled document runtime, run the mechanical style audit, render every page to PNG/PDF, inspect every page, fix, and re-render.
+- For DOCX, use a reliable document runtime available in the host, run the mechanical style audit, render every page to PNG/PDF, inspect every page, fix, and re-render.
 
 ```bash
-python scripts/audit_docx_manuscript_style.py manuscript.docx
+python3 "$SKILL_ROOT/scripts/audit_docx_manuscript_style.py" manuscript.docx
 ```
 
 A mechanical pass does not replace official-template or rendered visual review.
@@ -180,6 +196,7 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 
 | Resource | Load when |
 |---|---|
+| [references/platform-compatibility.md](references/platform-compatibility.md) | Resolving host tools, subagents, bundled scripts, or install-specific behavior |
 | [references/journal-discovery-and-profile.md](references/journal-discovery-and-profile.md) | Target journal is unknown or any journal-specific task begins |
 | [references/multi-agent-review.md](references/multi-agent-review.md) | Planning, running, or synthesizing reviewer agents |
 | [references/journal-tier-rubrics.md](references/journal-tier-rubrics.md) | Calibrating reviewer strictness or selecting specialist roles |

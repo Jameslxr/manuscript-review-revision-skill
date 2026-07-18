@@ -4,7 +4,12 @@
 
 Run at least five actual reviewer agents plus a root orchestrator. The root creates factual intake material and synthesizes after all reports finish; it is not counted as one of the five.
 
-Use agent delegation tools when available. With a four-slot limit, run three reviewers in wave 1 and the remaining reviewers in wave 2. Preserve independence across waves: later reviewers receive no earlier conclusions.
+Use the host's real non-fork subagent/delegation tool when available. In Codex,
+use independent collaboration/subagent tasks. In Claude Code, use normal
+`Agent` subagents with fresh contexts rather than forks that inherit the parent
+conversation. With a four-slot limit, run three reviewers in wave 1 and the
+remaining reviewers in wave 2. Preserve independence across waves: later
+reviewers receive no earlier conclusions.
 
 If agent tools are unavailable or fewer than five reviewer runs complete, label the gate `NOT ASSESSABLE`. Do not rename five sections written by one model as five agents.
 
@@ -21,6 +26,9 @@ Give every reviewer:
 - the common report contract
 
 Do not include another reviewer's report, the expected verdict, suspected defects, planned fixes, or root conclusions. Prefer a fresh context for each reviewer.
+
+After dispatch, record each real host-provided Agent task ID in the panel plan
+when the platform exposes it.
 
 ## Required core roles
 

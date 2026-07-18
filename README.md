@@ -2,11 +2,11 @@
 
 [English](README_EN.md)
 
-这是一个用于科学论文审稿和修改的 Codex Skill。它会先确认目标期刊，并根据期刊定位安排 5–6 个相互独立的审稿角色。完成科学审查并取得作者授权后，才会进入内容修改、文献核查、语言润色和投稿格式检查。
+这是一个用于科学论文审稿和修改的 Agent Skill，可安装在 Codex、Claude Code 及其他兼容 Agent Skills 的环境中。它会先确认目标期刊，并根据期刊定位安排 5–6 个相互独立的审稿角色。完成科学审查并取得作者授权后，才会进入内容修改、文献核查、语言润色和投稿格式检查。
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.1.3-2563eb)
+![Version](https://img.shields.io/badge/version-v1.2.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## 简要说明
@@ -152,18 +152,27 @@ flowchart TB
 git clone https://github.com/Jameslxr/manuscript-review-revision-skill.git
 cd manuscript-review-revision-skill
 python3 -m pip install -r requirements.txt
-mkdir -p "$HOME/.codex/skills"
-ln -s "$PWD/manuscript-review-revision" \
-  "$HOME/.codex/skills/manuscript-review-revision"
 ```
 
-重新载入 Codex 后，可以这样调用：
+个人级安装（按使用的平台选择）：
+
+```bash
+# Codex
+mkdir -p "$HOME/.codex/skills"
+ln -s "$PWD/manuscript-review-revision" "$HOME/.codex/skills/manuscript-review-revision"
+# Claude Code
+mkdir -p "$HOME/.claude/skills"
+ln -s "$PWD/manuscript-review-revision" "$HOME/.claude/skills/manuscript-review-revision"
+```
+
+调用方式：
 
 ```text
-使用 $manuscript-review-revision，我上传了稿件。
+Codex：使用 $manuscript-review-revision，我上传了稿件。
+Claude Code：/manuscript-review-revision 我上传了稿件。
 ```
 
-如目标安装路径已存在，请先确认它是否为旧版本或已有链接，不要直接覆盖。更多调用示例见 [使用指南](docs/USAGE.md)。
+不要只复制 `SKILL.md`，因为运行还需要 `references/` 和 `scripts/`。Claude Code 的项目级安装、其他宿主要求和完整调用示例见 [使用指南](docs/USAGE.md)。
 
 ## 当前版本与验证
 

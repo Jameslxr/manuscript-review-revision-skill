@@ -2,11 +2,11 @@
 
 [中文说明](README.md)
 
-This Codex skill supports scientific manuscript review and revision. It first confirms the target journal and assigns 5–6 independent reviewer roles suited to that journal. Scientific revision, reference checking, language editing, and submission formatting begin only after the review is complete and the author explicitly approves revision.
+This Agent Skill supports scientific manuscript review and revision in Codex, Claude Code, and other compatible Agent Skills hosts. It first confirms the target journal and assigns 5–6 independent reviewer roles suited to that journal. Scientific revision, reference checking, language editing, and submission formatting begin only after the review is complete and the author explicitly approves revision.
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.1.3-2563eb)
+![Version](https://img.shields.io/badge/version-v1.2.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -152,18 +152,27 @@ Step 6 assigns at least five independent reviewer roles with separate responsibi
 git clone https://github.com/Jameslxr/manuscript-review-revision-skill.git
 cd manuscript-review-revision-skill
 python3 -m pip install -r requirements.txt
-mkdir -p "$HOME/.codex/skills"
-ln -s "$PWD/manuscript-review-revision" \
-  "$HOME/.codex/skills/manuscript-review-revision"
 ```
 
-Reload Codex, then invoke:
+Choose the personal installation for your host:
+
+```bash
+# Codex
+mkdir -p "$HOME/.codex/skills"
+ln -s "$PWD/manuscript-review-revision" "$HOME/.codex/skills/manuscript-review-revision"
+# Claude Code
+mkdir -p "$HOME/.claude/skills"
+ln -s "$PWD/manuscript-review-revision" "$HOME/.claude/skills/manuscript-review-revision"
+```
+
+Invoke the installed Skill:
 
 ```text
-Use $manuscript-review-revision. I uploaded a manuscript.
+Codex: Use $manuscript-review-revision. I uploaded a manuscript.
+Claude Code: /manuscript-review-revision I uploaded a manuscript.
 ```
 
-Do not overwrite an existing install path without checking whether it is an older copy or symlink. More examples are in the [usage guide](docs/USAGE.md).
+Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/`. Project-level Claude Code installation, requirements for other hosts, and complete invocation examples are in the [usage guide](docs/USAGE.md).
 
 ## Current Status And Validation
 

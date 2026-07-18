@@ -31,13 +31,16 @@ The review report may use tables for issue tracking, but its visual system must 
 1. Preserve the original.
 2. Use the journal template when supplied; otherwise create an explicit neutral style map.
 3. Apply only stage-appropriate requirements: fonts, margins, spacing, line numbering, anonymization, section order, citations, captions, tables, and page breaks.
-4. Run `scripts/audit_docx_manuscript_style.py`.
-5. Render DOCX with the canonical documents-skill renderer.
+4. Run `python3 "$SKILL_ROOT/scripts/audit_docx_manuscript_style.py" manuscript.docx`.
+5. Render DOCX with a reliable renderer available in the current host.
 6. Inspect every page at 100% zoom.
 7. Check title/heading color, clipping, overlap, tables, captions, page breaks, orphan headings, figures, headers/footers, line numbers, and references.
 8. Fix and re-render after every layout-sensitive change.
 
-If rendering is unavailable, disclose that visual QA was not completed and return the format gate `NOT ASSESSABLE`.
+Codex may use an installed document/PDF capability. Claude Code may use an
+available office converter, renderer, script, or MCP tool. If rendering is
+unavailable, disclose that visual QA was not completed and return the format
+gate `NOT ASSESSABLE`.
 
 ## Output separation
 

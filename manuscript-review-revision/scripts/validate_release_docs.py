@@ -10,6 +10,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 README_ZH = ROOT / "README.md"
 README_EN = ROOT / "README_EN.md"
+USAGE = ROOT / "docs" / "USAGE.md"
+SKILL_ENTRY = ROOT / "manuscript-review-revision" / "SKILL.md"
+PLATFORM_COMPATIBILITY = (
+    ROOT
+    / "manuscript-review-revision"
+    / "references"
+    / "platform-compatibility.md"
+)
 MAX_README_LINES = 200
 LOCAL_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 VERSION_RE = re.compile(r"version-v(\d+\.\d+\.\d+)")
@@ -18,6 +26,7 @@ VERSION_RE = re.compile(r"version-v(\d+\.\d+\.\d+)")
 def markdown_files() -> list[Path]:
     files = [README_ZH, README_EN, ROOT / "ATTRIBUTION.md"]
     files.extend(sorted((ROOT / "docs").glob("*.md")))
+    files.append(PLATFORM_COMPATIBILITY)
     return files
 
 
@@ -53,6 +62,8 @@ def main() -> int:
 
     zh = README_ZH.read_text(encoding="utf-8")
     en = README_EN.read_text(encoding="utf-8")
+    usage = USAGE.read_text(encoding="utf-8")
+    skill_entry = SKILL_ENTRY.read_text(encoding="utf-8")
 
     if "[English](README_EN.md)" not in zh:
         errors.append("README.md is missing the English language switch.")
@@ -81,6 +92,23 @@ def main() -> int:
         errors.append(
             "README version mismatch or missing unique version badge: "
             f"Chinese={zh_versions}, English={en_versions}."
+        )
+
+    for label, text in (("README.md", zh), ("README_EN.md", en)):
+        for required in ("Codex", "Claude Code"):
+            if required not in text:
+                errors.append(f"{label} is missing host: {required}.")
+
+    for install_path in ("$HOME/.codex/skills", "$HOME/.claude/skills"):
+        if install_path not in zh or install_path not in en or install_path not in usage:
+            errors.append(
+                f"Cross-platform install path is not documented consistently: "
+                f"{install_path}."
+            )
+
+    if "references/platform-compatibility.md" not in skill_entry:
+        errors.append(
+            "SKILL.md does not load references/platform-compatibility.md."
         )
 
     for path, text in ((README_ZH, zh), (README_EN, en)):
