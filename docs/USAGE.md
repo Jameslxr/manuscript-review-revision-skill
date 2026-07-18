@@ -4,35 +4,85 @@
 
 ## 运行条件
 
-- 支持本地 Skills 的 Codex 环境；
+- Codex、Claude Code，或其他能够读取完整 Agent Skill 目录的兼容环境；
 - 可访问期刊官网、PubMed、Crossref 或其他权威学术来源；
-- 完整审稿需要能够执行至少 5 个彼此独立的 Agent 任务；
+- 完整审稿需要宿主能够执行至少 5 个具有独立上下文的 Agent 任务；
 - Python 3.10 或更高版本；
 - DOCX 样式审计和测试需要 `python-docx`。
 
 ## 安装
 
+先克隆仓库并安装 Python 依赖：
+
 ```bash
 git clone https://github.com/Jameslxr/manuscript-review-revision-skill.git
 cd manuscript-review-revision-skill
 python3 -m pip install -r requirements.txt
+```
+
+### Codex：个人级安装
+
+```bash
 mkdir -p "$HOME/.codex/skills"
 ln -s "$PWD/manuscript-review-revision" \
   "$HOME/.codex/skills/manuscript-review-revision"
 ```
 
-如果不希望使用符号链接，也可以复制完整技能目录：
+重新载入 Codex 后，可以通过 `$manuscript-review-revision` 调用。
+
+### Claude Code：个人级安装
+
+Claude Code v2.1.203 或更高版本可以直接加载符号链接：
+
+```bash
+mkdir -p "$HOME/.claude/skills"
+ln -s "$PWD/manuscript-review-revision" \
+  "$HOME/.claude/skills/manuscript-review-revision"
+```
+
+如需只在某一个项目中使用，可将完整目录放入该项目：
+
+```bash
+mkdir -p /path/to/project/.claude/skills
+cp -R manuscript-review-revision \
+  /path/to/project/.claude/skills/manuscript-review-revision
+```
+
+启动 Claude Code 后，可通过 `/manuscript-review-revision` 调用。Claude
+Code 也会根据 Skill 描述在相关请求中自动加载。
+
+### 复制安装和其他宿主
+
+如果不希望使用符号链接，可将完整目录复制到宿主的 Skills 目录：
 
 ```bash
 cp -R manuscript-review-revision "$HOME/.codex/skills/"
 ```
 
-不要只复制 `SKILL.md`；该 Skill 还依赖 `references/`、`scripts/` 和 `agents/`。
+不要只复制 `SKILL.md`；该 Skill 还依赖 `references/` 和 `scripts/`。
+`agents/openai.yaml` 是 Codex 的界面元数据，其他宿主可以忽略。
+
+其他 Agent Skills 宿主只有同时满足以下条件，才能报告为完成完整流程：
+
+- 能读取 Skill 的附带文件；
+- 能运行 Python 验证脚本；
+- 能访问当前期刊和学术来源；
+- 能创建至少 5 个真正独立的子 Agent。
+
+缺少某项关键能力时，相关阶段必须标记为 `NOT ASSESSABLE`。
 
 ## 最小调用
 
+Codex：
+
 ```text
-使用 $manuscript-review-revision，我上传了 manuscript。
+使用 $manuscript-review-revision，我上传了稿件。
+```
+
+Claude Code：
+
+```text
+/manuscript-review-revision 我上传了稿件。
 ```
 
 如果没有提供目标期刊，Skill 会询问：
@@ -42,6 +92,9 @@ cp -R manuscript-review-revision "$HOME/.codex/skills/"
 ```
 
 ## 已知目标期刊
+
+Codex 使用 `$manuscript-review-revision`；Claude Code 将第一行替换为
+`/manuscript-review-revision`，后续参数相同：
 
 ```text
 使用 $manuscript-review-revision。
@@ -92,6 +145,16 @@ cp -R manuscript-review-revision "$HOME/.codex/skills/"
 ```
 
 “继续”“帮我看看”或上传新文件不自动视为修改授权。
+
+## 多 Agent 在不同宿主中的实现
+
+| 宿主 | 独立审稿实现 |
+|---|---|
+| Codex | 使用平台提供的子 Agent / collaboration delegation；每个角色使用独立任务 |
+| Claude Code | 使用非 fork 的 `Agent` 子 Agent；每个 Agent 具有新的独立上下文 |
+| 其他宿主 | 必须提供等效的独立上下文任务；单次对话内模拟 5 个角色不算完成 |
+
+无论使用哪个宿主，所有审稿角色都必须接收相同稿件哈希、期刊档案和事实材料，并且在初审完成前看不到其他角色的结论。
 
 ## 返修回复
 

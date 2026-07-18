@@ -49,11 +49,20 @@ This check confirms that:
 - every local Markdown link resolves;
 - the two release README files remain at or below 200 lines so that detailed
   implementation material stays in `docs/`.
+- Codex and Claude Code are both named in the bilingual release pages;
+- Codex and Claude Code installation paths remain present in the bilingual
+  README files and usage guide;
+- the Skill entrypoint loads the platform-compatibility contract.
 
 ## Manual forward test
 
 The initial release was also exercised with a synthetic hepatocellular
 carcinoma manuscript targeting a high-tier hepatology journal.
+
+This forward test ran in Codex. The repository's Claude Code compatibility is
+currently validated at the Agent Skills layout, installation-documentation,
+resource-path, and capability-contract levels; it has not yet completed a
+Claude Code end-to-end manuscript forward test.
 
 Expected behavior:
 
@@ -70,4 +79,6 @@ they are workflow test fixtures rather than reusable Skill resources.
 
 These checks validate the Skill structure and selected fail-closed controls.
 They do not prove that every scientific judgment is correct, that every journal
-website is reachable, or that a submitted manuscript will be accepted.
+website is reachable, that every compatible host exposes equivalent tools, or
+that a submitted manuscript will be accepted. A host without five real
+isolated subagent tasks cannot claim completion of the multi-agent review gate.
