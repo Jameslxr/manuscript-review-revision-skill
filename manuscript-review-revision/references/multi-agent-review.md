@@ -27,8 +27,14 @@ Give every reviewer:
 
 Do not include another reviewer's report, the expected verdict, suspected defects, planned fixes, or root conclusions. Prefer a fresh context for each reviewer.
 
-After dispatch, record each real host-provided Agent task ID in the panel plan
-when the platform exposes it.
+After dispatch, record each real host-provided Agent task ID in the panel plan.
+For every task, also record the receipt source, fresh-context mode, start/end
+timestamps, frozen-input hashes, report path, and report SHA-256. If the host
+does not expose a task identity or equivalent execution log, mark the panel
+receipt `NOT ASSESSABLE`; do not substitute a self-assigned label.
+
+The receipt validator checks recorded host identity and artifact closure. It
+does not cryptographically prove what happened inside a proprietary host.
 
 ## Required core roles
 
@@ -84,6 +90,11 @@ Confidence and reasons
 
 Every issue must include a manuscript anchor: section, quoted phrase, figure, table, supplement, or stable paragraph identifier. Never invent line numbers. Separate work required to establish the claim from optional work that merely strengthens presentation.
 
+Each reported issue must be transferable to `reviews/concern_ledger.tsv` with
+a unique concern ID, a cross-review issue key, review axis, severity, exact
+claim/evidence pointers, confidence, and a concrete resolution test. Use the
+controlled vocabulary in `concern-ledger-and-adjudication.md`.
+
 ## Synthesis
 
 After all reports finish, build a cross-review matrix with:
@@ -99,6 +110,11 @@ After all reports finish, build a cross-review matrix with:
 
 Do not decide by majority vote alone. A single well-grounded blocking issue can control the outcome. Do not average away a genuine disagreement; state what evidence would resolve it.
 
+Assign `CONSENSUS` only when at least two independent reviewers raised the same
+underlying issue. Preserve `DISAGREEMENT` as an explicit state. Treat pairwise
+issue-key overlap above 35% as a role-duplication warning, not a command to
+invent reviewer diversity.
+
 ## Review completion rule
 
 The panel is complete only when:
@@ -106,8 +122,10 @@ The panel is complete only when:
 - at least five independent reports exist
 - every required role is covered
 - every report uses the same frozen input hashes
+- every reviewer has a unique host task receipt and a verified report hash
 - no reviewer saw another review before submission
 - all `NOT ASSESSABLE` boundaries are retained
+- every actionable finding appears in the validated concern ledger
 - synthesis was created only after independent reports completed
 
 Then return one posture and pause before revision.

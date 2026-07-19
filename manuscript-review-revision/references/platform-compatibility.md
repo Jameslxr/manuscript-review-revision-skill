@@ -10,6 +10,7 @@ complete workflow only when it can:
 - inspect current official journal and scholarly sources;
 - execute the bundled Python validators;
 - create at least five real reviewer tasks with fresh, isolated contexts;
+- expose a host task identity or execution log for every reviewer run;
 - preserve review reports and the synthesis as separate artifacts.
 
 If a required capability is unavailable, mark the affected gate
@@ -39,6 +40,7 @@ python3 "$SKILL_ROOT/scripts/<script-name>.py" <arguments>
 | Need | Codex example | Claude Code example | Required behavior |
 |---|---|---|---|
 | Independent reviewers | collaboration/subagent delegation | non-fork `Agent` subagents | Fresh context for every reviewer; no earlier review in the task message |
+| Execution receipt | host task ID and task timestamps | Agent task ID or execution log | Unique task identity, receipt source, frozen-input hashes, timestamps, and report hash |
 | Current journal sources | Web, browser, or connected scholarly tools | Web search/fetch, browser, or MCP tools | Prefer official sources and record URLs plus access dates |
 | Manuscript and PDF reading | document/PDF capabilities when installed | native readers, Bash converters, or MCP tools | Inspect the supplied files; disclose unreadable components |
 | DOCX rendering | document renderer and PDF/image inspection | an available office converter, renderer, or MCP tool | Render and inspect every page; otherwise return `NOT ASSESSABLE` |
@@ -57,7 +59,8 @@ requirements above are authoritative; the example tool names are not.
 - Use normal `Agent` subagents with fresh isolated contexts for reviewer roles.
   Do not use a fork that inherits the parent conversation for an independent
   review seat.
-- Record the real Agent task ID in the panel plan when Claude Code exposes it.
+- Record the real Agent task ID or execution-log identity in the panel plan. If
+  neither is exposed, mark the panel receipt `NOT ASSESSABLE`.
 
 Claude Code documentation:
 
@@ -72,3 +75,12 @@ by other Agent Skills hosts. Codex-specific document, PDF, Nature, and figure
 Skills are optional accelerators rather than requirements. Use an equivalent
 capability when available; never silently lower a scientific or release gate
 because a named optional Skill is absent.
+
+## Receipt boundary
+
+`validate_review_panel.py` verifies that the recorded task identities are
+unique, timestamps are ordered, every reviewer used the same frozen input
+hashes, and every report matches its recorded hash. This is artifact-level
+verification, not cryptographic attestation by Codex, Claude Code, or another
+host. Do not describe it as proof of model identity, prompt privacy, or internal
+execution semantics.

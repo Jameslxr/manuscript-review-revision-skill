@@ -12,11 +12,11 @@ README_ZH = ROOT / "README.md"
 README_EN = ROOT / "README_EN.md"
 USAGE = ROOT / "docs" / "USAGE.md"
 SKILL_ENTRY = ROOT / "manuscript-review-revision" / "SKILL.md"
-PLATFORM_COMPATIBILITY = (
+CONCERN_LEDGER_VALIDATOR = (
     ROOT
     / "manuscript-review-revision"
-    / "references"
-    / "platform-compatibility.md"
+    / "scripts"
+    / "validate_concern_ledger.py"
 )
 MAX_README_LINES = 200
 LOCAL_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
@@ -24,9 +24,11 @@ VERSION_RE = re.compile(r"version-v(\d+\.\d+\.\d+)")
 
 
 def markdown_files() -> list[Path]:
-    files = [README_ZH, README_EN, ROOT / "ATTRIBUTION.md"]
+    files = [README_ZH, README_EN, ROOT / "ATTRIBUTION.md", SKILL_ENTRY]
     files.extend(sorted((ROOT / "docs").glob("*.md")))
-    files.append(PLATFORM_COMPATIBILITY)
+    files.extend(
+        sorted((ROOT / "manuscript-review-revision" / "references").glob("*.md"))
+    )
     return files
 
 
@@ -54,6 +56,11 @@ def main() -> int:
     for path in markdown_files():
         if not path.exists():
             errors.append(f"missing release document: {path.relative_to(ROOT)}")
+    if not CONCERN_LEDGER_VALIDATOR.is_file():
+        errors.append(
+            "missing concern-ledger validator: "
+            f"{CONCERN_LEDGER_VALIDATOR.relative_to(ROOT)}"
+        )
 
     if errors:
         for error in errors:
@@ -110,6 +117,15 @@ def main() -> int:
         errors.append(
             "SKILL.md does not load references/platform-compatibility.md."
         )
+    for required_reference in (
+        "references/review-panel-receipt-schema.md",
+        "references/concern-ledger-and-adjudication.md",
+        "references/biomedical-review-gates.md",
+    ):
+        if required_reference not in skill_entry:
+            errors.append(f"SKILL.md does not load {required_reference}.")
+    if "scripts/validate_concern_ledger.py" not in skill_entry:
+        errors.append("SKILL.md does not invoke scripts/validate_concern_ledger.py.")
 
     for path, text in ((README_ZH, zh), (README_EN, en)):
         line_count = len(text.splitlines())

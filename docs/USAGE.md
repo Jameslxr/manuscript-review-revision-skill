@@ -68,6 +68,7 @@ cp -R manuscript-review-revision "$HOME/.codex/skills/"
 - 能运行 Python 验证脚本；
 - 能访问当前期刊和学术来源；
 - 能创建至少 5 个真正独立的子 Agent。
+- 能提供每个 reviewer 的任务 ID 或可引用的执行日志。
 
 缺少某项关键能力时，相关阶段必须标记为 `NOT ASSESSABLE`。
 
@@ -154,7 +155,11 @@ Codex 使用 `$manuscript-review-revision`；Claude Code 将第一行替换为
 | Claude Code | 使用非 fork 的 `Agent` 子 Agent；每个 Agent 具有新的独立上下文 |
 | 其他宿主 | 必须提供等效的独立上下文任务；单次对话内模拟 5 个角色不算完成 |
 
-无论使用哪个宿主，所有审稿角色都必须接收相同稿件哈希、期刊档案和事实材料，并且在初审完成前看不到其他角色的结论。
+无论使用哪个宿主，所有审稿角色都必须接收相同稿件哈希、期刊档案和事实材料，并且在初审完成前看不到其他角色的结论。每个 reviewer 还必须记录唯一任务 ID、运行时间、输入哈希和报告哈希；缺少任务身份时，Panel 标记为 `NOT ASSESSABLE`。
+
+独立报告完成后，系统建立 `reviews/concern_ledger.tsv`。每条意见必须指向
+原文位置和证据位置，并给出可观察的解决标准。只有至少两个独立 reviewer
+提出同一问题时才能标记为共识；冲突意见不得被多数票抹平。
 
 ## 返修回复
 
@@ -185,6 +190,7 @@ Codex 使用 `$manuscript-review-revision`；Claude Code 将第一行替换为
 - 目标期刊未确定；
 - 关键稿件版本冲突；
 - 无法执行至少 5 个独立 Agent 任务；
+- 无法取得 reviewer 任务 ID/执行日志，或报告哈希无法闭环；
 - 期刊强制规则无法核实；
 - 参考文献只有 metadata，没有足以判断 Claim 支持的内容；
 - 作者尚未授权修改；

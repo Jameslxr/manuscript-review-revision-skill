@@ -6,7 +6,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.2.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.3.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -16,7 +16,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 | Review criteria vary across journals | Confirms the target journal, article type, and submission stage before setting the review criteria |
 | Editing too early can obscure unresolved scientific issues | Keeps the manuscript unchanged until the independent scientific review is complete |
 | A single review perspective can miss important problems | Uses at least five independent reviewer roles and may add a sixth for high-tier journals or high-risk studies |
-| Repeated reviews of the same manuscript by a general-purpose model may be inconsistent or internally contradictory | Fixes the manuscript version, journal requirements, and reviewer responsibilities; reviewers work independently before disagreements are recorded and synthesized under common rules |
+| Repeated reviews of the same manuscript by a general-purpose model may be inconsistent or internally contradictory | Freezes the manuscript, journal rules, and roles; records task receipts and output hashes before synthesizing consensus and disagreement concern by concern |
 | An existing reference may not support the statement where it is cited | Checks reference validity, citation format, and support for the specific statement separately |
 | Generated files may not follow standard manuscript conventions | Checks headings, sections, body styles, and the rendered DOCX or PDF pages |
 | Submission readiness cannot be judged when key evidence is missing | Reports the manuscript as failed or not assessable (`FAIL` / `NOT ASSESSABLE`) |
@@ -71,7 +71,7 @@ flowchart TB
     RULES["4 · Review the journal website<br/>and confirm current requirements"]
     CHECK["5 · Check that materials are complete<br/>text · figures · legends · supplements · references"]
     REVIEW["6 · At least 5 reviewers with different roles<br/>independently assess the same manuscript version"]
-    SUMMARY["7 · Combine the reviews<br/>must fix · important · minor · cannot yet assess"]
+    SUMMARY["7 · Record each concern and evidence location<br/>then synthesize consensus · disagreement · priority"]
     REPORT["8 · Provide the complete review report<br/>without changing the manuscript"]
     AUTH{"9 · Does the author authorize<br/>manuscript revision?"}
     STOP(["No: stop<br/>preserve the manuscript and review report"])
@@ -121,7 +121,7 @@ flowchart TB
     style S3 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
 ```
 
-Step 6 assigns at least five independent reviewer roles with separate responsibilities: journal fit, domain science, study design, statistics and reproducibility, and citation support. A sixth specialist may be added for a high-tier journal or a complex, high-risk study. Each reviewer forms an initial assessment from the same manuscript version before the reviews are combined. This independent-first design reduces cross-role influence and prevents the combined review from changing direction before each role has recorded its own assessment.
+Step 6 assigns at least five independent reviewer roles for journal fit, domain science, study design, statistics and reproducibility, and citation support. The workflow records each Agent's real task ID, timestamps, frozen-input hashes, and report hash. Every concern is then linked to manuscript and evidence locations before the root agent labels consensus, disagreement, and unique findings. A sixth specialist may be added for a high-tier journal or complex, high-risk study.
 
 [Read the full technical architecture](docs/ARCHITECTURE.md)
 
@@ -130,7 +130,7 @@ Step 6 assigns at least five independent reviewer roles with separate responsibi
 | Stage | Main files |
 |---|---|
 | Journal requirements | `00_input_inventory.json`, `01_journal_profile.json` |
-| Independent review | `reviews/reviewer_01.md` through `reviewer_05.md` or higher |
+| Independent review | `03_review_panel_plan.json`, reviewer reports, and `reviews/concern_ledger.tsv` |
 | Review synthesis | `04_cross_review_matrix.tsv`, `05_review_verdict.md` |
 | Reference audit | `06_reference_audit.tsv` |
 | Authorized revision | tracked manuscript, clean manuscript, `revision_log.tsv` |
@@ -139,7 +139,7 @@ Step 6 assigns at least five independent reviewer roles with separate responsibi
 ## Limitations
 
 - Full review does not begin until the target journal is fixed.
-- Fewer than five actual independent agent tasks cannot be reported as a completed multi-agent review.
+- Completion requires at least five independent Agent tasks with unique receipts, identical input hashes, and matching report hashes.
 - No revision, polishing, or formatting occurs without explicit author authorization.
 - The skill does not invent experiments, results, citations, journal rules, reviewer identities, or completed changes.
 - Search snippets, title similarity, and metadata-only results do not establish direct scientific support.
@@ -181,10 +181,11 @@ The current release is **Beta**. The workflow and its main risk controls are cov
 Current automated coverage includes:
 
 - unresolved mandatory journal rules cannot pass;
-- panels with fewer than five independent reviewer roles cannot pass;
+- panels with fewer than five Agents, duplicate task IDs, inconsistent inputs, or mismatched report hashes cannot pass;
+- one reviewer cannot label its own finding as consensus, and concerns require manuscript and evidence pointers;
 - metadata-only evidence cannot be labeled direct support;
 - blue or otherwise non-black manuscript headings fail;
-- complete audit records and compliant black headings can pass.
+- compliant black headings and complete audit records can pass.
 
 [Read the reproducible validation scope](docs/VALIDATION.md)
 
