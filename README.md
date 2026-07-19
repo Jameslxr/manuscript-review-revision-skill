@@ -6,7 +6,7 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.2.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.3.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## 简要说明
@@ -16,7 +16,7 @@
 | 不同期刊的审稿标准并不相同 | 先确认目标期刊、文章类型和投稿阶段，再确定相应的审稿要求 |
 | 过早润色可能掩盖尚未解决的科学问题 | 独立科学审稿完成前不修改原稿 |
 | 单一审稿视角可能遗漏重要问题 | 安排至少 5 个独立审稿角色；高水平期刊或高风险研究可增加第 6 个角色 |
-| 同一篇稿件多次交给通用大模型，审稿意见可能前后不一致，甚至相互矛盾 | 固定稿件版本、期刊要求和角色职责；各角色先独立审稿，再按统一规则汇总并记录分歧 |
+| 同一篇稿件多次交给通用大模型，审稿意见可能前后不一致，甚至相互矛盾 | 固定稿件、期刊要求和角色职责；记录每个 Agent 的任务收据和输出哈希，再逐条汇总共识与分歧 |
 | 文献存在并不代表它支持当前表述 | 分别核对文献真实性、引用格式及其对具体论断的支持程度 |
 | 输出文件可能不符合正式投稿的排版习惯 | 检查标题、章节、正文样式，并逐页查看 DOCX 或 PDF 的实际效果 |
 | 材料不足时无法判断稿件是否已具备投稿条件 | 关键证据缺失时明确判定为未通过或暂时无法评估（`FAIL` / `NOT ASSESSABLE`） |
@@ -71,7 +71,7 @@ flowchart TB
     RULES["4 · 查阅期刊官网<br/>确认文章类型和最新投稿要求"]
     CHECK["5 · 核对材料是否齐全<br/>正文 · 图表 · 图注 · 补充材料 · 参考文献"]
     REVIEW["6 · 安排至少 5 个分工不同的审稿角色<br/>分别审查同一版本稿件"]
-    SUMMARY["7 · 汇总审稿意见<br/>分为必须解决 · 重要 · 次要 · 暂时无法判断"]
+    SUMMARY["7 · 逐条记录问题与证据位置<br/>再汇总共识 · 分歧 · 处理优先级"]
     REPORT["8 · 向作者提交完整审稿报告<br/>原稿保持不变"]
     AUTH{"9 · 作者是否授权<br/>开始修改稿件？"}
     STOP(["未授权：停止<br/>保留原稿和审稿报告"])
@@ -121,7 +121,7 @@ flowchart TB
     style S3 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
 ```
 
-第 6 步包含至少 5 个分工不同、相互独立的审稿角色，分别负责期刊匹配、领域科学、研究设计、统计与可重复性，以及文献对具体表述的支持。对于高水平期刊或复杂、高风险研究，可增加第 6 个专项角色。所有角色基于同一版本稿件独立形成初审意见，之后再统一汇总。这种先独立、后汇总的安排可以减少角色间的相互影响，也避免系统在尚未形成独立意见时反复改变结论。
+第 6 步包含至少 5 个分工不同、相互独立的审稿角色，分别负责期刊匹配、领域科学、研究设计、统计与可重复性，以及文献对具体表述的支持。系统记录每个 Agent 的真实任务 ID、运行时间、输入与报告哈希；随后将每条问题连接到原文和证据位置，再区分共识、分歧和独有意见。对于高水平期刊或复杂、高风险研究，可增加第 6 个专项角色。
 
 [查看完整技术架构、角色配置和返回规则](docs/ARCHITECTURE.md)
 
@@ -130,7 +130,7 @@ flowchart TB
 | 工作阶段 | 主要文件 |
 |---|---|
 | 期刊要求整理 | `00_input_inventory.json`、`01_journal_profile.json` |
-| 独立审稿 | `reviews/reviewer_01.md` 至 `reviewer_05.md` 或更高 |
+| 独立审稿 | `03_review_panel_plan.json`、各 reviewer 报告、`reviews/concern_ledger.tsv` |
 | 审稿意见汇总 | `04_cross_review_matrix.tsv`、`05_review_verdict.md` |
 | 文献核查 | `06_reference_audit.tsv` |
 | 授权后的修改 | 带修订痕迹的稿件、清洁稿、`revision_log.tsv` |
@@ -139,7 +139,7 @@ flowchart TB
 ## 使用限制
 
 - 在目标期刊确定前，不开展完整审稿；
-- 只有实际运行至少 5 个相互独立的 Agent 任务，才会报告为已完成多角色独立审稿；
+- 只有至少 5 个独立 Agent 任务具有唯一任务收据、相同输入哈希和匹配的报告哈希，才会报告完成；
 - 未获得作者明确授权时，不修改、润色或重新排版原稿；
 - 不虚构实验、结果、文献、期刊要求、审稿人身份或并未完成的修改；
 - 搜索结果摘要、标题相似性或仅有元数据的记录，不能单独证明文献支持某项具体表述；
@@ -181,10 +181,11 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 当前自动测试覆盖：
 
 - 如果期刊的强制要求尚未核实，系统不会判定通过；
-- 少于 5 个独立审稿角色时，系统不会判定通过；
+- 少于 5 个独立 Agent、任务 ID 重复、输入不一致或报告哈希不匹配时，Panel 不会通过；
+- 单个 reviewer 不能把自己的意见标记为共识；问题必须指向原文与证据位置；
 - 仅有文献元数据时，不能标记为直接支持；
 - 标题或章节使用蓝色等非黑色样式时，格式检查不通过；
-- 标题为黑色且审计记录完整时，可以通过相应检查。
+- 合规的黑色标题和完整审计记录可以通过相应检查。
 
 [查看可复现验证命令与边界](docs/VALIDATION.md)
 

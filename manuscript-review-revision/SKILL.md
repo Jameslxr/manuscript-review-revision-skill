@@ -29,7 +29,8 @@ before using tools or bundled scripts.
   Tool names are examples, not requirements.
 - For full review, use the host's real non-fork subagent/delegation mechanism
   with a fresh isolated context for every reviewer.
-- Record actual host-provided Agent task IDs when available.
+- Record actual host-provided Agent task IDs, timestamps, frozen-input hashes,
+  and report hashes as the review execution receipt.
 - If a required capability is unavailable, mark the affected gate
   `NOT ASSESSABLE`; do not imitate a completed capability in one conversation.
 
@@ -81,19 +82,29 @@ If the user supplies a target and manuscript but no mode, default to `scientific
 
 ## Step 3: run the independent reviewer panel
 
-Load [references/multi-agent-review.md](references/multi-agent-review.md) and [references/journal-tier-rubrics.md](references/journal-tier-rubrics.md) completely.
+Load [references/multi-agent-review.md](references/multi-agent-review.md),
+[references/journal-tier-rubrics.md](references/journal-tier-rubrics.md), and
+[references/review-panel-receipt-schema.md](references/review-panel-receipt-schema.md),
+[references/concern-ledger-and-adjudication.md](references/concern-ledger-and-adjudication.md)
+completely. Load the applicable sections of
+[references/biomedical-review-gates.md](references/biomedical-review-gates.md).
 
 - Spawn at least five actual independent reviewer agents with the host's
   non-fork, isolated subagent/delegation mechanism when available.
 - Use five reviewer agents plus a root synthesis; do not count the root synthesis as a reviewer.
 - For high-tier or complex manuscripts, add a sixth specialist or adversarial reviewer.
 - Run agents in waves when concurrency is limited; never reduce the reviewer count to fit one wave.
-- Give every reviewer the same frozen manuscript, inventory, factual journal profile, and role-specific rubric.
+- Give every reviewer the same frozen manuscript, inventory, factual journal
+  profile, shared fact base, and role-specific rubric.
 - Do not expose one reviewer's output to another before all independent reports finish.
 - Use functional review lenses, not fabricated human biographies.
 - If actual agent delegation is unavailable, do not claim multi-agent review completion. Mark the panel gate `NOT ASSESSABLE` and ask before using isolated single-agent passes as a fallback.
 
-Create `02_shared_fact_base.md`, `03_review_panel_plan.json`, and `reviews/reviewer_01.md` through `reviews/reviewer_05.md` or higher. Validate:
+Create `02_shared_fact_base.md`, `03_review_panel_plan.json`, and
+`reviews/reviewer_01.md` through `reviews/reviewer_05.md` or higher. The panel
+plan must use schema `2.0` and close every reviewer against a unique host task
+ID, `FRESH_NON_FORK` context, start/end time, the three frozen input hashes, and
+the resulting report hash. Validate:
 
 ```bash
 python3 "$SKILL_ROOT/scripts/validate_review_panel.py" 03_review_panel_plan.json
@@ -101,7 +112,15 @@ python3 "$SKILL_ROOT/scripts/validate_review_panel.py" 03_review_panel_plan.json
 
 ## Step 4: synthesize, decide, and pause
 
-Consolidate without averaging away disagreements. Create:
+After all independent reports are frozen, create and validate
+`reviews/concern_ledger.tsv`:
+
+```bash
+python3 "$SKILL_ROOT/scripts/validate_concern_ledger.py" \
+  reviews/concern_ledger.tsv 03_review_panel_plan.json
+```
+
+Then consolidate without averaging away disagreements. Create:
 
 - `04_cross_review_matrix.tsv`
 - `05_review_verdict.md`
@@ -179,6 +198,7 @@ Use this stable order when the corresponding phase runs:
 02_shared_fact_base.md
 03_review_panel_plan.json
 reviews/reviewer_01.md ...
+reviews/concern_ledger.tsv
 04_cross_review_matrix.tsv
 05_review_verdict.md
 06_reference_audit.tsv
@@ -200,6 +220,9 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 | [references/journal-discovery-and-profile.md](references/journal-discovery-and-profile.md) | Target journal is unknown or any journal-specific task begins |
 | [references/multi-agent-review.md](references/multi-agent-review.md) | Planning, running, or synthesizing reviewer agents |
 | [references/journal-tier-rubrics.md](references/journal-tier-rubrics.md) | Calibrating reviewer strictness or selecting specialist roles |
+| [references/review-panel-receipt-schema.md](references/review-panel-receipt-schema.md) | Building and validating host task receipts and report hashes |
+| [references/concern-ledger-and-adjudication.md](references/concern-ledger-and-adjudication.md) | Normalizing findings, evidence anchors, consensus, disagreement, and resolution |
+| [references/biomedical-review-gates.md](references/biomedical-review-gates.md) | Applying design-specific clinical, wet-lab, omics, AI, review, or animal stress tests |
 | [references/reference-integrity.md](references/reference-integrity.md) | Auditing, adding, moving, or formatting citations |
 | [references/revision-and-response.md](references/revision-and-response.md) | Revising a manuscript or responding to reviewers |
 | [references/manuscript-formatting.md](references/manuscript-formatting.md) | Creating or checking DOCX/PDF/LaTeX submission files |

@@ -19,14 +19,21 @@ python3 -m unittest discover \
   -v
 ```
 
-The current suite contains six representative tests covering:
+The current suite contains 12 representative tests covering:
 
 1. a complete journal profile passes;
 2. a journal profile with an unresolved mandatory rule fails;
-3. a five-agent independent panel passes;
-4. direct citation support passes only with full evidence;
-5. metadata-only evidence cannot be labeled direct support;
-6. blue or otherwise non-black manuscript headings fail the DOCX style audit,
+3. a five-Agent panel with complete task receipts passes;
+4. duplicate host task IDs fail;
+5. a report hash that does not match the saved report fails;
+6. a valid concern ledger with independently supported consensus passes;
+7. one reviewer cannot label a finding as consensus;
+8. located evidence without a specific pointer fails;
+9. high cross-review overlap produces a diagnostic warning rather than invented
+   reviewer diversity;
+10. direct citation support passes only with full evidence;
+11. metadata-only evidence cannot be labeled direct support;
+12. blue or otherwise non-black manuscript headings fail the DOCX style audit,
    while a plain black manuscript passes.
 
 ## Syntax checks
@@ -53,6 +60,8 @@ This check confirms that:
 - Codex and Claude Code installation paths remain present in the bilingual
   README files and usage guide;
 - the Skill entrypoint loads the platform-compatibility contract.
+- the Skill entrypoint loads the receipt schema, concern-ledger contract, and
+  biomedical review gates.
 
 ## Manual forward test
 
@@ -68,7 +77,8 @@ Expected behavior:
 
 - the target journal is fixed before full review;
 - six independent functional reviewer roles are selected for the journal tier;
-- the panel validator accepts the completed panel;
+- the panel validator accepts completed execution receipts and report hashes;
+- the concern-ledger validator accepts evidence-anchored consensus and disagreement;
 - the synthesis reports major scientific rework when warranted;
 - manuscript revision does not begin before explicit author authorization.
 
@@ -82,3 +92,5 @@ They do not prove that every scientific judgment is correct, that every journal
 website is reachable, that every compatible host exposes equivalent tools, or
 that a submitted manuscript will be accepted. A host without five real
 isolated subagent tasks cannot claim completion of the multi-agent review gate.
+Task receipts verify recorded host identities and artifact closure; they are
+not cryptographic attestation of a host's internal execution.

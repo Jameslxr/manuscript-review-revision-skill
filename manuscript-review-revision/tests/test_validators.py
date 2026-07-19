@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import subprocess
 import sys
@@ -17,6 +18,30 @@ from docx.shared import RGBColor
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = SKILL_ROOT / "scripts"
+CORE_ROLES = [
+    "journal-priority",
+    "domain-science",
+    "study-design",
+    "statistics-reproducibility",
+    "claim-evidence-reference",
+]
+CONCERN_COLUMNS = [
+    "concern_id",
+    "issue_key",
+    "reviewer_id",
+    "role_id",
+    "axis",
+    "severity",
+    "claim_pointer",
+    "evidence_pointer",
+    "evidence_status",
+    "concern",
+    "resolution_test",
+    "journal_gate",
+    "confidence",
+    "consensus_status",
+    "disposition",
+]
 
 
 def run_script(name: str, *args: object) -> subprocess.CompletedProcess[str]:
@@ -26,6 +51,108 @@ def run_script(name: str, *args: object) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         check=False,
     )
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def write_panel(
+    root: Path, *, duplicate_task: bool = False, corrupt_report_hash: bool = False
+) -> Path:
+    frozen_hashes = {
+        "manuscript_sha256": "a" * 64,
+        "journal_profile_sha256": "b" * 64,
+        "shared_fact_base_sha256": "c" * 64,
+    }
+    reviewers = []
+    for index, role in enumerate(CORE_ROLES, start=1):
+        report = root / f"reviewer_{index:02d}.md"
+        report.write_text(
+            f"# Reviewer {index}\n\nEvidence-based report for {role}.\n",
+            encoding="utf-8",
+        )
+        task_number = 1 if duplicate_task and index == 2 else index
+        reviewers.append(
+            {
+                "agent_id": f"agent-{index}",
+                "host_task_id": f"host-task-{task_number}",
+                "receipt_source": "HOST_NATIVE",
+                "context_mode": "FRESH_NON_FORK",
+                "role_id": role,
+                "role": role.replace("-", " "),
+                "independent": True,
+                "saw_other_reviews": False,
+                "status": "COMPLETED",
+                "started_at": f"2026-07-19T10:0{index}:00-05:00",
+                "completed_at": f"2026-07-19T10:1{index}:00-05:00",
+                "input_hashes": frozen_hashes,
+                "report_path": report.name,
+                "report_sha256": (
+                    "d" * 64
+                    if corrupt_report_hash and index == 1
+                    else file_sha256(report)
+                ),
+            }
+        )
+    panel = root / "panel.json"
+    panel.write_text(
+        json.dumps(
+            {
+                "panel_schema_version": "2.0",
+                "skill_version": "1.3.0",
+                "host": "Test Host",
+                "host_version": "1.0",
+                "target_journal": "Example Journal",
+                "article_type": "Original Article",
+                **frozen_hashes,
+                "execution_mode": "independent_agents",
+                "root_is_reviewer": False,
+                "synthesis_started_before_reviews_completed": False,
+                "reviewers": reviewers,
+            }
+        ),
+        encoding="utf-8",
+    )
+    return panel
+
+
+def write_concern_ledger(path: Path, rows: list[dict[str, str]]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=CONCERN_COLUMNS, delimiter="\t")
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def concern_row(
+    concern_id: str,
+    issue_key: str,
+    reviewer_number: int,
+    role_id: str,
+    *,
+    consensus_status: str = "UNIQUE",
+    evidence_status: str = "LOCATED",
+    evidence_pointer: str = "Results > Validation, paragraph 2",
+) -> dict[str, str]:
+    return {
+        "concern_id": concern_id,
+        "issue_key": issue_key,
+        "reviewer_id": f"agent-{reviewer_number}",
+        "role_id": role_id,
+        "axis": "experimental-design",
+        "severity": "MAJOR",
+        "claim_pointer": "Discussion, paragraph 1: external validity",
+        "evidence_pointer": evidence_pointer,
+        "evidence_status": evidence_status,
+        "concern": "The stated generalization exceeds the tested cohort.",
+        "resolution_test": "Narrow the claim or add an independent external cohort.",
+        "journal_gate": "evidence threshold",
+        "confidence": "0.9",
+        "consensus_status": consensus_status,
+        "disposition": (
+            "NOT_ASSESSABLE" if evidence_status == "NOT_ASSESSABLE" else "OPEN"
+        ),
+    }
 
 
 class ValidatorTests(unittest.TestCase):
@@ -110,47 +237,140 @@ class ValidatorTests(unittest.TestCase):
     def test_five_agent_panel_passes(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            roles = [
-                "journal-priority",
-                "domain-science",
-                "study-design",
-                "statistics-reproducibility",
-                "claim-evidence-reference",
-            ]
-            reviewers = []
-            for index, role in enumerate(roles, start=1):
-                report = root / f"reviewer_{index:02d}.md"
-                report.write_text(f"# Reviewer {index}\n\nEvidence-based report.\n")
-                reviewers.append(
-                    {
-                        "agent_id": f"agent-{index}",
-                        "role_id": role,
-                        "role": role.replace("-", " "),
-                        "independent": True,
-                        "saw_other_reviews": False,
-                        "status": "COMPLETED",
-                        "report_path": report.name,
-                    }
-                )
-            panel = root / "panel.json"
-            panel.write_text(
-                json.dumps(
-                    {
-                        "target_journal": "Example Journal",
-                        "article_type": "Original Article",
-                        "manuscript_sha256": "a" * 64,
-                        "journal_profile_sha256": "b" * 64,
-                        "execution_mode": "independent_agents",
-                        "root_is_reviewer": False,
-                        "synthesis_started_before_reviews_completed": False,
-                        "reviewers": reviewers,
-                    }
-                ),
-                encoding="utf-8",
-            )
+            panel = write_panel(root)
             result = run_script("validate_review_panel.py", panel)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("Reviewer agents: 5", result.stdout)
+            self.assertIn("Validated receipts: 5", result.stdout)
+
+    def test_duplicate_task_id_and_inconsistent_input_fail(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root, duplicate_task=True)
+            result = run_script("validate_review_panel.py", panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("Duplicate host_task_id", result.stdout)
+
+            panel = write_panel(root)
+            content = json.loads(panel.read_text(encoding="utf-8"))
+            content["reviewers"][0]["input_hashes"]["manuscript_sha256"] = "f" * 64
+            panel.write_text(json.dumps(content), encoding="utf-8")
+            result = run_script("validate_review_panel.py", panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("does not match the frozen panel input", result.stdout)
+
+    def test_report_hash_mismatch_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            panel = write_panel(Path(temp), corrupt_report_hash=True)
+            result = run_script("validate_review_panel.py", panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("report_sha256 does not match", result.stdout)
+
+    def test_concern_ledger_passes_with_valid_consensus(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            rows = [
+                concern_row(
+                    "C001",
+                    "external-validation",
+                    2,
+                    "domain-science",
+                    consensus_status="CONSENSUS",
+                ),
+                concern_row(
+                    "C002",
+                    "external-validation",
+                    3,
+                    "study-design",
+                    consensus_status="CONSENSUS",
+                ),
+                concern_row(
+                    "C003",
+                    "multiplicity",
+                    4,
+                    "statistics-reproducibility",
+                ),
+            ]
+            write_concern_ledger(ledger, rows)
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Concern ledger validation: PASS", result.stdout)
+            self.assertIn("Consensus / disagreement / unique: 1 / 0 / 1", result.stdout)
+
+    def test_single_reviewer_cannot_claim_consensus(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            write_concern_ledger(
+                ledger,
+                [
+                    concern_row(
+                        "C001",
+                        "external-validation",
+                        3,
+                        "study-design",
+                        consensus_status="CONSENSUS",
+                    )
+                ],
+            )
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("fewer than two reviewers", result.stdout)
+
+    def test_located_evidence_requires_pointer(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            write_concern_ledger(
+                ledger,
+                [
+                    concern_row(
+                        "C001",
+                        "external-validation",
+                        3,
+                        "study-design",
+                        evidence_pointer="",
+                    )
+                ],
+            )
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("requires a specific evidence_pointer", result.stdout)
+
+    def test_high_overlap_warns_without_inventing_diversity(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            rows = []
+            for issue_number in range(1, 4):
+                issue_key = f"shared-{issue_number}"
+                rows.extend(
+                    [
+                        concern_row(
+                            f"C{issue_number}A",
+                            issue_key,
+                            2,
+                            "domain-science",
+                            consensus_status="CONSENSUS",
+                        ),
+                        concern_row(
+                            f"C{issue_number}B",
+                            issue_key,
+                            3,
+                            "study-design",
+                            consensus_status="CONSENSUS",
+                        ),
+                    ]
+                )
+            write_concern_ledger(ledger, rows)
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("WARNING: Reviewer pair agent-2/agent-3", result.stdout)
 
     def test_reference_direct_support_passes_only_with_full_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
