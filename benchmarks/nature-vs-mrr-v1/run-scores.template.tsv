@@ -1,0 +1,5 @@
+system	run_id	detected_issue_ids	unsupported_concern_count	precision_non_invention	traceability	resolution_quality	consistency	journal_calibration	auditability	posture	notes
+System A	A1	G01;G02	0	0	0	0	0	0	0	UNSCORED	Replace with blinded evaluator scores.
+System A	A2	G01;G02	0	0	0	0	0	0	0	UNSCORED	Replace with blinded evaluator scores.
+System B	B1	G01;G02	0	0	0	0	0	0	0	UNSCORED	Replace with blinded evaluator scores.
+System B	B2	G01;G02	0	0	0	0	0	0	0	UNSCORED	Replace with blinded evaluator scores.

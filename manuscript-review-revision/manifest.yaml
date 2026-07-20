@@ -1,0 +1,31 @@
+name: manuscript-review-revision
+version: 1.4.0
+description: >
+  Declarative routing manifest for journal-aware, review-first manuscript
+  assessment and authorized revision across compatible Agent Skills hosts.
+
+always_load:
+  - references/platform-compatibility.md
+
+references:
+  on_demand:
+    - condition: target journal is unknown or journal requirements must be refreshed
+      path: references/journal-discovery-and-profile.md
+    - condition: planning, dispatching, validating, or synthesizing independent reviewer agents
+      path: references/multi-agent-review.md
+    - condition: calibrating editorial strictness or selecting the optional specialist seat
+      path: references/journal-tier-rubrics.md
+    - condition: creating or validating panel receipts, axis ownership, or report budgets
+      path: references/review-panel-receipt-schema.md
+    - condition: creating the concern ledger, consensus states, or resolution tests
+      path: references/concern-ledger-and-adjudication.md
+    - condition: applying clinical, experimental, omics, biomarker, AI, review, or animal gates
+      path: references/biomedical-review-gates.md
+    - condition: verifying reference reality, placement, format, or exact claim support
+      path: references/reference-integrity.md
+    - condition: revising a manuscript or responding to reviewer comments after authorization
+      path: references/revision-and-response.md
+    - condition: creating or checking a DOCX, PDF, LaTeX, or submission package
+      path: references/manuscript-formatting.md
+    - condition: deciding final submission readiness
+      path: references/release-gates.md

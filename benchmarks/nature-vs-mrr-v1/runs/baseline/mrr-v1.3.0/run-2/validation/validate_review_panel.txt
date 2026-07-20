@@ -1,0 +1,7 @@
+Review panel validation: PASS
+Target journal: Nature
+Reviewer agents: 6
+Completed: 6
+Validated receipts: 6
+Roles: claim-evidence-reference, domain-science, figure-narrative-reporting, journal-priority, statistics-reproducibility, study-design
+WARNING: Panel includes 6 reviewers; minimum is 5.

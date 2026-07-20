@@ -1,0 +1,19 @@
+issue_id	detected	evidence_pointer	evaluator_note
+G01	1	I10; SR-02; SD-02; CE-02	The package states that all feature selection, cutoffs, coefficient signs, and missing-value rules used all 72 patients before the split, so the subset is not independent and performance is optimistically biased.
+G02	1	I11; SR-01	The package states that 46,218 cells from eight patients were treated as independent observations and requires patient-level pseudobulk or mixed-model inference.
+G03	1	I13; SR-04	The package states that 31 deaths were used with 27 genes plus 18 covariates, stepwise selection, no sample-size rationale, and no stability or optimism correction.
+G04	1	I12; SR-03; CE-01	The package states that median survivor follow-up was 18 months, many three-year outcomes were unavailable, and a censoring-aware time-dependent estimand with at-risk counts is required.
+G05	1	I07; DS-04; AR-01	The package states that the eight-tumour cross-sectional EVA1/T-cell-score association cannot establish exclusion, direction, or temporal order.
+G06	1	I03; DS-01; SD-04; CE-03; AR-02	The package states that one guide without an independent perturbation, rescue, target engagement, or immune-cell assay cannot establish EVA1-specific immune causality.
+G07	1	I04; DS-02; SD-05; SR-06; AR-03	The package states that five-per-group cage-order allocation, unblinded measurement, no replicate, and universal anti-PD-1 exposure cannot isolate sensitization; it requires a randomized, blinded, replicated 2-by-2 design.
+G08	1	I12; SR-03; CE-01	The package explicitly reconciles the conflicting 0.91, 0.84, and 0.86 AUC values as an unresolved internal inconsistency.
+G09	1	I02; JP-02; SD-01; CE-05; AR-04	The package states that a retrospective resection-survival cohort without treatment comparison, calibration, clinical baselines, decision analysis, or treatment interaction cannot support actionability or anti-PD-1 selection.
+G10	1	I11; SR-01	The package states that nominal screening of thousands of genes without FDR control invalidates the candidate pool and requires multiplicity-controlled inference.
+G11	1	I09; SD-06	The package states that committee and protocol identifiers, consent or waiver, animal approval, and humane endpoints are unreported and therefore governance cannot be verified, without asserting that approval was absent.
+G12	1	I14; SR-05	The package states that absent raw and processed data, coefficients, code, seeds, versions, and analysis data prevent independent reconstruction and audit.
+G13	1	I05; JP-04	The package states that the “none” and “first” claims are unsupported by the supplied two-reference packet and correctly leaves field-wide priority NOT ASSESSABLE pending a comparative literature analysis.
+G14	1	I15; I16; CE-06; CE-07	The package separately identifies the visible mismatch between reference 1 and the field-wide negative claim and between reference 2 and score-specific anti-PD-1 monotherapy benefit, while reserving exact full-text support as not assessable.
+G15	1	I01; JP-01; DS-06; SD-03; AR-06	The package states that one virally enriched centre, two cell lines, and one Huh7 xenograft do not support universal application across aetiologies or treatment settings.
+G16	1	I13; SR-04	The package explicitly identifies missing confidence intervals and an unchecked proportional-hazards assumption and requires intervals and PH diagnostics.
+G17	1	I17; CE-08; I11; SR-01	The package identifies missing biological-unit definitions, denominators, group sizes, and uncertainty in the legends and separately identifies the cell-versus-patient unit problem, requiring patient-aware summaries and complete reporting.
+G18	1	I01; JP-01; 05_review_verdict.md	The package applies Nature’s interdisciplinary outstanding-importance bar, finds the current breadth insufficient, and presents a scientific fit posture rather than a certain editorial decision.

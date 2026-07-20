@@ -6,7 +6,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.3.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.4.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -15,7 +15,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 |---|---|
 | Review criteria vary across journals | Confirms the target journal, article type, and submission stage before setting the review criteria |
 | Editing too early can obscure unresolved scientific issues | Keeps the manuscript unchanged until the independent scientific review is complete |
-| A single review perspective can miss important problems | Uses at least five independent reviewer roles and may add a sixth for high-tier journals or high-risk studies |
+| A single review perspective can miss important problems | Uses five fixed independent roles, at most one risk-triggered specialist, and explicit scope and output budgets |
 | Repeated reviews of the same manuscript by a general-purpose model may be inconsistent or internally contradictory | Freezes the manuscript, journal rules, and roles; records task receipts and output hashes before synthesizing consensus and disagreement concern by concern |
 | An existing reference may not support the statement where it is cited | Checks reference validity, citation format, and support for the specific statement separately |
 | Generated files may not follow standard manuscript conventions | Checks headings, sections, body styles, and the rendered DOCX or PDF pages |
@@ -70,7 +70,7 @@ flowchart TB
     PICK["3B · The author selects 1 target journal"]
     RULES["4 · Review the journal website<br/>and confirm current requirements"]
     CHECK["5 · Check that materials are complete<br/>text · figures · legends · supplements · references"]
-    REVIEW["6 · At least 5 reviewers with different roles<br/>independently assess the same manuscript version"]
+    REVIEW["6 · Five core roles and at most one specialist<br/>independently review assigned risk surfaces"]
     SUMMARY["7 · Record each concern and evidence location<br/>then synthesize consensus · disagreement · priority"]
     REPORT["8 · Provide the complete review report<br/>without changing the manuscript"]
     AUTH{"9 · Does the author authorize<br/>manuscript revision?"}
@@ -121,7 +121,7 @@ flowchart TB
     style S3 fill:#FFFFFF,stroke:#CBD5E1,stroke-width:1px
 ```
 
-Step 6 assigns at least five independent reviewer roles for journal fit, domain science, study design, statistics and reproducibility, and citation support. The workflow records each Agent's real task ID, timestamps, frozen-input hashes, and report hash. Every concern is then linked to manuscript and evidence locations before the root agent labels consensus, disagreement, and unique findings. A sixth specialist may be added for a high-tier journal or complex, high-risk study.
+Step 6 assigns five fixed independent roles for journal fit, domain science, study design, statistics and reproducibility, and citation support. The workflow records each Agent's real task ID, timestamps, frozen-input hashes, and report hash. Every concern is linked to manuscript and evidence locations before synthesis. A high-risk study may add only one specialist; each seat is limited to eight prioritized concerns and 1,800 word-equivalent units to prevent repeated whole-manuscript reviews.
 
 [Read the full technical architecture](docs/ARCHITECTURE.md)
 
@@ -139,7 +139,7 @@ Step 6 assigns at least five independent reviewer roles for journal fit, domain 
 ## Limitations
 
 - Full review does not begin until the target journal is fixed.
-- Completion requires at least five independent Agent tasks with unique receipts, identical input hashes, and matching report hashes.
+- A panel has five core seats and at most one explicitly triggered specialist; completion requires closed task receipts, input/report hashes, and one primary owner for every review axis.
 - No revision, polishing, or formatting occurs without explicit author authorization.
 - The skill does not invent experiments, results, citations, journal rules, reviewer identities, or completed changes.
 - Search snippets, title similarity, and metadata-only results do not establish direct scientific support.
@@ -176,12 +176,12 @@ Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/
 
 ## Current Status And Validation
 
-The current release is **Beta**. The workflow and its main risk controls are covered by automated tests, and the complete 6-agent process has been exercised with a simulated hepatocellular-carcinoma manuscript. These tests show that the workflow operates as designed; they do not guarantee that every domain judgment, journal-page interpretation, or citation-support decision will be correct for every manuscript.
+The current release is **Beta**. Its main controls are automated. In two blinded runs on the same synthetic hepatocellular-carcinoma manuscript, this Skill detected all 18 seeded issues; one Nature-comparator run missed two. A separate 1.4.0 run preserved 18/18 detection while reducing raw review volume by 60%–69%. These results are limited to this forward test and are not a universal model-performance claim. Methods, raw outputs, and optimization evidence are in `benchmarks/nature-vs-mrr-v1/`.
 
 Current automated coverage includes:
 
 - unresolved mandatory journal rules cannot pass;
-- panels with fewer than five Agents, duplicate task IDs, inconsistent inputs, or mismatched report hashes cannot pass;
+- panels with fewer than five Agents, a seventh reviewer, duplicate task IDs, mismatched axis ownership, inconsistent hashes, or an over-budget seat cannot pass; a verdict above 900 word-equivalent units or containing multiple postures also fails;
 - one reviewer cannot label its own finding as consensus, and concerns require manuscript and evidence pointers;
 - metadata-only evidence cannot be labeled direct support;
 - blue or otherwise non-black manuscript headings fail;

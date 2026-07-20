@@ -1,0 +1,62 @@
+{
+  "status": "PASS",
+  "answer_key_issue_count": 18,
+  "answer_key_total_weight": 42,
+  "blind_mapping_revealed_after_scoring": {
+    "System A": "manuscript-review-revision v1.3.0",
+    "System B": "nature-reviewer v1.1.0"
+  },
+  "systems": {
+    "System A": {
+      "average_total_score": 98.0,
+      "issue_jaccard": 1.0,
+      "posture_agreement": true,
+      "total_score_spread": 0.0,
+      "runs": {
+        "A1": {
+          "total_score": 98.0,
+          "detected_issue_count": 18,
+          "unsupported_concern_count": 0
+        },
+        "A2": {
+          "total_score": 98.0,
+          "detected_issue_count": 18,
+          "unsupported_concern_count": 0
+        }
+      }
+    },
+    "System B": {
+      "average_total_score": 93.928,
+      "issue_jaccard": 0.889,
+      "posture_agreement": true,
+      "total_score_spread": 2.143,
+      "runs": {
+        "B1": {
+          "total_score": 95.0,
+          "detected_issue_count": 18,
+          "unsupported_concern_count": 0
+        },
+        "B2": {
+          "total_score": 92.857,
+          "detected_issue_count": 16,
+          "missed_issue_ids": ["G16", "G17"],
+          "unsupported_concern_count": 0
+        }
+      }
+    }
+  },
+  "post_optimization": {
+    "system": "manuscript-review-revision v1.4.0",
+    "run_count": 1,
+    "total_score": 100.0,
+    "detected_issue_count": 18,
+    "answer_key_issue_count": 18,
+    "unsupported_concern_count": 0,
+    "raw_review_word_equivalent_units": 8379,
+    "concern_count": 36,
+    "normalized_issue_count": 18,
+    "maximum_pair_overlap": 0.75,
+    "verdict_word_equivalent_units": 450,
+    "stability_estimate": false
+  }
+}

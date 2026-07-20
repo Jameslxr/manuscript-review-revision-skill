@@ -1,0 +1,7 @@
+Review panel validation: PASS
+Target journal: Nature
+Reviewer agents: 7
+Completed: 7
+Validated receipts: 7
+Roles: adversarial-causal-chain, claim-evidence-reference, domain-science, figure-narrative-reporting, journal-priority, statistics-reproducibility, study-design
+WARNING: Panel includes 7 reviewers; minimum is 5.

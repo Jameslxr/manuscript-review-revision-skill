@@ -1,0 +1,39 @@
+{
+  "run_id": "post_v1_4_nature_run_1",
+  "skill_version": "1.4.0",
+  "target_journal": "Nature",
+  "article_type": "Article",
+  "submission_stage": "initial",
+  "reviewer_count": 6,
+  "core_reviewer_count": 5,
+  "optional_reviewer_count": 1,
+  "optional_seat": "adversarial-review",
+  "optional_seat_trigger": "fragile causal and clinical-utility chain",
+  "sequential_execution_waves": 6,
+  "reviewer_report_word_equivalent_units": [
+    1242,
+    1267,
+    1384,
+    1505,
+    1498,
+    1483
+  ],
+  "reviewer_report_unit_total": 8379,
+  "concern_count": 36,
+  "normalized_issue_count": 18,
+  "concern_to_issue_ratio": 2.0,
+  "consensus_issue_count": 7,
+  "disagreement_issue_count": 0,
+  "unique_issue_count": 11,
+  "maximum_pair_overlap": 0.75,
+  "verdict_word_equivalent_units": 450,
+  "posture": "MAJOR_SCIENTIFIC_REWORK_REQUIRED",
+  "validators": {
+    "journal_profile": "PASS",
+    "review_panel": "PASS",
+    "concern_ledger": "PASS_WITH_OVERLAP_WARNINGS",
+    "review_verdict": "PASS"
+  },
+  "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+  "manuscript_modified": false
+}

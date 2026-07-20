@@ -1,0 +1,108 @@
+{
+  "target_journal": "Nature",
+  "article_type": "Article",
+  "submission_stage": "initial",
+  "accessed_at": "2026-07-20",
+  "profile_status": "PASS",
+  "journal_tier": "broad flagship",
+  "official_sources": [
+    {
+      "title": "Editorial criteria and processes",
+      "url": "https://www.nature.com/nature/for-authors/editorial-criteria-and-processes",
+      "accessed_at": "2026-07-20",
+      "official": true
+    },
+    {
+      "title": "Initial submission",
+      "url": "https://www.nature.com/nature/for-authors/initial-submission",
+      "accessed_at": "2026-07-20",
+      "official": true
+    },
+    {
+      "title": "Formatting guide",
+      "url": "https://www.nature.com/nature/for-authors/formatting-guide",
+      "accessed_at": "2026-07-20",
+      "official": true
+    },
+    {
+      "title": "Policies and processes for referees",
+      "url": "https://www.nature.com/nature/for-referees/policies-and-processes",
+      "accessed_at": "2026-07-20",
+      "official": true
+    }
+  ],
+  "requirements": [
+    {
+      "id": "N001",
+      "category": "editorial-criteria",
+      "text": "An Article should report original research of outstanding scientific importance and reach a conclusion of interest to an interdisciplinary readership.",
+      "source_url": "https://www.nature.com/nature/for-authors/editorial-criteria-and-processes",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "N002",
+      "category": "peer-review-criteria",
+      "text": "Referees should assess technical soundness, strength of evidence, novelty, field importance, and interest to a general scientific audience without claiming the final editorial decision.",
+      "source_url": "https://www.nature.com/nature/for-referees/policies-and-processes",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "N003",
+      "category": "length",
+      "text": "A typical Article uses an approximately 200-word summary and approximately 2,500 main-text words for six pages or 4,300 words for eight pages.",
+      "source_url": "https://www.nature.com/nature/for-authors/initial-submission",
+      "applies_to": "initial",
+      "mandatory": false,
+      "status": "MET"
+    },
+    {
+      "id": "N004",
+      "category": "display-items",
+      "text": "A typical Article uses four modest display items for six pages or five to six for eight pages.",
+      "source_url": "https://www.nature.com/nature/for-authors/initial-submission",
+      "applies_to": "initial",
+      "mandatory": false,
+      "status": "MET"
+    },
+    {
+      "id": "N005",
+      "category": "references",
+      "text": "As a guideline, an Article may use up to 50 references within the allocated page budget.",
+      "source_url": "https://www.nature.com/nature/for-authors/initial-submission",
+      "applies_to": "initial",
+      "mandatory": false,
+      "status": "MET"
+    },
+    {
+      "id": "N006",
+      "category": "methods",
+      "text": "Methods should contain the elements necessary to interpret and replicate the results.",
+      "source_url": "https://www.nature.com/nature/for-authors/initial-submission",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "N007",
+      "category": "manuscript-order",
+      "text": "The submission sequence includes title, authors, affiliations, summary paragraph, main text, references, tables, legends, methods, data and code availability, and required declarations.",
+      "source_url": "https://www.nature.com/nature/for-authors/formatting-guide",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "N008",
+      "category": "initial-file",
+      "text": "Nature encourages text and figures to be combined in one Word or PDF file for initial review.",
+      "source_url": "https://www.nature.com/nature/for-authors/initial-submission",
+      "applies_to": "initial",
+      "mandatory": false,
+      "status": "MET"
+    }
+  ]
+}

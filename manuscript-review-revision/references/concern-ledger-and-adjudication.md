@@ -13,6 +13,8 @@ Create `reviews/concern_ledger.tsv`. Each row must identify:
   issue
 - the panel `reviewer_id` and `role_id`
 - one review `axis` and one `severity`
+- `role_scope`: `PRIMARY` for an owned axis or `BLOCKING_CROSSOVER` for a
+  blocking out-of-role finding
 - an exact `claim_pointer` into the manuscript
 - an `evidence_pointer`, or an explicit reason why a location is unavailable
 - the concern in falsifiable language
@@ -46,6 +48,11 @@ These axes are scientific stress tests, not official journal requirements:
 Mark an inapplicable domain gate in the reviewer report as `NOT APPLICABLE`.
 Use `NOT ASSESSABLE` only when required material is absent or inaccessible.
 
+The panel plan assigns each axis to one primary role. A `PRIMARY` ledger row
+must use that owner. A reviewer may cross the boundary only when the issue is
+`BLOCKING`; record that row as `BLOCKING_CROSSOVER`. Do not use crossover rows
+to duplicate major, minor, or editorial findings owned by another role.
+
 ## Severity
 
 - `BLOCKING`: prevents a defensible submission to the selected journal.
@@ -71,6 +78,10 @@ Pairwise issue-key overlap above 35% is a diagnostic warning that roles may be
 duplicating one another. It is not an instruction to manufacture artificial
 differences. High overlap can be legitimate when a central flaw affects several
 review domains.
+
+The validator also enforces a maximum of eight concerns per reviewer. This is
+a prioritization limit, not permission to omit a blocking issue: replace a
+lower-severity entry when a blocking concern is found.
 
 ## Resolution and disposition
 

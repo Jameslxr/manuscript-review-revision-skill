@@ -12,11 +12,18 @@ README_ZH = ROOT / "README.md"
 README_EN = ROOT / "README_EN.md"
 USAGE = ROOT / "docs" / "USAGE.md"
 SKILL_ENTRY = ROOT / "manuscript-review-revision" / "SKILL.md"
+SKILL_MANIFEST = ROOT / "manuscript-review-revision" / "manifest.yaml"
 CONCERN_LEDGER_VALIDATOR = (
     ROOT
     / "manuscript-review-revision"
     / "scripts"
     / "validate_concern_ledger.py"
+)
+REVIEW_VERDICT_VALIDATOR = (
+    ROOT
+    / "manuscript-review-revision"
+    / "scripts"
+    / "validate_review_verdict.py"
 )
 MAX_README_LINES = 200
 LOCAL_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
@@ -61,6 +68,15 @@ def main() -> int:
             "missing concern-ledger validator: "
             f"{CONCERN_LEDGER_VALIDATOR.relative_to(ROOT)}"
         )
+    if not REVIEW_VERDICT_VALIDATOR.is_file():
+        errors.append(
+            "missing review-verdict validator: "
+            f"{REVIEW_VERDICT_VALIDATOR.relative_to(ROOT)}"
+        )
+    if not SKILL_MANIFEST.is_file():
+        errors.append(
+            f"missing skill manifest: {SKILL_MANIFEST.relative_to(ROOT)}"
+        )
 
     if errors:
         for error in errors:
@@ -71,6 +87,7 @@ def main() -> int:
     en = README_EN.read_text(encoding="utf-8")
     usage = USAGE.read_text(encoding="utf-8")
     skill_entry = SKILL_ENTRY.read_text(encoding="utf-8")
+    skill_manifest = SKILL_MANIFEST.read_text(encoding="utf-8")
 
     if "[English](README_EN.md)" not in zh:
         errors.append("README.md is missing the English language switch.")
@@ -100,6 +117,16 @@ def main() -> int:
             "README version mismatch or missing unique version badge: "
             f"Chinese={zh_versions}, English={en_versions}."
         )
+    manifest_versions = re.findall(
+        r"^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\s*$",
+        skill_manifest,
+        flags=re.MULTILINE,
+    )
+    if len(manifest_versions) != 1 or manifest_versions != zh_versions:
+        errors.append(
+            "Skill manifest version does not match README badges: "
+            f"manifest={manifest_versions}, README={zh_versions}."
+        )
 
     for label, text in (("README.md", zh), ("README_EN.md", en)):
         for required in ("Codex", "Claude Code"):
@@ -126,6 +153,8 @@ def main() -> int:
             errors.append(f"SKILL.md does not load {required_reference}.")
     if "scripts/validate_concern_ledger.py" not in skill_entry:
         errors.append("SKILL.md does not invoke scripts/validate_concern_ledger.py.")
+    if "scripts/validate_review_verdict.py" not in skill_entry:
+        errors.append("SKILL.md does not invoke scripts/validate_review_verdict.py.")
 
     for path, text in ((README_ZH, zh), (README_EN, en)):
         line_count = len(text.splitlines())

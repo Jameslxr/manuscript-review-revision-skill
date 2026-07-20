@@ -18,6 +18,7 @@ REQUIRED_COLUMNS = {
     "reviewer_id",
     "role_id",
     "axis",
+    "role_scope",
     "severity",
     "claim_pointer",
     "evidence_pointer",
@@ -123,11 +124,22 @@ def validate(
                 role_id = str(reviewer.get("role_id", "")).strip()
                 if reviewer_id:
                     reviewer_roles[reviewer_id] = role_id
+    review_policy = panel.get("review_policy")
+    if not isinstance(review_policy, dict):
+        review_policy = {}
+    axis_owners_value = review_policy.get("axis_owners")
+    axis_owners = axis_owners_value if isinstance(axis_owners_value, dict) else {}
+    concern_limit = review_policy.get("max_concerns_per_reviewer")
+    major_limit = review_policy.get("max_blocking_major_per_reviewer")
+    minor_limit = review_policy.get("max_minor_editorial_per_reviewer")
 
     concern_ids: set[str] = set()
     issue_reviewers: dict[str, set[str]] = defaultdict(set)
     issue_statuses: dict[str, set[str]] = defaultdict(set)
     reviewer_issues: dict[str, set[str]] = defaultdict(set)
+    reviewer_concerns: Counter[str] = Counter()
+    reviewer_major_concerns: Counter[str] = Counter()
+    reviewer_minor_concerns: Counter[str] = Counter()
 
     for row_number, row in enumerate(rows, start=2):
         prefix = f"row {row_number}"
@@ -155,6 +167,11 @@ def validate(
         axis = row.get("axis", "")
         if axis not in AXES:
             errors.append(f"{prefix}: invalid axis {axis!r}.")
+        role_scope = row.get("role_scope", "").upper()
+        if role_scope not in {"PRIMARY", "BLOCKING_CROSSOVER"}:
+            errors.append(
+                f"{prefix}: role_scope must be PRIMARY or BLOCKING_CROSSOVER."
+            )
         severity = row.get("severity", "").upper()
         if severity not in SEVERITIES:
             errors.append(f"{prefix}: invalid severity {severity!r}.")
@@ -167,6 +184,22 @@ def validate(
         disposition = row.get("disposition", "").upper()
         if disposition not in DISPOSITIONS:
             errors.append(f"{prefix}: invalid disposition {disposition!r}.")
+
+        axis_owner = str(axis_owners.get(axis, "")).strip()
+        if role_scope == "PRIMARY" and axis_owner and role_id != axis_owner:
+            errors.append(
+                f"{prefix}: PRIMARY concern axis {axis!r} belongs to role "
+                f"{axis_owner!r}, not {role_id!r}."
+            )
+        if role_scope == "BLOCKING_CROSSOVER":
+            if severity != "BLOCKING":
+                errors.append(
+                    f"{prefix}: BLOCKING_CROSSOVER concerns must have BLOCKING severity."
+                )
+            if axis_owner and role_id == axis_owner:
+                errors.append(
+                    f"{prefix}: role {role_id!r} owns axis {axis!r}; use PRIMARY scope."
+                )
 
         for field in ("claim_pointer", "concern", "resolution_test"):
             if row.get(field, "").upper() in EMPTY_MARKERS:
@@ -193,6 +226,33 @@ def validate(
             issue_reviewers[issue_key].add(reviewer_id)
             issue_statuses[issue_key].add(consensus_status)
             reviewer_issues[reviewer_id].add(issue_key)
+            reviewer_concerns[reviewer_id] += 1
+            if severity in {"BLOCKING", "MAJOR"}:
+                reviewer_major_concerns[reviewer_id] += 1
+            if severity in {"MINOR", "EDITORIAL"}:
+                reviewer_minor_concerns[reviewer_id] += 1
+
+    if isinstance(concern_limit, int):
+        for reviewer_id, count in sorted(reviewer_concerns.items()):
+            if count > concern_limit:
+                errors.append(
+                    f"Reviewer {reviewer_id!r} has {count} concerns; limit is "
+                    f"{concern_limit}."
+                )
+    if isinstance(major_limit, int):
+        for reviewer_id, count in sorted(reviewer_major_concerns.items()):
+            if count > major_limit:
+                errors.append(
+                    f"Reviewer {reviewer_id!r} has {count} BLOCKING/MAJOR concerns; "
+                    f"limit is {major_limit}."
+                )
+    if isinstance(minor_limit, int):
+        for reviewer_id, count in sorted(reviewer_minor_concerns.items()):
+            if count > minor_limit:
+                errors.append(
+                    f"Reviewer {reviewer_id!r} has {count} MINOR/EDITORIAL concerns; "
+                    f"limit is {minor_limit}."
+                )
 
     for issue_key, reviewer_ids in issue_reviewers.items():
         statuses = issue_statuses[issue_key]
@@ -242,6 +302,13 @@ def validate(
         "unique_issue_count": status_counts["UNIQUE"],
         "maximum_pair_overlap": round(max_observed, 4),
         "pair_overlaps": pair_overlaps,
+        "reviewer_concern_counts": dict(sorted(reviewer_concerns.items())),
+        "reviewer_blocking_major_counts": dict(
+            sorted(reviewer_major_concerns.items())
+        ),
+        "reviewer_minor_editorial_counts": dict(
+            sorted(reviewer_minor_concerns.items())
+        ),
         "errors": errors,
         "warnings": warnings,
     }

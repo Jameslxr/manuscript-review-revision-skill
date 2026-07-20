@@ -31,6 +31,7 @@ CONCERN_COLUMNS = [
     "reviewer_id",
     "role_id",
     "axis",
+    "role_scope",
     "severity",
     "claim_pointer",
     "evidence_pointer",
@@ -42,6 +43,22 @@ CONCERN_COLUMNS = [
     "consensus_status",
     "disposition",
 ]
+AXIS_OWNERS = {
+    "journal-fit": "journal-priority",
+    "novelty-significance": "journal-priority",
+    "mechanism-evidence": "domain-science",
+    "experimental-design": "study-design",
+    "statistical-rigor": "statistics-reproducibility",
+    "reproducibility": "statistics-reproducibility",
+    "clinical-validity": "domain-science",
+    "ethical-governance": "study-design",
+    "data-resource-quality": "statistics-reproducibility",
+    "figures-and-tables": "claim-evidence-reference",
+    "writing-clarity": "claim-evidence-reference",
+    "claim-moderation": "claim-evidence-reference",
+    "causal-vs-correlative": "study-design",
+    "reference-support": "claim-evidence-reference",
+}
 
 
 def run_script(name: str, *args: object) -> subprocess.CompletedProcess[str]:
@@ -58,7 +75,11 @@ def file_sha256(path: Path) -> str:
 
 
 def write_panel(
-    root: Path, *, duplicate_task: bool = False, corrupt_report_hash: bool = False
+    root: Path,
+    *,
+    duplicate_task: bool = False,
+    corrupt_report_hash: bool = False,
+    oversized_first_report: bool = False,
 ) -> Path:
     frozen_hashes = {
         "manuscript_sha256": "a" * 64,
@@ -68,10 +89,10 @@ def write_panel(
     reviewers = []
     for index, role in enumerate(CORE_ROLES, start=1):
         report = root / f"reviewer_{index:02d}.md"
-        report.write_text(
-            f"# Reviewer {index}\n\nEvidence-based report for {role}.\n",
-            encoding="utf-8",
-        )
+        report_text = f"# Reviewer {index}\n\nEvidence-based report for {role}.\n"
+        if oversized_first_report and index == 1:
+            report_text += " ".join(["finding"] * 1801)
+        report.write_text(report_text, encoding="utf-8")
         task_number = 1 if duplicate_task and index == 2 else index
         reviewers.append(
             {
@@ -81,6 +102,10 @@ def write_panel(
                 "context_mode": "FRESH_NON_FORK",
                 "role_id": role,
                 "role": role.replace("-", " "),
+                "seat_type": "CORE",
+                "primary_axes": [
+                    axis for axis, owner in AXIS_OWNERS.items() if owner == role
+                ],
                 "independent": True,
                 "saw_other_reviews": False,
                 "status": "COMPLETED",
@@ -99,8 +124,8 @@ def write_panel(
     panel.write_text(
         json.dumps(
             {
-                "panel_schema_version": "2.0",
-                "skill_version": "1.3.0",
+                "panel_schema_version": "2.1",
+                "skill_version": "1.4.0",
                 "host": "Test Host",
                 "host_version": "1.0",
                 "target_journal": "Example Journal",
@@ -109,6 +134,18 @@ def write_panel(
                 "execution_mode": "independent_agents",
                 "root_is_reviewer": False,
                 "synthesis_started_before_reviews_completed": False,
+                "review_policy": {
+                    "core_reviewer_count": 5,
+                    "maximum_panel_size": 6,
+                    "max_concerns_per_reviewer": 8,
+                    "max_blocking_major_per_reviewer": 6,
+                    "max_minor_editorial_per_reviewer": 2,
+                    "max_report_words": 1800,
+                    "out_of_role_reporting": "BLOCKING_ONLY",
+                    "overlap_target": 0.35,
+                    "optional_seat_trigger": "NONE",
+                    "axis_owners": AXIS_OWNERS,
+                },
                 "reviewers": reviewers,
             }
         ),
@@ -133,14 +170,18 @@ def concern_row(
     consensus_status: str = "UNIQUE",
     evidence_status: str = "LOCATED",
     evidence_pointer: str = "Results > Validation, paragraph 2",
+    axis: str = "experimental-design",
+    role_scope: str = "PRIMARY",
+    severity: str = "MAJOR",
 ) -> dict[str, str]:
     return {
         "concern_id": concern_id,
         "issue_key": issue_key,
         "reviewer_id": f"agent-{reviewer_number}",
         "role_id": role_id,
-        "axis": "experimental-design",
-        "severity": "MAJOR",
+        "axis": axis,
+        "role_scope": role_scope,
+        "severity": severity,
         "claim_pointer": "Discussion, paragraph 1: external validity",
         "evidence_pointer": evidence_pointer,
         "evidence_status": evidence_status,
@@ -266,6 +307,19 @@ class ValidatorTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("report_sha256 does not match", result.stdout)
 
+    def test_not_assessable_reviewer_does_not_count_as_completed(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            panel = write_panel(Path(temp))
+            content = json.loads(panel.read_text(encoding="utf-8"))
+            content["reviewers"][0]["status"] = "NOT_ASSESSABLE"
+            panel.write_text(json.dumps(content), encoding="utf-8")
+            result = run_script("validate_review_panel.py", panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "Only 4 completed independent reviewer agents",
+                result.stdout,
+            )
+
     def test_concern_ledger_passes_with_valid_consensus(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -278,6 +332,8 @@ class ValidatorTests(unittest.TestCase):
                     2,
                     "domain-science",
                     consensus_status="CONSENSUS",
+                    role_scope="BLOCKING_CROSSOVER",
+                    severity="BLOCKING",
                 ),
                 concern_row(
                     "C002",
@@ -285,12 +341,14 @@ class ValidatorTests(unittest.TestCase):
                     3,
                     "study-design",
                     consensus_status="CONSENSUS",
+                    severity="BLOCKING",
                 ),
                 concern_row(
                     "C003",
                     "multiplicity",
                     4,
                     "statistics-reproducibility",
+                    axis="statistical-rigor",
                 ),
             ]
             write_concern_ledger(ledger, rows)
@@ -357,6 +415,8 @@ class ValidatorTests(unittest.TestCase):
                             2,
                             "domain-science",
                             consensus_status="CONSENSUS",
+                            role_scope="BLOCKING_CROSSOVER",
+                            severity="BLOCKING",
                         ),
                         concern_row(
                             f"C{issue_number}B",
@@ -364,6 +424,7 @@ class ValidatorTests(unittest.TestCase):
                             3,
                             "study-design",
                             consensus_status="CONSENSUS",
+                            severity="BLOCKING",
                         ),
                     ]
                 )
@@ -371,6 +432,165 @@ class ValidatorTests(unittest.TestCase):
             result = run_script("validate_concern_ledger.py", ledger, panel)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("WARNING: Reviewer pair agent-2/agent-3", result.stdout)
+
+    def test_seventh_reviewer_exceeds_panel_maximum(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            content = json.loads(panel.read_text(encoding="utf-8"))
+            for index, role in ((6, "figure-narrative-reporting"), (7, "adversarial-review")):
+                report = root / f"reviewer_{index:02d}.md"
+                report.write_text(f"# Reviewer {index}\n", encoding="utf-8")
+                receipt = dict(content["reviewers"][0])
+                receipt.update(
+                    {
+                        "agent_id": f"agent-{index}",
+                        "host_task_id": f"host-task-{index}",
+                        "role_id": role,
+                        "role": role.replace("-", " "),
+                        "seat_type": "OPTIONAL",
+                        "primary_axes": [],
+                        "report_path": report.name,
+                        "report_sha256": file_sha256(report),
+                    }
+                )
+                content["reviewers"].append(receipt)
+            content["review_policy"]["optional_seat_trigger"] = "multiple risks"
+            panel.write_text(json.dumps(content), encoding="utf-8")
+            result = run_script("validate_review_panel.py", panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("maximum is 6", result.stdout)
+            self.assertIn("at most one OPTIONAL seat", result.stdout)
+
+    def test_required_core_role_cannot_be_optional(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            panel = write_panel(Path(temp))
+            content = json.loads(panel.read_text(encoding="utf-8"))
+            content["reviewers"][0]["seat_type"] = "OPTIONAL"
+            content["review_policy"]["optional_seat_trigger"] = "editorial risk"
+            panel.write_text(json.dumps(content), encoding="utf-8")
+            result = run_script("validate_review_panel.py", panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "Required core role 'journal-priority' must use seat_type CORE",
+                result.stdout,
+            )
+
+    def test_reviewer_report_budget_is_enforced(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            panel = write_panel(Path(temp), oversized_first_report=True)
+            result = run_script("validate_review_panel.py", panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("word-equivalent units; limit is 1800", result.stdout)
+
+    def test_concern_budget_is_enforced(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            rows = [
+                concern_row(
+                    f"C{index:03d}",
+                    f"design-issue-{index}",
+                    3,
+                    "study-design",
+                )
+                for index in range(1, 10)
+            ]
+            write_concern_ledger(ledger, rows)
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("has 9 concerns; limit is 8", result.stdout)
+
+    def test_blocking_major_budget_is_enforced(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            rows = [
+                concern_row(
+                    f"C{index:03d}",
+                    f"design-major-{index}",
+                    3,
+                    "study-design",
+                    severity="MAJOR",
+                )
+                for index in range(1, 8)
+            ]
+            write_concern_ledger(ledger, rows)
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("has 7 BLOCKING/MAJOR concerns; limit is 6", result.stdout)
+
+    def test_minor_editorial_budget_is_enforced(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            rows = [
+                concern_row(
+                    f"C{index:03d}",
+                    f"design-minor-{index}",
+                    3,
+                    "study-design",
+                    severity="MINOR",
+                )
+                for index in range(1, 4)
+            ]
+            write_concern_ledger(ledger, rows)
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("has 3 MINOR/EDITORIAL concerns; limit is 2", result.stdout)
+
+    def test_non_blocking_out_of_role_concern_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            write_concern_ledger(
+                ledger,
+                [
+                    concern_row(
+                        "C001",
+                        "design-issue",
+                        2,
+                        "domain-science",
+                        role_scope="BLOCKING_CROSSOVER",
+                        severity="MAJOR",
+                    )
+                ],
+            )
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "BLOCKING_CROSSOVER concerns must have BLOCKING severity",
+                result.stdout,
+            )
+
+    def test_bounded_single_posture_verdict_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            verdict = Path(temp) / "verdict.md"
+            verdict.write_text(
+                "# Verdict\n\n`MAJOR_SCIENTIFIC_REWORK_REQUIRED`\n\n"
+                "The central claim requires a leakage-free validation cohort.\n",
+                encoding="utf-8",
+            )
+            result = run_script("validate_review_verdict.py", verdict)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Review verdict validation: PASS", result.stdout)
+
+    def test_overlong_or_multiple_posture_verdict_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            verdict = Path(temp) / "verdict.md"
+            verdict.write_text(
+                "MAJOR_SCIENTIFIC_REWORK_REQUIRED RETARGET_RECOMMENDED\n"
+                + " ".join(["finding"] * 901),
+                encoding="utf-8",
+            )
+            result = run_script("validate_review_verdict.py", verdict)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("maximum is 900", result.stdout)
+            self.assertIn("exactly one allowed review posture", result.stdout)
 
     def test_reference_direct_support_passes_only_with_full_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

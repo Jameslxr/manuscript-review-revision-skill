@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "target_journal": "Nature",
+  "source_count": 4,
+  "requirement_count": 8,
+  "mandatory_unresolved": [],
+  "errors": [],
+  "warnings": []
+}

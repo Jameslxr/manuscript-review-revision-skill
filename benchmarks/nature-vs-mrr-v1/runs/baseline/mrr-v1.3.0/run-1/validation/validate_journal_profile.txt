@@ -1,0 +1,4 @@
+Journal profile validation: PASS
+Target journal: Nature
+Official sources: 4
+Requirements: 8

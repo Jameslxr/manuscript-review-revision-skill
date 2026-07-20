@@ -1,0 +1,73 @@
+system	run_id	issue_id	detected	evidence_pointer	evaluator_note
+System A	A1	G01	1	final.md blocker 1; matrix.tsv XRM-007	States whole-cohort selection and tuning contaminated the nominal validation subset.
+System A	A1	G02	1	final.md blocker 5; matrix.tsv XRM-010	Identifies cells as the wrong independent unit and requires patient-aware inference.
+System A	A1	G03	1	final.md major additional issue 1; matrix.tsv XRM-017	Identifies excessive adaptive modelling relative to 31 deaths and requests penalization or optimism correction.
+System A	A1	G04	1	final.md blocker 6; matrix.tsv XRM-011	Connects the 3-year endpoint to 18-month median survivor follow-up and requires censoring-aware support.
+System A	A1	G05	1	matrix.tsv XRM-014; final.md blocker 4	Treats the eight-tumour EVA1/T-cell result as association rather than exclusion or causal immune evasion.
+System A	A1	G06	1	final.md blocker 4; matrix.tsv XRM-006	Specifies the one-guide, no-rescue, no-target-engagement, no-immune-context mechanism defect.
+System A	A1	G07	1	final.md blockers 3 and major additional issue 2; matrix.tsv XRM-001 and XRM-013	Identifies absent untreated arms plus cage-order allocation, unblinding, small groups, and no replication.
+System A	A1	G08	1	final.md blocker 6; matrix.tsv XRM-011	Explicitly lists the conflicting 0.91, 0.84, and 0.86 AUC values.
+System A	A1	G09	1	final.md blocker 2; matrix.tsv XRM-002 and XRM-003	States that OS in a resection cohort cannot establish anti-PD-1 selection or clinical utility and requests calibration, baselines, and decision utility.
+System A	A1	G10	1	final.md blocker 5; matrix.tsv XRM-010 and XRM-018	Identifies nominal transcriptome-scale screening without multiplicity correction.
+System A	A1	G11	1	final.md major additional issue 5; matrix.tsv XRM-005	Identifies missing committee, protocol, consent, animal approval, and humane-endpoint reporting while preserving underlying status as not assessable.
+System A	A1	G12	1	final.md blocker 7; matrix.tsv XRM-009	Identifies unavailable coefficients, code, data, seeds, versions, and source materials as blocking reproduction.
+System A	A1	G13	1	final.md major additional issue 4; matrix.tsv XRM-019	States that the two-reference foundation cannot sustain exhaustive first or no-prior-signature novelty claims.
+System A	A1	G14	1	matrix.tsv XRM-019; ledger.tsv REFERENCE_SUPPORT rows	Identifies mismatched claim placement for both references and requires an atomic full-text claim-support audit.
+System A	A1	G15	1	matrix.tsv XRM-016; final.md blocker 2	Bounds generalization from a viral-dominant single-centre resection cohort.
+System A	A1	G16	1	final.md major additional issue 1; matrix.tsv XRM-021	Explicitly identifies absent confidence intervals and proportional-hazards diagnostics.
+System A	A1	G17	1	reports/reviewer_06.md M1; matrix.tsv XRM-025	States that one-cell-per-point foregrounding and incomplete legend denominators, replicate structure, and uncertainty obscure the patient unit.
+System A	A1	G18	1	final.md Nature calibration; matrix.tsv XRM-008	Separates Nature-level broad-interest insufficiency from scientific invalidity and avoids predicting the editorial decision.
+System A	A2	G01	1	final.md decisive finding 2; matrix.tsv X02	States that full-dataset selection and rules invalidate independence of the split.
+System A	A2	G02	1	final.md decisive finding 3; matrix.tsv X06	Identifies 46,218 cells from eight patients as pseudoreplication requiring patient-aware inference.
+System A	A2	G03	1	matrix.tsv X07; ledger.tsv ST-M1	Identifies 45 adaptive inputs with 31 deaths, stepwise selection, and absent shrinkage or optimism correction.
+System A	A2	G04	1	final.md decisive finding 6; matrix.tsv X08	Identifies unsupported 3-year performance under immature follow-up and requires a censoring-aware estimand.
+System A	A2	G05	1	final.md decisive finding 4; matrix.tsv X09 and X26	States that the eight-tumour association cannot establish exclusion or causal immune evasion.
+System A	A2	G06	1	final.md decisive finding 4; matrix.tsv X09	Identifies single-guide specificity, rescue, target-engagement, and immune-functional gaps.
+System A	A2	G07	1	final.md decisive finding 5 and required path; matrix.tsv X03 and X10	Identifies missing anti-PD-1 interaction arms and animal bias, power, blinding, and replication defects.
+System A	A2	G08	1	final.md decisive finding 6; matrix.tsv X08	Explicitly identifies the 0.91, 0.84, and 0.86 inconsistency.
+System A	A2	G09	1	final.md decisive finding 1; matrix.tsv X01 and X25	Rejects treatment-selection and deployment claims without calibration, clinical baselines, utility, or a treatment-response design.
+System A	A2	G10	1	final.md decisive finding 3; matrix.tsv X06	Identifies uncorrected nominal screening and requires FDR control.
+System A	A2	G11	1	final.md required resolution path; matrix.tsv X11	Identifies incomplete human and animal approvals, consent, welfare, and humane-endpoint reporting without alleging misconduct.
+System A	A2	G12	1	final.md decisive finding 2 and required path; matrix.tsv X05	Identifies the non-executable score and absent data, code, environment, and seeds.
+System A	A2	G13	1	matrix.tsv X04 and X18	States that first-in-field and broad originality claims are unsupported by the sparse comparative literature context.
+System A	A2	G14	1	matrix.tsv X18; ledger.tsv citation-support-mismatch rows	Identifies the reference-to-claim scope mismatch and requires atomic claim-support checking.
+System A	A2	G15	1	matrix.tsv X13	Identifies the single-centre viral-dominant cohort as insufficient for universal scope.
+System A	A2	G16	1	matrix.tsv X24; ledger.tsv ST-M2	Explicitly identifies missing confidence intervals and proportional-hazards diagnostics.
+System A	A2	G17	1	ledger.tsv FRR-M8 and FRR-M7; matrix.tsv X32	States that cell-level display foregrounds cell counts over eight tumours and that legends omit biological n and uncertainty.
+System A	A2	G18	1	final.md decisive finding 7; matrix.tsv X04	Applies a Nature-level interdisciplinary importance bar while keeping technical invalidity and journal fit distinct.
+System B	B1	G01	1	final.md R1-M1 lines 29-34	Explicitly identifies outcome-informed whole-cohort model development before the split.
+System B	B1	G02	1	final.md R1-M2 lines 36-41	Explicitly identifies cell-level independence across only eight patients.
+System B	B1	G03	1	final.md R1-M1 lines 31-34	Identifies 45 candidate inputs, 31 deaths, stepwise selection, optimism, and instability.
+System B	B1	G04	1	final.md R1-M5 lines 57-62	Links the 3-year endpoint to 18-month median survivor follow-up and unspecified censoring.
+System B	B1	G05	1	final.md R1-M2 lines 38-41 and R3-M3 lines 199-204	States that the eight-tumour correlation is associative and cannot show T-cell exclusion.
+System B	B1	G06	1	final.md R1-M3 lines 43-48	Identifies the one-guide, no-rescue, no-target-engagement, tumour-only mechanism defect.
+System B	B1	G07	1	final.md R1-M4 lines 50-55	Identifies absent untreated arms, cage-order allocation, unblinding, five-per-group size, single time point, and no replication.
+System B	B1	G08	1	final.md R1-M5 lines 59-62 and R3-M1 lines 185-190	Explicitly lists all three conflicting AUC values.
+System B	B1	G09	1	final.md R2-M2 and R2-M5 lines 114-140	Separates prognosis from treatment benefit and identifies absent calibration, baselines, decision analysis, and utility.
+System B	B1	G10	1	final.md R1-M2 lines 38-41	Identifies 1,842 nominal hits without multiple-testing correction.
+System B	B1	G11	1	final.md R3-M6 lines 220-225	Identifies all core human and animal governance reporting omissions without alleging absent approval.
+System B	B1	G12	1	final.md R1-M6 lines 64-69	Identifies absent raw data, model specification, code, seeds, and versions as preventing reproduction.
+System B	B1	G13	1	final.md R2-M4 lines 128-133	States that first and no-prior-signature claims lack a focused comparative literature basis.
+System B	B1	G14	1	final.md R2-M2 lines 116-119 and R2-M4 lines 128-133	Directly identifies both the reference 1 novelty mismatch and reference 2 treatment-selection mismatch.
+System B	B1	G15	1	final.md R2-M3 lines 121-126	Identifies the viral-dominant single-centre cohort and narrow models as insufficient for universality.
+System B	B1	G16	1	final.md R1-M5 lines 59-62	Explicitly identifies absent proportional-hazards checking and hazard-ratio confidence intervals.
+System B	B1	G17	1	final.md R3-M4 lines 206-211	Identifies one-cell-per-point visual foregrounding plus missing denominators, replicate definitions, and uncertainty.
+System B	B1	G18	1	final.md Nature-style criteria lines 75-85 and synthesis lines 264-266	Calibrates broad interdisciplinary fit to Nature while reserving the editorial decision.
+System B	B2	G01	1	final.md R1-M2 lines 37-41	Explicitly identifies whole-cohort selection before the split as non-independent validation.
+System B	B2	G02	1	final.md R1-M1 lines 31-35	Identifies cells from eight patients as independent observations and requires patient-aware inference.
+System B	B2	G03	1	final.md R1-M2 lines 37-41	Identifies 27 genes plus 18 covariates with 31 deaths as optimism and selection-instability risk.
+System B	B2	G04	1	final.md R1-M3 lines 43-47	Connects the 3-year endpoint to immature follow-up and unspecified censoring.
+System B	B2	G05	1	final.md R1-M1 lines 31-35 and R3-M6 lines 205-209	States that the eight-tumour association cannot establish exclusion or causal immune control.
+System B	B2	G06	1	final.md R1-M4 lines 49-53	Identifies the one-guide, no-rescue, no-target-engagement, no-immune-function design.
+System B	B2	G07	1	final.md R1-M5 and R1-M6 lines 55-65	Identifies absent treatment-interaction arms plus five-per-group, cage-order, unblinded, single-time-point, unreplicated animal design.
+System B	B2	G08	1	final.md R1-M3 lines 43-47 and R3-M2 lines 181-185	Explicitly lists the 0.91, 0.84, and 0.86 conflict.
+System B	B2	G09	1	final.md R2-M2 lines 109-113; synthesis lines 254-261	Rejects anti-PD-1 selection and requests calibration, clinical comparators, utility, and a treatment-interaction design.
+System B	B2	G10	1	final.md R1-M1 lines 31-35	Identifies 1,842 nominal genes without multiplicity correction and requests FDR control.
+System B	B2	G11	1	final.md R3-M5 lines 199-203	Identifies committee, protocol, consent, animal approval, and humane-endpoint reporting omissions without alleging misconduct.
+System B	B2	G12	1	final.md R3-M4 lines 193-197	Identifies absent coefficients, data, code, seeds, and versions as blocking independent calculation.
+System B	B2	G13	1	final.md R2-M1 lines 103-107	States that first and no-prior-signature claims lack an adequate comparative literature basis.
+System B	B2	G14	1	final.md R2-M1 lines 103-107	Directly identifies reference 1 as inadequate for the sweeping no-prior-utility claim; it does not separately audit reference 2.
+System B	B2	G15	1	final.md R2-M4 lines 121-125	Identifies the viral-dominant single-centre cohort as insufficient for universal application.
+System B	B2	G16	0	final.md reviewed throughout	Requests uncertainty for other endpoints but never states the missing hazard-ratio confidence intervals or absent proportional-hazards check.
+System B	B2	G17	0	final.md R1-M1 lines 31-35 and risk boundary line 273	Discusses pseudoreplication and marks figure encodings or denominators not assessable, but does not state the ground-truth cell-level display defect.
+System B	B2	G18	1	final.md Nature-style criteria lines 71-81 and 143-153	Applies the broad interdisciplinary Nature bar and expressly reserves the editorial decision.

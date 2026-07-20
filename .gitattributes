@@ -1,0 +1,3 @@
+# Preserve byte-identical synthetic benchmark artifacts whose SHA-256 receipts
+# are part of the audit record.
+benchmarks/nature-vs-mrr-v1/runs/** whitespace=-trailing-space

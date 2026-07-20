@@ -1,0 +1,148 @@
+{
+  "status": "PASS",
+  "concern_count": 36,
+  "issue_count": 18,
+  "consensus_issue_count": 7,
+  "disagreement_issue_count": 0,
+  "unique_issue_count": 11,
+  "maximum_pair_overlap": 0.75,
+  "pair_overlaps": [
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/adversarial_post14",
+        "/root/post_v14_nature_forward_run/claim_evidence_post14"
+      ],
+      "overlap": 0.5
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/adversarial_post14",
+        "/root/post_v14_nature_forward_run/domain_science_post14"
+      ],
+      "overlap": 0.6667
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/adversarial_post14",
+        "/root/post_v14_nature_forward_run/journal_priority_post14"
+      ],
+      "overlap": 0.75
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/adversarial_post14",
+        "/root/post_v14_nature_forward_run/statistics_repro_post14"
+      ],
+      "overlap": 0.1667
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/adversarial_post14",
+        "/root/post_v14_nature_forward_run/study_design_post14"
+      ],
+      "overlap": 0.6667
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/claim_evidence_post14",
+        "/root/post_v14_nature_forward_run/domain_science_post14"
+      ],
+      "overlap": 0.3333
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/claim_evidence_post14",
+        "/root/post_v14_nature_forward_run/journal_priority_post14"
+      ],
+      "overlap": 0.5
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/claim_evidence_post14",
+        "/root/post_v14_nature_forward_run/statistics_repro_post14"
+      ],
+      "overlap": 0.5
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/claim_evidence_post14",
+        "/root/post_v14_nature_forward_run/study_design_post14"
+      ],
+      "overlap": 0.6667
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/domain_science_post14",
+        "/root/post_v14_nature_forward_run/journal_priority_post14"
+      ],
+      "overlap": 0.5
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/domain_science_post14",
+        "/root/post_v14_nature_forward_run/statistics_repro_post14"
+      ],
+      "overlap": 0.1667
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/domain_science_post14",
+        "/root/post_v14_nature_forward_run/study_design_post14"
+      ],
+      "overlap": 0.5
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/journal_priority_post14",
+        "/root/post_v14_nature_forward_run/statistics_repro_post14"
+      ],
+      "overlap": 0.25
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/journal_priority_post14",
+        "/root/post_v14_nature_forward_run/study_design_post14"
+      ],
+      "overlap": 0.75
+    },
+    {
+      "reviewers": [
+        "/root/post_v14_nature_forward_run/statistics_repro_post14",
+        "/root/post_v14_nature_forward_run/study_design_post14"
+      ],
+      "overlap": 0.3333
+    }
+  ],
+  "reviewer_concern_counts": {
+    "/root/post_v14_nature_forward_run/adversarial_post14": 6,
+    "/root/post_v14_nature_forward_run/claim_evidence_post14": 8,
+    "/root/post_v14_nature_forward_run/domain_science_post14": 6,
+    "/root/post_v14_nature_forward_run/journal_priority_post14": 4,
+    "/root/post_v14_nature_forward_run/statistics_repro_post14": 6,
+    "/root/post_v14_nature_forward_run/study_design_post14": 6
+  },
+  "reviewer_blocking_major_counts": {
+    "/root/post_v14_nature_forward_run/adversarial_post14": 6,
+    "/root/post_v14_nature_forward_run/claim_evidence_post14": 6,
+    "/root/post_v14_nature_forward_run/domain_science_post14": 6,
+    "/root/post_v14_nature_forward_run/journal_priority_post14": 4,
+    "/root/post_v14_nature_forward_run/statistics_repro_post14": 6,
+    "/root/post_v14_nature_forward_run/study_design_post14": 6
+  },
+  "reviewer_minor_editorial_counts": {
+    "/root/post_v14_nature_forward_run/claim_evidence_post14": 2
+  },
+  "errors": [],
+  "warnings": [
+    "Reviewer pair /root/post_v14_nature_forward_run/adversarial_post14//root/post_v14_nature_forward_run/claim_evidence_post14 issue-key overlap is 50%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.",
+    "Reviewer pair /root/post_v14_nature_forward_run/adversarial_post14//root/post_v14_nature_forward_run/domain_science_post14 issue-key overlap is 67%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.",
+    "Reviewer pair /root/post_v14_nature_forward_run/adversarial_post14//root/post_v14_nature_forward_run/journal_priority_post14 issue-key overlap is 75%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.",
+    "Reviewer pair /root/post_v14_nature_forward_run/adversarial_post14//root/post_v14_nature_forward_run/study_design_post14 issue-key overlap is 67%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.",
+    "Reviewer pair /root/post_v14_nature_forward_run/claim_evidence_post14//root/post_v14_nature_forward_run/journal_priority_post14 issue-key overlap is 50%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.",
+    "Reviewer pair /root/post_v14_nature_forward_run/claim_evidence_post14//root/post_v14_nature_forward_run/statistics_repro_post14 issue-key overlap is 50%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.",
+    "Reviewer pair /root/post_v14_nature_forward_run/claim_evidence_post14//root/post_v14_nature_forward_run/study_design_post14 issue-key overlap is 67%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.",
+    "Reviewer pair /root/post_v14_nature_forward_run/domain_science_post14//root/post_v14_nature_forward_run/journal_priority_post14 issue-key overlap is 50%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.",
+    "Reviewer pair /root/post_v14_nature_forward_run/domain_science_post14//root/post_v14_nature_forward_run/study_design_post14 issue-key overlap is 50%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.",
+    "Reviewer pair /root/post_v14_nature_forward_run/journal_priority_post14//root/post_v14_nature_forward_run/study_design_post14 issue-key overlap is 75%; target is at most 35%. Inspect role duplication, but do not invent artificial differences."
+  ]
+}

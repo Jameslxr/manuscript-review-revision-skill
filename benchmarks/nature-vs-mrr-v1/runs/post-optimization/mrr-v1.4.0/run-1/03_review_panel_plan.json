@@ -1,0 +1,195 @@
+{
+  "panel_schema_version": "2.1",
+  "skill_version": "1.4.0",
+  "host": "Codex",
+  "host_version": "NOT_EXPOSED",
+  "target_journal": "Nature",
+  "article_type": "Article",
+  "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+  "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+  "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976",
+  "execution_mode": "independent_agents",
+  "root_is_reviewer": false,
+  "synthesis_started_before_reviews_completed": false,
+  "review_policy": {
+    "core_reviewer_count": 5,
+    "maximum_panel_size": 6,
+    "max_concerns_per_reviewer": 8,
+    "max_report_words": 1800,
+    "max_blocking_major_per_reviewer": 6,
+    "max_minor_editorial_per_reviewer": 2,
+    "out_of_role_reporting": "BLOCKING_ONLY",
+    "overlap_target": 0.35,
+    "optional_seat_trigger": "fragile causal and clinical-utility chain",
+    "axis_owners": {
+      "journal-fit": "journal-priority",
+      "novelty-significance": "journal-priority",
+      "mechanism-evidence": "domain-science",
+      "experimental-design": "study-design",
+      "clinical-validity": "study-design",
+      "ethical-governance": "study-design",
+      "statistical-rigor": "statistics-reproducibility",
+      "reproducibility": "statistics-reproducibility",
+      "data-resource-quality": "statistics-reproducibility",
+      "figures-and-tables": "claim-evidence-reference",
+      "writing-clarity": "claim-evidence-reference",
+      "claim-moderation": "claim-evidence-reference",
+      "reference-support": "claim-evidence-reference",
+      "causal-vs-correlative": "adversarial-review"
+    }
+  },
+  "reviewers": [
+    {
+      "agent_id": "/root/post_v14_nature_forward_run/journal_priority_post14",
+      "host_task_id": "/root/post_v14_nature_forward_run/journal_priority_post14",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "journal-priority",
+      "role": "Journal priority and editorial fit",
+      "seat_type": "CORE",
+      "primary_axes": [
+        "journal-fit",
+        "novelty-significance"
+      ],
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T11:30:59-05:00",
+      "completed_at": "2026-07-20T11:34:15-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_01.md",
+      "report_sha256": "502ddd9cf3e62839106f9294269b35eba01b4aabf89851531f94c4ced640befa"
+    },
+    {
+      "agent_id": "/root/post_v14_nature_forward_run/domain_science_post14",
+      "host_task_id": "/root/post_v14_nature_forward_run/domain_science_post14",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "domain-science",
+      "role": "Domain science and mechanistic evidence",
+      "seat_type": "CORE",
+      "primary_axes": [
+        "mechanism-evidence"
+      ],
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T11:35:12-05:00",
+      "completed_at": "2026-07-20T11:42:46-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_02.md",
+      "report_sha256": "1f1e9de31e4c6bfb3ddada469d01337e48b7485bc283f91dca99519608f64226"
+    },
+    {
+      "agent_id": "/root/post_v14_nature_forward_run/study_design_post14",
+      "host_task_id": "/root/post_v14_nature_forward_run/study_design_post14",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "study-design",
+      "role": "Clinical, experimental, and governance design",
+      "seat_type": "CORE",
+      "primary_axes": [
+        "experimental-design",
+        "clinical-validity",
+        "ethical-governance"
+      ],
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T11:38:02-05:00",
+      "completed_at": "2026-07-20T11:54:51-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_03.md",
+      "report_sha256": "a17f876e89f8735c6a4840686d151fa1618bf760911700b2d3d183d9ebec0e67"
+    },
+    {
+      "agent_id": "/root/post_v14_nature_forward_run/statistics_repro_post14",
+      "host_task_id": "/root/post_v14_nature_forward_run/statistics_repro_post14",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "statistics-reproducibility",
+      "role": "Statistical rigor, reproducibility, and data resources",
+      "seat_type": "CORE",
+      "primary_axes": [
+        "statistical-rigor",
+        "reproducibility",
+        "data-resource-quality"
+      ],
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T11:44:00-05:00",
+      "completed_at": "2026-07-20T11:55:14-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_04.md",
+      "report_sha256": "59dfda7977394536976ec2495652bd78d8ed2715829fca2711a3533f6128c094"
+    },
+    {
+      "agent_id": "/root/post_v14_nature_forward_run/claim_evidence_post14",
+      "host_task_id": "/root/post_v14_nature_forward_run/claim_evidence_post14",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "claim-evidence-reference",
+      "role": "Claim, evidence, figure, writing, and reference support",
+      "seat_type": "CORE",
+      "primary_axes": [
+        "figures-and-tables",
+        "writing-clarity",
+        "claim-moderation",
+        "reference-support"
+      ],
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T11:47:50-05:00",
+      "completed_at": "2026-07-20T11:55:41-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_05.md",
+      "report_sha256": "58b343453b5a7a4d09f155fc0ed710d1fe618fbb0b1f894b40e5285986afd678"
+    },
+    {
+      "agent_id": "/root/post_v14_nature_forward_run/adversarial_post14",
+      "host_task_id": "/root/post_v14_nature_forward_run/adversarial_post14",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "adversarial-review",
+      "role": "Adversarial causal-chain review",
+      "seat_type": "OPTIONAL",
+      "primary_axes": [
+        "causal-vs-correlative"
+      ],
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T11:50:42-05:00",
+      "completed_at": "2026-07-20T11:55:58-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_06.md",
+      "report_sha256": "d3d3fcaba08ad06bbc6914027e4009feba886836dcb6302c03e529ff01df0039"
+    }
+  ]
+}

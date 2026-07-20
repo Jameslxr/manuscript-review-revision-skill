@@ -1,0 +1,99 @@
+{
+  "target_journal": "Journal of Hepatology",
+  "article_type": "Original Article",
+  "submission_stage": "initial",
+  "accessed_at": "2026-07-20",
+  "profile_status": "PASS",
+  "journal_tier": "top specialty",
+  "official_sources": [
+    {
+      "title": "Journal of Hepatology",
+      "url": "https://easl.eu/publications/journal-of-hepatology/",
+      "accessed_at": "2026-07-20",
+      "official": true
+    },
+    {
+      "title": "Guide for authors - Journal of Hepatology",
+      "url": "https://www.sciencedirect.com/journal/journal-of-hepatology/publish/guide-for-authors",
+      "accessed_at": "2026-07-20",
+      "official": true
+    }
+  ],
+  "requirements": [
+    {
+      "id": "JH001",
+      "category": "scope",
+      "text": "The journal publishes original basic, translational, and clinical investigations in hepatology.",
+      "source_url": "https://easl.eu/publications/journal-of-hepatology/",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "JH002",
+      "category": "editorial-criteria",
+      "text": "Articles are selected for originality, superior quality, and clarity of presentation.",
+      "source_url": "https://easl.eu/publications/journal-of-hepatology/",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "JH003",
+      "category": "length",
+      "text": "Original manuscripts should not exceed 6,000 words including abstract, references, tables, and figure legends.",
+      "source_url": "https://www.sciencedirect.com/journal/journal-of-hepatology/publish/guide-for-authors",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "JH004",
+      "category": "display-items",
+      "text": "Original manuscripts may include no more than eight tables and/or figures.",
+      "source_url": "https://www.sciencedirect.com/journal/journal-of-hepatology/publish/guide-for-authors",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "JH005",
+      "category": "references",
+      "text": "Original manuscripts may include no more than 100 references.",
+      "source_url": "https://www.sciencedirect.com/journal/journal-of-hepatology/publish/guide-for-authors",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "JH006",
+      "category": "manuscript-order",
+      "text": "The manuscript order includes title page, journal-format abstract, Impact and Implications, Introduction, Methods, Results, Discussion, declarations, references, tables, legends, and figures.",
+      "source_url": "https://www.sciencedirect.com/journal/journal-of-hepatology/publish/guide-for-authors",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "JH007",
+      "category": "title-page",
+      "text": "The title should not exceed 130 characters; the title page also requires a short title, author and affiliation details, keywords, electronic word count, display-item count, and conflict statement.",
+      "source_url": "https://www.sciencedirect.com/journal/journal-of-hepatology/publish/guide-for-authors",
+      "applies_to": "initial",
+      "mandatory": true,
+      "status": "MET"
+    },
+    {
+      "id": "JH008",
+      "category": "checklist",
+      "text": "The journal requires its author checklist at revision and encourages it at initial submission; the checklist covers animal welfare, human subjects, data deposition, and ethics.",
+      "source_url": "https://www.sciencedirect.com/journal/journal-of-hepatology/publish/guide-for-authors",
+      "applies_to": [
+        "initial",
+        "revision"
+      ],
+      "mandatory": false,
+      "status": "MET"
+    }
+  ]
+}

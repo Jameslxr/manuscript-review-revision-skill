@@ -92,7 +92,15 @@ completely. Load the applicable sections of
 - Spawn at least five actual independent reviewer agents with the host's
   non-fork, isolated subagent/delegation mechanism when available.
 - Use five reviewer agents plus a root synthesis; do not count the root synthesis as a reviewer.
-- For high-tier or complex manuscripts, add a sixth specialist or adversarial reviewer.
+- Use exactly five core seats. For high-tier or complex manuscripts, add at
+  most one sixth specialist seat, selected by the highest-risk unresolved
+  trigger. Never add both a figure reviewer and an adversarial reviewer.
+- Assign every applicable review axis to exactly one primary owner before
+  dispatch. A reviewer may report outside its owned axes only for a clearly
+  blocking concern.
+- Limit each reviewer to eight prioritized concerns and 1,800
+  word-equivalent units. Completeness means covering the assigned risk surface,
+  not repeating a whole-manuscript review.
 - Run agents in waves when concurrency is limited; never reduce the reviewer count to fit one wave.
 - Give every reviewer the same frozen manuscript, inventory, factual journal
   profile, shared fact base, and role-specific rubric.
@@ -102,7 +110,9 @@ completely. Load the applicable sections of
 
 Create `02_shared_fact_base.md`, `03_review_panel_plan.json`, and
 `reviews/reviewer_01.md` through `reviews/reviewer_05.md` or higher. The panel
-plan must use schema `2.0` and close every reviewer against a unique host task
+plan must use schema `2.1`, contain five core seats and no more than one
+triggered optional seat, record axis ownership and output budgets, and close
+every reviewer against a unique host task
 ID, `FRESH_NON_FORK` context, start/end time, the three frozen input hashes, and
 the resulting report hash. Validate:
 
@@ -124,6 +134,16 @@ Then consolidate without averaging away disagreements. Create:
 
 - `04_cross_review_matrix.tsv`
 - `05_review_verdict.md`
+
+Use one matrix row per normalized issue and keep the author-facing verdict at
+or below 900 word-equivalent units. Put detail in the traceable ledger; do not
+repeat every reviewer report in the verdict.
+
+Validate the verdict:
+
+```bash
+python3 "$SKILL_ROOT/scripts/validate_review_verdict.py" 05_review_verdict.md
+```
 
 Use exactly one review posture:
 

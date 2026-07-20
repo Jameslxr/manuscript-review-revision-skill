@@ -19,21 +19,43 @@ python3 -m unittest discover \
   -v
 ```
 
-The current suite contains 12 representative tests covering:
+Recalculate the frozen blinded benchmark:
+
+```bash
+python3 benchmarks/nature-vs-mrr-v1/score_runs.py \
+  benchmarks/nature-vs-mrr-v1/answer-key.tsv \
+  benchmarks/nature-vs-mrr-v1/evaluation/run-scores.tsv
+python3 benchmarks/nature-vs-mrr-v1/score_runs.py \
+  benchmarks/nature-vs-mrr-v1/answer-key.tsv \
+  benchmarks/nature-vs-mrr-v1/evaluation/post-v1.4.0/run-score.tsv \
+  --expected-runs 1
+```
+
+The current suite contains 22 representative tests covering:
 
 1. a complete journal profile passes;
 2. a journal profile with an unresolved mandatory rule fails;
 3. a five-Agent panel with complete task receipts passes;
 4. duplicate host task IDs fail;
 5. a report hash that does not match the saved report fails;
-6. a valid concern ledger with independently supported consensus passes;
-7. one reviewer cannot label a finding as consensus;
-8. located evidence without a specific pointer fails;
-9. high cross-review overlap produces a diagnostic warning rather than invented
+6. a recorded `NOT_ASSESSABLE` reviewer does not count as completed;
+7. a valid concern ledger with independently supported consensus passes;
+8. one reviewer cannot label a finding as consensus;
+9. located evidence without a specific pointer fails;
+10. high cross-review overlap produces a diagnostic warning rather than invented
    reviewer diversity;
-10. direct citation support passes only with full evidence;
-11. metadata-only evidence cannot be labeled direct support;
-12. blue or otherwise non-black manuscript headings fail the DOCX style audit,
+11. a seventh reviewer fails the six-seat maximum;
+12. a required core role cannot be mislabeled as optional;
+13. reviewer reports above 1,800 word-equivalent units fail;
+14. more than eight ledger concerns from one reviewer fail;
+15. more than six blocking/major concerns from one reviewer fail;
+16. more than two minor/editorial concerns from one reviewer fail;
+17. non-blocking out-of-role concerns fail;
+18. a bounded verdict with one allowed posture passes;
+19. an overlong or multiple-posture verdict fails;
+20. direct citation support passes only with full evidence;
+21. metadata-only evidence cannot be labeled direct support;
+22. blue or otherwise non-black manuscript headings fail the DOCX style audit,
    while a plain black manuscript passes.
 
 ## Syntax checks
@@ -62,11 +84,22 @@ This check confirms that:
 - the Skill entrypoint loads the platform-compatibility contract.
 - the Skill entrypoint loads the receipt schema, concern-ledger contract, and
   biomedical review gates.
+- the Skill entrypoint invokes both concern-ledger and bounded-verdict
+  validators.
 
 ## Manual forward test
 
-The initial release was also exercised with a synthetic hepatocellular
-carcinoma manuscript targeting a high-tier hepatology journal.
+Version 1.3.0 was exercised twice against the same synthetic hepatocellular
+carcinoma manuscript and frozen Nature Article profile. Current upstream
+`nature-reviewer` 1.1.0 was run twice as a comparator. A blinded evaluator
+scored all four packages against 18 seeded issues before system identities were
+revealed.
+
+One additional fresh-context version 1.4.0 run preserved 18/18 seeded-issue
+detection with zero unsupported affirmative concerns. Its six reviewer reports
+totaled 8,379 word-equivalent units versus 21,194 and 27,200 in the two
+version-1.3.0 runs. This one post-run verifies the new budgets on the fixture;
+it is not a replicate-based stability estimate.
 
 This forward test ran in Codex. The repository's Claude Code compatibility is
 currently validated at the Agent Skills layout, installation-documentation,
@@ -76,14 +109,17 @@ Claude Code end-to-end manuscript forward test.
 Expected behavior:
 
 - the target journal is fixed before full review;
-- six independent functional reviewer roles are selected for the journal tier;
+- five core roles and at most one risk-triggered specialist are selected;
 - the panel validator accepts completed execution receipts and report hashes;
+- the panel validator enforces axis ownership and per-seat output budgets;
 - the concern-ledger validator accepts evidence-anchored consensus and disagreement;
 - the synthesis reports major scientific rework when warranted;
 - manuscript revision does not begin before explicit author authorization.
 
-The synthetic manuscript and generated reviews are not distributed because
-they are workflow test fixtures rather than reusable Skill resources.
+The synthetic manuscript, sealed answer key, scoring script, raw review
+artifacts, blinded issue map, and benchmark report are distributed under
+`benchmarks/nature-vs-mrr-v1/`. The comparison is a bounded forward test, not a
+universal ranking of models or review systems.
 
 ## Validation boundary
 

@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "target_journal": "Nature",
+  "reviewer_count": 6,
+  "completed_reviewer_count": 6,
+  "validated_receipt_count": 6,
+  "roles": [
+    "adversarial-review",
+    "claim-evidence-reference",
+    "domain-science",
+    "journal-priority",
+    "statistics-reproducibility",
+    "study-design"
+  ],
+  "core_seat_count": 5,
+  "optional_seat_count": 1,
+  "report_unit_counts": {
+    "journal-priority": 1242,
+    "domain-science": 1267,
+    "study-design": 1384,
+    "statistics-reproducibility": 1505,
+    "claim-evidence-reference": 1498,
+    "adversarial-review": 1483
+  },
+  "errors": [],
+  "warnings": []
+}

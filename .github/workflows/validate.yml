@@ -27,10 +27,23 @@ jobs:
         run: python -m pip install -r requirements.txt
 
       - name: Compile validator scripts
-        run: python -m py_compile manuscript-review-revision/scripts/*.py
+        run: >-
+          python -m py_compile
+          manuscript-review-revision/scripts/*.py
+          benchmarks/nature-vs-mrr-v1/score_runs.py
 
       - name: Validate release documentation
         run: python manuscript-review-revision/scripts/validate_release_docs.py
 
       - name: Run validator tests
         run: python -m unittest discover -s manuscript-review-revision/tests -v
+
+      - name: Recalculate frozen benchmark scores
+        run: |
+          python benchmarks/nature-vs-mrr-v1/score_runs.py \
+            benchmarks/nature-vs-mrr-v1/answer-key.tsv \
+            benchmarks/nature-vs-mrr-v1/evaluation/run-scores.tsv
+          python benchmarks/nature-vs-mrr-v1/score_runs.py \
+            benchmarks/nature-vs-mrr-v1/answer-key.tsv \
+            benchmarks/nature-vs-mrr-v1/evaluation/post-v1.4.0/run-score.tsv \
+            --expected-runs 1

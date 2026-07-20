@@ -1,0 +1,2 @@
+system	run_id	detected_issue_ids	unsupported_concern_count	precision_non_invention	traceability	resolution_quality	consistency	journal_calibration	auditability	posture	notes
+MRR v1.4	P1	G01;G02;G03;G04;G05;G06;G07;G08;G09;G10;G11;G12;G13;G14;G15;G16;G17;G18	0	20	15	10	10	10	5	MAJOR_SCIENTIFIC_REWORK_REQUIRED	Strict core-defect detection found all 18 sealed issues; raw reviews 8379 word-equivalent units, 36 concerns normalized to 18 issues, ratio 2.00, maximum pair overlap 0.75, verdict 450 units; schema budgets passed with overlap warnings.

@@ -16,7 +16,7 @@ flowchart TB
         direction LR
         J1["01 期刊校准<br/>已知：官网建档<br/>未知：Top 5 推荐"]
         J2["02 输入冻结<br/>版本 · 清单 · SHA-256"]
-        J3["03 动态审稿 Panel<br/>固定五席 + 收据与报告哈希"]
+        J3["03 动态审稿 Panel<br/>固定五席 + 最多一席专项审稿"]
         J4["04 问题台账与主审综合<br/>证据定位 · 共识 · 分歧"]
         J1 --> J2 --> J3 --> J4
     end
@@ -62,13 +62,13 @@ flowchart TB
 flowchart LR
     ROUTER["Panel Router<br/>期刊档次 × 文章类型 × 研究风险"]
     CORE["固定五席 A1–A5<br/>独立上下文 · 不共享初始结论"]
-    A6["条件第六席 A6<br/>对抗审稿 / 图表叙事 / 报告规范"]
+    A6["唯一可选第六席 A6<br/>对抗审稿 或 图表叙事"]
     RECEIPT["运行收据<br/>任务 ID · 输入哈希 · 时间 · 报告哈希"]
     MATRIX["逐条问题台账<br/>原文与证据位置 · 共识 · 分歧"]
     VERDICT{"主审裁决"}
 
     ROUTER --> CORE --> RECEIPT --> MATRIX --> VERDICT
-    ROUTER -. "高档期刊 / 高风险研究" .-> A6
+    ROUTER -. "最高风险触发项" .-> A6
     A6 -.-> RECEIPT
 
     classDef router fill:#0F2747,stroke:#0F2747,stroke-width:2px,color:#FFFFFF;
@@ -173,9 +173,9 @@ python3 -m pip install -r requirements.txt
 
 期刊档次不会改变科学有效性、伦理、文献真实性或可重复性的底线。它改变的是期刊对研究影响范围、创新幅度、验证深度、机制完整性和临床或技术后果的预期。
 
-| 期刊编辑档次 | 默认 Panel | 主要审稿门槛 | 第 6 个 Agent |
+| 期刊编辑档次 | 默认 Panel | 主要审稿门槛 | 唯一可选第 6 席 |
 |---|---:|---|---|
-| Broad flagship | 6 | 跨领域重要性、重大概念推进、因果链完整、多层验证、非专业读者可理解性 | 对抗性审查或图表叙事审查，默认加入 |
+| Broad flagship | 6 | 跨领域重要性、重大概念推进、因果链完整、多层验证、非专业读者可理解性 | 在对抗性审查与图表叙事审查中选择最可能改变结论的一席 |
 | Top specialty | 5–6 | 领域级推进、严格设计、独立验证、机制或临床后果 | 当核心 Claim 依赖外部验证、因果链或临床效用时加入 |
 | Strong specialty | 5 | 清晰的新贡献、可靠方法、充分验证、领域价值、克制的 Claim | 研究复杂或图表密集时加入 |
 | Soundness-focused | 5 | 技术有效性、透明度、可重复性、伦理合规、结论不超过证据 | 通常不强制；出现高风险方法学问题时加入 |
@@ -208,6 +208,10 @@ python3 -m pip install -r requirements.txt
 | `figure-narrative-reporting` | 正文–图表–图注–数据闭环、文章架构和报告规范 |
 | `adversarial-review` | 主动寻找能够推翻核心结论、阻止投稿或要求转投的关键缺陷 |
 
+第 6 席最多只能选择一个。若同时存在因果链和图表叙事风险，路由器选择最可能改变总体结论的一项，另一项并入最接近的核心角色，不增加第 7 席。
+
+每次派发前，14 个审稿轴分别指定一个主责角色。每个 reviewer 最多提交 8 个优先问题和 1,800 个等效词单位；只有 `BLOCKING` 问题可以跨越角色边界。这样既保留至少五个真实独立判断，又避免每个角色重复完成一次整稿审查。
+
 这些是功能性审稿角色，不会虚构真实审稿人的姓名、单位、资历或编辑部内部信息。
 
 ## 5. 根据文章类型替换专业角色
@@ -235,22 +239,26 @@ python3 -m pip install -r requirements.txt
 - 在提交报告前看不到其他 Agent 的结论；
 - 提供可定位到正文、图表、表格或补充材料的证据锚点；
 - 明确区分 `BLOCKING`、`MAJOR`、`MINOR` 和 `NOT ASSESSABLE`；
+- 只负责预先分配的主责轴；非主责问题只有在达到 `BLOCKING` 时才能进入台账；
+- 每席最多 8 个问题和 1,800 个等效词单位；
 - 不虚构实验、结果、引文、行号或已经完成的修改。
 
 Root Agent 只负责最终综合，不计入 5 个审稿 Agents。综合过程不是简单多数投票；一个证据充分的阻断问题可以决定整体结论。
 
-Panel 使用 schema `2.0`。`validate_review_panel.py` 检查任务 ID 是否唯一、
-上下文是否声明为 `FRESH_NON_FORK`、三类冻结输入哈希是否一致、时间顺序是否
-合理，以及报告哈希是否与实际文件相同。如果宿主不提供任务 ID 或可引用的执行
-日志，该项必须标记为 `NOT ASSESSABLE`。这一验证证明的是运行记录与产物闭环，
-不是宿主内部执行过程的密码学证明。
+Panel 使用 schema `2.1`。`validate_review_panel.py` 除了检查任务 ID、
+`FRESH_NON_FORK`、冻结输入哈希、时间顺序和报告哈希，还会检查固定五席、
+最多一席可选 reviewer、审稿轴主责分配和 1,800 等效词单位上限。如果宿主不
+提供任务 ID 或可引用的执行日志，该项必须标记为 `NOT ASSESSABLE`。这一验证
+证明的是运行记录与产物闭环，不是宿主内部执行过程的密码学证明。
 
 独立报告完成后，Root Agent 将每条意见写入
 `reviews/concern_ledger.tsv`。每行包含问题 ID、跨 reviewer 的 issue key、
-原文位置、证据位置、严重度、置信度和可观察的解决标准。只有至少两个独立
+角色范围、原文位置、证据位置、严重度、置信度和可观察的解决标准。每位
+reviewer 最多保留 8 条优先问题。只有至少两个独立
 reviewer 提出相同问题，才可标记为 `CONSENSUS`；意见冲突保留为
 `DISAGREEMENT`。reviewer 两两 issue-key 重合超过 35% 会产生角色重复警告，
-但不会为了降低重合率而虚构差异。
+但不会为了降低重合率而虚构差异。`validate_review_verdict.py` 另行检查作者版
+结论不超过 900 个等效词单位，并且只包含一个允许的审稿姿态。
 
 按稿件类型加载专项审核门槛：临床队列/试验、biomarker、wet-lab mechanism、
 bulk/single-cell/spatial omics、AI/计算方法、系统综述/meta-analysis，以及动物

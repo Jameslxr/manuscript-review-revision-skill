@@ -1,0 +1,17 @@
+Concern ledger validation: PASS
+Concerns: 74
+Issues: 34
+Consensus / disagreement / unique: 16 / 0 / 18
+Maximum pair overlap: 80%
+WARNING: Reviewer pair /root/mrr_nature_forward_run_1/reviewer_07_adversarial_causal/run2_figure_reporting_fresh//root/mrr_nature_forward_run_2/nature_claim_evidence_r2 issue-key overlap is 44%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_1/reviewer_07_adversarial_causal/run2_figure_reporting_fresh//root/mrr_nature_forward_run_2/nature_journal_priority_r2 issue-key overlap is 44%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_1/reviewer_07_adversarial_causal/run2_figure_reporting_fresh//root/mrr_nature_forward_run_2/nature_statistics_repro_r2 issue-key overlap is 67%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_2/nature_claim_evidence_r2//root/mrr_nature_forward_run_2/nature_domain_science_r2 issue-key overlap is 55%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_2/nature_claim_evidence_r2//root/mrr_nature_forward_run_2/nature_journal_priority_r2 issue-key overlap is 73%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_2/nature_claim_evidence_r2//root/mrr_nature_forward_run_2/nature_statistics_repro_r2 issue-key overlap is 64%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_2/nature_claim_evidence_r2//root/mrr_nature_forward_run_2/nature_study_design_r2 issue-key overlap is 70%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_2/nature_domain_science_r2//root/mrr_nature_forward_run_2/nature_journal_priority_r2 issue-key overlap is 42%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_2/nature_domain_science_r2//root/mrr_nature_forward_run_2/nature_study_design_r2 issue-key overlap is 50%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_2/nature_journal_priority_r2//root/mrr_nature_forward_run_2/nature_statistics_repro_r2 issue-key overlap is 67%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_2/nature_journal_priority_r2//root/mrr_nature_forward_run_2/nature_study_design_r2 issue-key overlap is 80%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.
+WARNING: Reviewer pair /root/mrr_nature_forward_run_2/nature_statistics_repro_r2//root/mrr_nature_forward_run_2/nature_study_design_r2 issue-key overlap is 70%; target is at most 35%. Inspect role duplication, but do not invent artificial differences.

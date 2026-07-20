@@ -1,0 +1,156 @@
+{
+  "panel_schema_version": "2.0",
+  "skill_version": "1.3.0",
+  "host": "Codex",
+  "host_version": "NOT_EXPOSED",
+  "target_journal": "Nature",
+  "article_type": "Article",
+  "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+  "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+  "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976",
+  "execution_mode": "independent_agents",
+  "root_is_reviewer": false,
+  "synthesis_started_before_reviews_completed": false,
+  "reviewers": [
+    {
+      "agent_id": "/root/mrr_nature_forward_run_1/reviewer_01_journal_priority",
+      "host_task_id": "/root/mrr_nature_forward_run_1/reviewer_01_journal_priority",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "journal-priority",
+      "role": "Journal priority and editorial fit",
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T09:56:09-05:00",
+      "completed_at": "2026-07-20T09:59:25-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_01.md",
+      "report_sha256": "cb55bee3cc9559a29a0b9bb4369582b04c80d9b0bdfb9765a04c5f8fe0f8ab5b"
+    },
+    {
+      "agent_id": "/root/mrr_nature_forward_run_1/reviewer_02_domain_science",
+      "host_task_id": "/root/mrr_nature_forward_run_1/reviewer_02_domain_science",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "domain-science",
+      "role": "HCC biology and tumour immunology",
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T09:56:24-05:00",
+      "completed_at": "2026-07-20T10:00:14-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_02.md",
+      "report_sha256": "d5c793565d68d011f815acb27838baf7d0d30b58ffaca35a56d6b259a330f3da"
+    },
+    {
+      "agent_id": "/root/mrr_nature_forward_run_1/reviewer_03_study_design",
+      "host_task_id": "/root/mrr_nature_forward_run_1/reviewer_03_study_design",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "study-design",
+      "role": "Integrated clinical, biomarker, omics, wet-lab and animal design",
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T10:00:17-05:00",
+      "completed_at": "2026-07-20T10:04:13-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_03.md",
+      "report_sha256": "ee30230a34aaab70eab778a84f60c254755634661ba910127c871be411094160"
+    },
+    {
+      "agent_id": "/root/mrr_nature_forward_run_1/reviewer_04_statistics_repro",
+      "host_task_id": "/root/mrr_nature_forward_run_1/reviewer_04_statistics_repro",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "statistics-reproducibility",
+      "role": "Statistics and reproducibility",
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T10:00:31-05:00",
+      "completed_at": "2026-07-20T10:04:31-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_04.md",
+      "report_sha256": "dbc5c3f822e97539ebe21580121ed66599bc4647c8cc9ccaad5ef162f7da7625"
+    },
+    {
+      "agent_id": "/root/mrr_nature_forward_run_1/reviewer_05_claim_reference",
+      "host_task_id": "/root/mrr_nature_forward_run_1/reviewer_05_claim_reference",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "claim-evidence-reference",
+      "role": "Claim, evidence and reference support",
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T10:04:31-05:00",
+      "completed_at": "2026-07-20T10:08:35-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_05.md",
+      "report_sha256": "74f385856e35a833d84ef7c322640ec3967c33caa8ff4fe06b3f2b5d29393039"
+    },
+    {
+      "agent_id": "/root/mrr_nature_forward_run_1/reviewer_06_figure_reporting",
+      "host_task_id": "/root/mrr_nature_forward_run_1/reviewer_06_figure_reporting",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "figure-narrative-reporting",
+      "role": "Figure, narrative and reporting closure",
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T10:05:15-05:00",
+      "completed_at": "2026-07-20T10:09:18-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_06.md",
+      "report_sha256": "c0f3188ed99dab85560186b2e8c4ab3b57b3e905085a9afe357f9b16d19010ec"
+    },
+    {
+      "agent_id": "/root/mrr_nature_forward_run_1/reviewer_07_adversarial_causal",
+      "host_task_id": "/root/mrr_nature_forward_run_1/reviewer_07_adversarial_causal",
+      "receipt_source": "HOST_NATIVE",
+      "context_mode": "FRESH_NON_FORK",
+      "role_id": "adversarial-causal-chain",
+      "role": "Adversarial central causal-chain review",
+      "independent": true,
+      "saw_other_reviews": false,
+      "status": "COMPLETED",
+      "started_at": "2026-07-20T10:09:18-05:00",
+      "completed_at": "2026-07-20T10:13:40-05:00",
+      "input_hashes": {
+        "manuscript_sha256": "d51224a5ec717a268dadeee2fe9461a7b9d8c833f5b459be2d522a88d5c0006f",
+        "journal_profile_sha256": "6f6386d213e195d6ec26d0c177568f27753208425a6a15ce139b1ac2235fd6eb",
+        "shared_fact_base_sha256": "947b2ed3c744626d5eadc56845b65f223c6b0d4336bd765e3c714acf4ff4a976"
+      },
+      "report_path": "reviews/reviewer_07.md",
+      "report_sha256": "de8c982f8f9cddaef7ab0fb6ddff20644115cca6a9b37156654bdda8b614bcca"
+    }
+  ]
+}
