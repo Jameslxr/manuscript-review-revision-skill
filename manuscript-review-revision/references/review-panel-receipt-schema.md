@@ -10,7 +10,7 @@ panel gate `NOT ASSESSABLE`; do not invent a task ID.
 | Field | Requirement |
 |---|---|
 | `panel_schema_version` | exactly `2.1` |
-| `skill_version` | semantic version, for example `1.4.0` |
+| `skill_version` | semantic version, for example `1.5.0` |
 | `host` | host name, for example `Codex` or `Claude Code` |
 | `host_version` | observed version or `NOT_EXPOSED` |
 | `target_journal` | exact journal name |
@@ -67,7 +67,7 @@ roles; a one-reviewer panel will not pass validation.
 ```json
 {
   "panel_schema_version": "2.1",
-  "skill_version": "1.4.0",
+  "skill_version": "1.5.0",
   "host": "Codex",
   "host_version": "NOT_EXPOSED",
   "target_journal": "Exact Journal Name",

@@ -113,7 +113,7 @@ def validate(panel: object, panel_path: Path, minimum: int) -> dict[str, object]
     if panel.get("panel_schema_version") != "2.1":
         errors.append("panel_schema_version must be '2.1'.")
     if not SEMVER_RE.fullmatch(str(panel.get("skill_version", ""))):
-        errors.append("skill_version must be a semantic version such as '1.4.0'.")
+        errors.append("skill_version must be a semantic version such as '1.5.0'.")
     for field in ("host", "host_version", "target_journal", "article_type"):
         if not isinstance(panel.get(field), str) or not str(panel.get(field)).strip():
             errors.append(f"{field} must be a non-empty string.")

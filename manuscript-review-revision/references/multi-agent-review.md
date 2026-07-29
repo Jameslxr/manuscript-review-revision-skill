@@ -105,12 +105,15 @@ Material inspected and assessment boundary
 Journal standard applied
 Overall assessment
 Major strengths
+Finding class for every concern
 BLOCKING issues
 MAJOR issues
 MINOR issues
 EDITORIAL issues
 Claim-ceiling risks
 Required versus optional additional work
+Defensibility after claim narrowing and limitation disclosure
+Primary resolution mode
 Journal-fit posture
 NOT ASSESSABLE items
 Evidence anchors
@@ -119,6 +122,12 @@ Confidence and reasons
 
 Every issue must include a manuscript anchor: section, quoted phrase, figure, table, supplement, or stable paragraph identifier. Never invent line numbers. Separate work required to establish the claim from optional work that merely strengthens presentation.
 
+Before using `BLOCKING`, apply the test in
+[evidence-calibration.md](evidence-calibration.md). A missing ideal cohort,
+rescue experiment, public dataset, or validation layer is not automatically
+blocking. State whether it is a fatal validity flaw, correctable before
+submission, an acceptable inherent limitation, or optional strengthening.
+
 Order concerns by consequence. Return at most six `BLOCKING` or `MAJOR`
 concerns and use the remaining budget for no more than two `MINOR` or
 `EDITORIAL` concerns. If more issues exist, state the omitted count and the
@@ -126,8 +135,9 @@ selection rule without listing additional disguised concerns.
 
 Each reported issue must be transferable to `reviews/concern_ledger.tsv` with
 a unique concern ID, a cross-review issue key, review axis, severity, exact
-claim/evidence pointers, confidence, and a concrete resolution test. Use the
-controlled vocabulary in `concern-ledger-and-adjudication.md`.
+claim/evidence pointers, finding class, defensibility state, resolution mode,
+confidence, and a concrete resolution test. Use the controlled vocabulary in
+`concern-ledger-and-adjudication.md`.
 
 ## Synthesis
 
@@ -140,6 +150,7 @@ After all reports finish, build a cross-review matrix with:
 - consensus or disagreement
 - root adjudication
 - required action
+- finding class and resolution mode
 - gate affected
 
 Do not decide by majority vote alone. A single well-grounded blocking issue can control the outcome. Do not average away a genuine disagreement; state what evidence would resolve it.

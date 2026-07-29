@@ -6,20 +6,20 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.4.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.5.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
 
 | Review consideration | Approach |
 |---|---|
-| Review criteria vary across journals | Confirms the target journal, article type, and submission stage before setting the review criteria |
+| Review criteria vary across journals | Confirms the target, article type, and stage, then calibrates severity from official rules and recent accepted same-type papers |
 | Editing too early can obscure unresolved scientific issues | Keeps the manuscript unchanged until the independent scientific review is complete |
 | A single review perspective can miss important problems | Uses five fixed independent roles, at most one risk-triggered specialist, and explicit scope and output budgets |
 | Repeated reviews of the same manuscript by a general-purpose model may be inconsistent or internally contradictory | Freezes the manuscript, journal rules, and roles; records task receipts and output hashes before synthesizing consensus and disagreement concern by concern |
 | An existing reference may not support the statement where it is cited | Checks reference validity, citation format, and support for the specific statement separately |
 | Generated files may not follow standard manuscript conventions | Checks headings, sections, body styles, and the rendered DOCX or PDF pages |
-| Submission readiness cannot be judged when key evidence is missing | Reports the manuscript as failed or not assessable (`FAIL` / `NOT ASSESSABLE`) |
+| No study can satisfy every ideal design feature | Separates fatal flaws, correctable issues, acceptable inherent limitations, and optional strengthening; only problems that survive honest claim narrowing can block |
 
 ## Main Uses
 
@@ -68,10 +68,10 @@ flowchart TB
     TARGET{"2 · Is the target<br/>journal decided?"}
     REC["3A · Recommend 5 journals based on<br/>topic, manuscript quality, and evidence"]
     PICK["3B · The author selects 1 target journal"]
-    RULES["4 · Review the journal website<br/>and confirm current requirements"]
+    RULES["4 · Review the journal website and recent comparators<br/>to separate mandatory rules from observed tolerance"]
     CHECK["5 · Check that materials are complete<br/>text · figures · legends · supplements · references"]
     REVIEW["6 · Five core roles and at most one specialist<br/>independently review assigned risk surfaces"]
-    SUMMARY["7 · Record each concern and evidence location<br/>then synthesize consensus · disagreement · priority"]
+    SUMMARY["7 · Classify fatal flaws · correctable issues<br/>acceptable limitations · optional strengthening"]
     REPORT["8 · Provide the complete review report<br/>without changing the manuscript"]
     AUTH{"9 · Does the author authorize<br/>manuscript revision?"}
     STOP(["No: stop<br/>preserve the manuscript and review report"])
@@ -129,7 +129,7 @@ Step 6 assigns five fixed independent roles for journal fit, domain science, stu
 
 | Stage | Main files |
 |---|---|
-| Journal requirements | `00_input_inventory.json`, `01_journal_profile.json` |
+| Journal requirements and tolerance | `00_input_inventory.json`, `01_journal_profile.json`, `01b_acceptance_tolerance_card.json` |
 | Independent review | `03_review_panel_plan.json`, reviewer reports, and `reviews/concern_ledger.tsv` |
 | Review synthesis | `04_cross_review_matrix.tsv`, `05_review_verdict.md` |
 | Reference audit | `06_reference_audit.tsv` |
@@ -139,11 +139,11 @@ Step 6 assigns five fixed independent roles for journal fit, domain science, stu
 ## Limitations
 
 - Full review does not begin until the target journal is fixed.
-- A panel has five core seats and at most one explicitly triggered specialist; completion requires closed task receipts, input/report hashes, and one primary owner for every review axis.
+- A panel has five core seats and at most one explicitly triggered specialist; an incomplete panel makes workflow assurance `NOT ASSESSABLE` but is not mislabeled as a scientific manuscript defect.
 - No revision, polishing, or formatting occurs without explicit author authorization.
 - The skill does not invent experiments, results, citations, journal rules, reviewer identities, or completed changes.
 - Search snippets, title similarity, and metadata-only results do not establish direct scientific support.
-- `RELEASE PASS` does not predict editorial decisions or acceptance.
+- Manuscript readiness and workflow assurance are reported separately; `RELEASE PASS` means both passed and does not predict acceptance.
 - Unpublished manuscripts, patient information, and restricted data remain subject to institutional and confidentiality rules.
 
 ## Installation
@@ -176,14 +176,14 @@ Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/
 
 ## Current Status And Validation
 
-The current release is **Beta**. Its main controls are automated. In two blinded runs on the same synthetic hepatocellular-carcinoma manuscript, this Skill detected all 18 seeded issues; one Nature-comparator run missed two. A separate 1.4.0 run preserved 18/18 detection while reducing raw review volume by 60%–69%. These results are limited to this forward test and are not a universal model-performance claim. Methods, raw outputs, and optimization evidence are in `benchmarks/nature-vs-mrr-v1/`.
+The current release is **Beta**. Version 1.5.0 adds accepted-paper tolerance calibration, four-class finding adjudication, and risk-tiered citation auditing to the existing blind and forward-test controls. The earlier independent rerun preserved 18/18 seeded-issue detection while reducing raw review volume by 60%–69%. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
 
 Current automated coverage includes:
 
-- unresolved mandatory journal rules cannot pass;
+- unresolved mandatory journal rules, or a tolerance card with fewer than five comparators and no substitution reason, cannot pass;
 - panels with fewer than five Agents, a seventh reviewer, duplicate task IDs, mismatched axis ownership, inconsistent hashes, or an over-budget seat cannot pass; a verdict above 900 word-equivalent units or containing multiple postures also fails;
-- one reviewer cannot label its own finding as consensus, and concerns require manuscript and evidence pointers;
-- metadata-only evidence cannot be labeled direct support;
+- one reviewer cannot label a concern as consensus; every concern records its four-class type, defensibility after claim narrowing, and resolution mode, while acceptable limitations and optional strengthening cannot be `BLOCKING`;
+- metadata-only evidence cannot be direct support; material/supporting claims require complete checks, while incomplete sampled context rows remain advisory;
 - blue or otherwise non-black manuscript headings fail;
 - compliant black headings and complete audit records can pass.
 

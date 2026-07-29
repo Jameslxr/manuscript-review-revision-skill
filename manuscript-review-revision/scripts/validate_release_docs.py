@@ -25,6 +25,12 @@ REVIEW_VERDICT_VALIDATOR = (
     / "scripts"
     / "validate_review_verdict.py"
 )
+ACCEPTANCE_TOLERANCE_VALIDATOR = (
+    ROOT
+    / "manuscript-review-revision"
+    / "scripts"
+    / "validate_acceptance_tolerance.py"
+)
 MAX_README_LINES = 200
 LOCAL_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 VERSION_RE = re.compile(r"version-v(\d+\.\d+\.\d+)")
@@ -72,6 +78,11 @@ def main() -> int:
         errors.append(
             "missing review-verdict validator: "
             f"{REVIEW_VERDICT_VALIDATOR.relative_to(ROOT)}"
+        )
+    if not ACCEPTANCE_TOLERANCE_VALIDATOR.is_file():
+        errors.append(
+            "missing acceptance-tolerance validator: "
+            f"{ACCEPTANCE_TOLERANCE_VALIDATOR.relative_to(ROOT)}"
         )
     if not SKILL_MANIFEST.is_file():
         errors.append(
@@ -148,6 +159,7 @@ def main() -> int:
         "references/review-panel-receipt-schema.md",
         "references/concern-ledger-and-adjudication.md",
         "references/biomedical-review-gates.md",
+        "references/evidence-calibration.md",
     ):
         if required_reference not in skill_entry:
             errors.append(f"SKILL.md does not load {required_reference}.")
@@ -155,6 +167,10 @@ def main() -> int:
         errors.append("SKILL.md does not invoke scripts/validate_concern_ledger.py.")
     if "scripts/validate_review_verdict.py" not in skill_entry:
         errors.append("SKILL.md does not invoke scripts/validate_review_verdict.py.")
+    if "scripts/validate_acceptance_tolerance.py" not in skill_entry:
+        errors.append(
+            "SKILL.md does not invoke scripts/validate_acceptance_tolerance.py."
+        )
 
     for path, text in ((README_ZH, zh), (README_EN, en)):
         line_count = len(text.splitlines())

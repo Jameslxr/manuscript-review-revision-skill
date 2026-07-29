@@ -7,7 +7,7 @@ complete workflow only when it can:
 
 - load an Agent Skill together with its `references/` and `scripts/`;
 - read the supplied manuscript and supporting files without mixing versions;
-- inspect current official journal and scholarly sources;
+- inspect current official journal sources and recent accepted same-type papers;
 - execute the bundled Python validators;
 - create at least five real reviewer tasks with fresh, isolated contexts;
 - expose a host task identity or execution log for every reviewer run;

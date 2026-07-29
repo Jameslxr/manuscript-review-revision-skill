@@ -24,6 +24,9 @@ REQUIRED_COLUMNS = {
     "evidence_pointer",
     "evidence_status",
     "concern",
+    "finding_class",
+    "defensibility_after_claim_narrowing",
+    "resolution_mode",
     "resolution_test",
     "journal_gate",
     "confidence",
@@ -47,6 +50,26 @@ AXES = {
     "reference-support",
 }
 SEVERITIES = {"BLOCKING", "MAJOR", "MINOR", "EDITORIAL"}
+FINDING_CLASSES = {
+    "FATAL_VALIDITY_FLAW",
+    "CORRECTABLE_BEFORE_SUBMISSION",
+    "ACCEPTABLE_INHERENT_LIMITATION",
+    "OPTIONAL_STRENGTHENING",
+}
+DEFENSIBILITY_STATES = {
+    "REMAINS_DEFENSIBLE",
+    "NOT_DEFENSIBLE",
+    "NOT_ASSESSABLE",
+}
+RESOLUTION_MODES = {
+    "NEW_ANALYSIS_OR_EXPERIMENT",
+    "CLAIM_NARROWING",
+    "LIMITATION_DISCLOSURE",
+    "JUSTIFIED_NON_ACTION",
+    "RETARGET",
+    "EDITORIAL_CORRECTION",
+    "NO_DEFENSIBLE_REMEDY",
+}
 EVIDENCE_STATUSES = {"LOCATED", "LOCATION_NOT_PROVIDED", "NOT_ASSESSABLE"}
 CONSENSUS_STATUSES = {"UNIQUE", "CONSENSUS", "DISAGREEMENT"}
 DISPOSITIONS = {
@@ -55,6 +78,7 @@ DISPOSITIONS = {
     "PARTIAL",
     "DISPUTED",
     "RESOLVED",
+    "ACCEPTABLE_LIMITATION",
     "NOT_ASSESSABLE",
 }
 EMPTY_MARKERS = {"", "N/A", "NA", "NONE", "UNKNOWN", "NOT_PROVIDED"}
@@ -175,6 +199,22 @@ def validate(
         severity = row.get("severity", "").upper()
         if severity not in SEVERITIES:
             errors.append(f"{prefix}: invalid severity {severity!r}.")
+        finding_class = row.get("finding_class", "").upper()
+        if finding_class not in FINDING_CLASSES:
+            errors.append(f"{prefix}: invalid finding_class {finding_class!r}.")
+        defensibility = row.get(
+            "defensibility_after_claim_narrowing", ""
+        ).upper()
+        if defensibility not in DEFENSIBILITY_STATES:
+            errors.append(
+                f"{prefix}: invalid defensibility_after_claim_narrowing "
+                f"{defensibility!r}."
+            )
+        resolution_mode = row.get("resolution_mode", "").upper()
+        if resolution_mode not in RESOLUTION_MODES:
+            errors.append(
+                f"{prefix}: invalid resolution_mode {resolution_mode!r}."
+            )
         evidence_status = row.get("evidence_status", "").upper()
         if evidence_status not in EVIDENCE_STATUSES:
             errors.append(f"{prefix}: invalid evidence_status {evidence_status!r}.")
@@ -213,6 +253,73 @@ def validate(
             errors.append(
                 f"{prefix}: NOT_ASSESSABLE evidence requires NOT_ASSESSABLE disposition."
             )
+
+        if severity == "BLOCKING" and defensibility != "NOT_DEFENSIBLE":
+            errors.append(
+                f"{prefix}: BLOCKING requires NOT_DEFENSIBLE after claim narrowing "
+                "and transparent limitation disclosure."
+            )
+        if severity == "BLOCKING" and evidence_status != "LOCATED":
+            errors.append(
+                f"{prefix}: BLOCKING requires located manuscript evidence; "
+                "otherwise use NOT_ASSESSABLE."
+            )
+        if severity != "BLOCKING" and defensibility == "NOT_DEFENSIBLE":
+            errors.append(
+                f"{prefix}: NOT_DEFENSIBLE findings must use BLOCKING severity."
+            )
+        if finding_class == "FATAL_VALIDITY_FLAW":
+            if severity != "BLOCKING":
+                errors.append(
+                    f"{prefix}: FATAL_VALIDITY_FLAW requires BLOCKING severity."
+                )
+            if defensibility != "NOT_DEFENSIBLE":
+                errors.append(
+                    f"{prefix}: FATAL_VALIDITY_FLAW requires NOT_DEFENSIBLE."
+                )
+            if resolution_mode != "NO_DEFENSIBLE_REMEDY":
+                errors.append(
+                    f"{prefix}: FATAL_VALIDITY_FLAW requires "
+                    "NO_DEFENSIBLE_REMEDY."
+                )
+        elif resolution_mode == "NO_DEFENSIBLE_REMEDY":
+            errors.append(
+                f"{prefix}: NO_DEFENSIBLE_REMEDY is reserved for "
+                "FATAL_VALIDITY_FLAW."
+            )
+
+        if finding_class == "ACCEPTABLE_INHERENT_LIMITATION":
+            if severity == "BLOCKING" or defensibility != "REMAINS_DEFENSIBLE":
+                errors.append(
+                    f"{prefix}: ACCEPTABLE_INHERENT_LIMITATION must remain "
+                    "defensible and cannot be BLOCKING."
+                )
+            if disposition != "ACCEPTABLE_LIMITATION":
+                errors.append(
+                    f"{prefix}: ACCEPTABLE_INHERENT_LIMITATION requires "
+                    "ACCEPTABLE_LIMITATION disposition."
+                )
+            if resolution_mode not in {
+                "CLAIM_NARROWING",
+                "LIMITATION_DISCLOSURE",
+                "JUSTIFIED_NON_ACTION",
+            }:
+                errors.append(
+                    f"{prefix}: acceptable limitations must be handled by claim "
+                    "narrowing, limitation disclosure, or justified non-action."
+                )
+        elif disposition == "ACCEPTABLE_LIMITATION":
+            errors.append(
+                f"{prefix}: ACCEPTABLE_LIMITATION disposition requires "
+                "ACCEPTABLE_INHERENT_LIMITATION finding_class."
+            )
+
+        if finding_class == "OPTIONAL_STRENGTHENING":
+            if severity == "BLOCKING" or defensibility != "REMAINS_DEFENSIBLE":
+                errors.append(
+                    f"{prefix}: OPTIONAL_STRENGTHENING must remain defensible "
+                    "and cannot be BLOCKING."
+                )
 
         try:
             confidence = float(row.get("confidence", ""))

@@ -4,8 +4,27 @@ Load only the sections that match the manuscript. These are internal review
 prompts, not claims about a journal's official checklist. Official instructions
 and field-specific reporting standards remain authoritative.
 
-For every applicable gate, report `PASS`, `FAIL`, or `NOT ASSESSABLE`, cite the
-manuscript location, explain the consequence, and define a resolution test.
+Assess every applicable domain, but do not convert every ideal design feature
+below into a mandatory experiment. For a critical gate, report `PASS`, `FAIL`,
+or `NOT ASSESSABLE`, cite the manuscript location, explain the consequence,
+apply the four finding classes in
+[evidence-calibration.md](evidence-calibration.md), and define a resolution
+test. A missing ideal validation layer is not a failure by itself when the
+bounded claim remains defensible.
+
+Across all designs:
+
+- require external validation when the manuscript claims validated
+  generalizability, intended-use performance, or clinical utility; otherwise
+  classify its absence by consequence and journal practice;
+- require rescue, orthogonal perturbation, or a complete causal chain when the
+  manuscript makes the corresponding mechanistic claim, not merely because the
+  experiment would strengthen the paper;
+- accept ethically or legally restricted data when the restriction is real,
+  disclosed, consistent with journal policy, and paired with a workable access
+  mechanism where feasible;
+- distinguish a fatal validity problem from a correctable report defect, an
+  acceptable inherent limitation, and optional strengthening.
 
 ## Universal claim gate
 

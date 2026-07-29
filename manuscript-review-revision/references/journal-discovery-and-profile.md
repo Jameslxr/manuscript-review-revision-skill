@@ -60,6 +60,12 @@ Create `01_journal_profile.json` containing:
 - `journal_tier`: a reasoned editorial-standard class, not an impact-factor label
 - `observed_comparators[]`, when journal benchmarking is requested
 
+For full scientific review, keep the factual journal profile separate from the
+interpretive `01b_acceptance_tolerance_card.json` defined in
+[evidence-calibration.md](evidence-calibration.md). Comparators describe
+observed editorial practice; they do not convert a scientific defect into a
+journal-requirement pass.
+
 Use requirement status `MET`, `NOT_MET`, `NOT_ASSESSABLE`, `NOT_APPLICABLE`, or `PENDING`. If an official rule is inaccessible or conflicting, keep the conflict visible and block a journal-specific pass.
 
 ## Required categories

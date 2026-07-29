@@ -13,6 +13,7 @@ from pathlib import Path
 REQUIRED_COLUMNS = {
     "sentence_id",
     "atomic_claim",
+    "claim_tier",
     "citation_key",
     "identifier",
     "metadata_status",
@@ -23,6 +24,7 @@ REQUIRED_COLUMNS = {
     "format_status",
     "action",
 }
+CLAIM_TIERS = {"A_MATERIAL", "B_SUPPORTING", "C_CONTEXT"}
 METADATA = {"VERIFIED", "UNVERIFIED", "CONFLICT"}
 INTEGRITY = {
     "CLEAR",
@@ -78,10 +80,13 @@ def validate_rows(rows: list[dict[str, str]], columns: set[str]) -> dict[str, ob
 
     seen_rows: set[tuple[str, str, str]] = set()
     blocked_rows: list[int] = []
+    advisory_rows: list[int] = []
+    tier_counts = {tier: 0 for tier in sorted(CLAIM_TIERS)}
 
     for index, row in enumerate(rows, start=2):
         sentence_id = normalized(row, "sentence_id")
         claim = normalized(row, "atomic_claim")
+        claim_tier = normalized(row, "claim_tier").upper()
         citation_key = normalized(row, "citation_key")
         identifier = normalized(row, "identifier")
         metadata = normalized(row, "metadata_status").upper()
@@ -102,6 +107,7 @@ def validate_rows(rows: list[dict[str, str]], columns: set[str]) -> dict[str, ob
                 errors.append(f"Row {index}: {field} must be non-empty.")
 
         for field, value, allowed in (
+            ("claim_tier", claim_tier, CLAIM_TIERS),
             ("metadata_status", metadata, METADATA),
             ("integrity_status", integrity, INTEGRITY),
             ("evidence_basis", evidence, EVIDENCE),
@@ -113,6 +119,9 @@ def validate_rows(rows: list[dict[str, str]], columns: set[str]) -> dict[str, ob
                 errors.append(
                     f"Row {index}: {field} must be one of {sorted(allowed)}; got {value!r}."
                 )
+
+        if claim_tier in CLAIM_TIERS:
+            tier_counts[claim_tier] += 1
 
         row_key = (sentence_id, claim, citation_key)
         if row_key in seen_rows:
@@ -140,30 +149,60 @@ def validate_rows(rows: list[dict[str, str]], columns: set[str]) -> dict[str, ob
                     f"Row {index}: DIRECT_SUPPORT requires PRECISE citation placement."
                 )
 
-        if integrity in {"RETRACTED", "EXPRESSION_OF_CONCERN", "NOT_CHECKED"}:
+        high_stakes = claim_tier in {"A_MATERIAL", "B_SUPPORTING"}
+
+        # Retractions and expressions of concern cannot support an affirmative
+        # claim at any tier. They are allowed only when the manuscript is
+        # explicitly using the record to discuss the integrity event or a
+        # limitation.
+        if (
+            integrity in {"RETRACTED", "EXPRESSION_OF_CONCERN"}
+            and support != "CONTRADICTS_OR_LIMITS"
+        ):
             blocked_rows.append(index)
-        if support == "NOT_ASSESSABLE":
-            blocked_rows.append(index)
-        if placement in {"AMBIGUOUS", "MISPLACED", "MISSING"}:
-            blocked_rows.append(index)
-        if format_status in {"FAIL", "NOT_ASSESSABLE"}:
+
+        # Complete semantic verification is mandatory for material and
+        # supporting claims. Generic context rows may be sampled; incomplete
+        # checks remain visible as advisories rather than blocking the entire
+        # citation gate.
+        risk_signals = (
+            metadata in {"UNVERIFIED", "CONFLICT"}
+            or integrity == "NOT_CHECKED"
+            or support == "NOT_ASSESSABLE"
+            or placement in {"AMBIGUOUS", "MISPLACED", "MISSING"}
+            or format_status == "NOT_ASSESSABLE"
+        )
+        if risk_signals:
+            (blocked_rows if high_stakes else advisory_rows).append(index)
+
+        # A known target-journal formatting error is a concrete correction at
+        # every tier, not an uncertainty to be waived by claim materiality.
+        if format_status == "FAIL":
             blocked_rows.append(index)
 
     if not rows:
         errors.append("Ledger contains no claim-reference rows.")
 
     blocked_rows = sorted(set(blocked_rows))
+    advisory_rows = sorted(set(advisory_rows) - set(blocked_rows))
     if blocked_rows:
         warnings.append(
             "Rows blocking a citation-gate PASS: "
             + ", ".join(str(value) for value in blocked_rows)
+        )
+    if advisory_rows:
+        warnings.append(
+            "Context rows requiring follow-up but not blocking a citation-gate PASS: "
+            + ", ".join(str(value) for value in advisory_rows)
         )
 
     status = "FAIL" if errors else ("NOT_ASSESSABLE" if blocked_rows else "PASS")
     return {
         "status": status,
         "row_count": len(rows),
+        "tier_counts": tier_counts,
         "blocked_rows": blocked_rows,
+        "advisory_rows": advisory_rows,
         "errors": errors,
         "warnings": warnings,
     }
@@ -181,6 +220,7 @@ def render_text(report: dict[str, object]) -> str:
         f"Reference audit validation: {report['status']}",
         f"Rows: {report.get('row_count', 0)}",
         f"Blocked rows: {report.get('blocked_rows', [])}",
+        f"Advisory rows: {report.get('advisory_rows', [])}",
     ]
     for warning in report.get("warnings", []):
         lines.append(f"WARNING: {warning}")

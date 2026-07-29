@@ -18,6 +18,10 @@ Create `reviews/concern_ledger.tsv`. Each row must identify:
 - an exact `claim_pointer` into the manuscript
 - an `evidence_pointer`, or an explicit reason why a location is unavailable
 - the concern in falsifiable language
+- one `finding_class`
+- whether the paper remains defensible after claim narrowing and transparent
+  limitation disclosure
+- one primary `resolution_mode`
 - a concrete `resolution_test`
 - any applicable `journal_gate`
 - confidence from 0 to 1
@@ -62,6 +66,43 @@ to duplicate major, minor, or editorial findings owned by another role.
 
 Severity follows consequence, not reviewer tone or vote count.
 
+Apply the blocking test from
+[evidence-calibration.md](evidence-calibration.md). `BLOCKING` is valid only
+when the manuscript remains `NOT_DEFENSIBLE` after accurate claim narrowing and
+transparent limitation disclosure, and the defect is anchored to located
+manuscript evidence. If the paper remains defensible, use a lower severity even
+when a larger cohort or additional experiment would be valuable. If evidence
+cannot be located, use `NOT_ASSESSABLE`, not a speculative blocker.
+
+## Finding class and resolution mode
+
+Use exactly one finding class:
+
+- `FATAL_VALIDITY_FLAW`
+- `CORRECTABLE_BEFORE_SUBMISSION`
+- `ACCEPTABLE_INHERENT_LIMITATION`
+- `OPTIONAL_STRENGTHENING`
+
+Record `defensibility_after_claim_narrowing` as:
+
+- `REMAINS_DEFENSIBLE`
+- `NOT_DEFENSIBLE`
+- `NOT_ASSESSABLE`
+
+Use one primary resolution mode:
+
+- `NEW_ANALYSIS_OR_EXPERIMENT`
+- `CLAIM_NARROWING`
+- `LIMITATION_DISCLOSURE`
+- `JUSTIFIED_NON_ACTION`
+- `RETARGET`
+- `EDITORIAL_CORRECTION`
+- `NO_DEFENSIBLE_REMEDY`
+
+`NO_DEFENSIBLE_REMEDY` is reserved for `FATAL_VALIDITY_FLAW`.
+`OPTIONAL_STRENGTHENING` and `ACCEPTABLE_INHERENT_LIMITATION` can never be
+`BLOCKING`.
+
 ## Cross-review status
 
 - `UNIQUE`: raised by exactly one reviewer.
@@ -92,6 +133,7 @@ Use one disposition:
 - `PARTIAL`
 - `DISPUTED`
 - `RESOLVED`
+- `ACCEPTABLE_LIMITATION`
 - `NOT_ASSESSABLE`
 
 A resolution test must be observable, for example:
@@ -101,6 +143,9 @@ A resolution test must be observable, for example:
 - cohort definition and exclusion flow made reproducible
 - figure value reconciled with source data and Results text
 - citation replaced by a source that directly supports the atomic claim
+- limitation disclosed and the associated claim narrowed without implying that
+  a new experiment was completed
+- justified non-action tied to feasibility, scope, or ethical/data-access limits
 
 Do not mark an issue `RESOLVED` because prose sounds better.
 

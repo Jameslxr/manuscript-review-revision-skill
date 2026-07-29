@@ -14,10 +14,10 @@
 flowchart TB
     subgraph REVIEW["A · 期刊校准与独立科学审稿"]
         direction LR
-        J1["01 期刊校准<br/>已知：官网建档<br/>未知：Top 5 推荐"]
+        J1["01 期刊校准<br/>官网规则 · 同类录用论文<br/>未知：Top 5 推荐"]
         J2["02 输入冻结<br/>版本 · 清单 · SHA-256"]
         J3["03 动态审稿 Panel<br/>固定五席 + 最多一席专项审稿"]
-        J4["04 问题台账与主审综合<br/>证据定位 · 共识 · 分歧"]
+        J4["04 问题台账与主审综合<br/>致命 · 可修正 · 可接受 · 可选"]
         J1 --> J2 --> J3 --> J4
     end
 
@@ -27,7 +27,7 @@ flowchart TB
         J6["06 分层修改<br/>科学 → 证据 → 语言 → 格式"]
         J7["07 证据闭环与复审"]
         J8{"08 Release Gate"}
-        OUT["PASS<br/>FAIL<br/>NOT ASSESSABLE"]
+        OUT["稿件就绪度<br/>工作流保证<br/>总体 Release 状态"]
         STOP["未授权：只读停止"]
         J5 -- "授权" --> J6 --> J7 --> J8 --> OUT
         J5 -. "未授权" .-> STOP
@@ -51,7 +51,7 @@ flowchart TB
 三条返回规则不画成长距离交叉线，以保持架构图可读：
 
 - **R1 · 更换目标期刊：** 返回 `01 期刊校准`，重新抓取并锁定期刊规则。
-- **R2 · 实质性内容变更：** 只要 claim、方法、统计、图表或参考文献发生实质变化，返回 `03 多 Agent 独立科学审稿`。
+- **R2 · 实质性内容变更：** 返回受影响的 reviewer；只有中心结论、核心证据、总体解释或目标期刊改变时才重跑完整 Panel。
 - **R3 · 投稿门禁失败：** 返回 `06 分层修改与复审`；问题关闭前不得标记为可投稿。
 
 ### 2. 动态多 Agent 审稿引擎
@@ -84,7 +84,7 @@ flowchart LR
     class VERDICT gate;
 ```
 
-关键状态均有机器可检查的中间产物：`01_journal_profile.json`、`03_review_panel_plan.json`、`reviews/concern_ledger.tsv`、`05_review_verdict.md`、`06_reference_audit.tsv` 和 `08_release_gate.md`。
+关键状态均有可检查的中间产物：`01_journal_profile.json`、`01b_acceptance_tolerance_card.json`、`03_review_panel_plan.json`、`reviews/concern_ledger.tsv`、`05_review_verdict.md`、`06_reference_audit.tsv` 和 `08_release_gate.md`。
 
 ## 安装与宿主兼容性
 
@@ -133,10 +133,11 @@ python3 -m pip install -r requirements.txt
 
 ## 1. 为什么需要这个 Skill
 
-常规 AI 改稿容易出现五类问题：
+常规 AI 改稿容易出现六类问题：
 
 - 在科学问题尚未解决时直接润色语言；
 - 不论目标期刊如何，都机械使用同一套“顶刊标准”；
+- 把理想实验配置误当成录用的必要条件，使小样本、单中心或探索性研究被过度否定；
 - 同一稿件重复运行时意见不稳定，或不同角色在同一上下文中相互影响；
 - 只核查文献是否存在，却不判断文献是否真正支持对应 Claim；
 - 生成带有蓝色标题、彩色 section、卡片和横幅的报告式 DOCX，而不是正式投稿 manuscript。
@@ -150,6 +151,7 @@ python3 -m pip install -r requirements.txt
 ```text
 目标期刊
 → 期刊档案
+→ 同类录用论文尺度卡
 → 冻结原稿
 → 独立多-Agent审稿
 → 综合结论
@@ -175,12 +177,12 @@ python3 -m pip install -r requirements.txt
 
 | 期刊编辑档次 | 默认 Panel | 主要审稿门槛 | 唯一可选第 6 席 |
 |---|---:|---|---|
-| Broad flagship | 6 | 跨领域重要性、重大概念推进、因果链完整、多层验证、非专业读者可理解性 | 在对抗性审查与图表叙事审查中选择最可能改变结论的一席 |
-| Top specialty | 5–6 | 领域级推进、严格设计、独立验证、机制或临床后果 | 当核心 Claim 依赖外部验证、因果链或临床效用时加入 |
+| Broad flagship | 6 | 跨领域重要性、重大概念推进、与 Claim 相称的证据深度、必要时的多层验证 | 在对抗性审查与图表叙事审查中选择最可能改变结论的一席 |
+| Top specialty | 5–6 | 领域级推进、严格设计、与预期推断相称的验证、机制或临床后果 | 当核心 Claim 依赖外部验证、因果链或临床效用时加入 |
 | Strong specialty | 5 | 清晰的新贡献、可靠方法、充分验证、领域价值、克制的 Claim | 研究复杂或图表密集时加入 |
 | Soundness-focused | 5 | 技术有效性、透明度、可重复性、伦理合规、结论不超过证据 | 通常不强制；出现高风险方法学问题时加入 |
 
-因此，较低档次的专业期刊不会因为缺少“旗舰期刊级广泛影响”而被错误否定；但任何期刊都不能降低以下底线：
+这些是竞争力预期，不是通用录用清单。每次正式审稿先阅读至少 5 篇近期同刊同类型论文，记录真实设计规模、验证层级、局限性、Claim 动词和数据限制。小样本、单臂、缺少外部验证或受限数据只有在使中心结论无法成立时才构成阻断；否则归为可修正问题、可接受局限或可选增强。较低档次的专业期刊不会因为缺少“旗舰期刊级广泛影响”而被错误否定，但任何期刊都不能降低以下底线：
 
 - 研究设计有效；
 - 统计和计算方法合理；
@@ -239,6 +241,8 @@ python3 -m pip install -r requirements.txt
 - 在提交报告前看不到其他 Agent 的结论；
 - 提供可定位到正文、图表、表格或补充材料的证据锚点；
 - 明确区分 `BLOCKING`、`MAJOR`、`MINOR` 和 `NOT ASSESSABLE`；
+- 每条问题归入 `FATAL_VALIDITY_FLAW`、`CORRECTABLE_BEFORE_SUBMISSION`、`ACCEPTABLE_INHERENT_LIMITATION` 或 `OPTIONAL_STRENGTHENING`；
+- 只有收窄 Claim 并透明披露局限后仍不可辩护的问题才能标记 `BLOCKING`；
 - 只负责预先分配的主责轴；非主责问题只有在达到 `BLOCKING` 时才能进入台账；
 - 每席最多 8 个问题和 1,800 个等效词单位；
 - 不虚构实验、结果、引文、行号或已经完成的修改。
@@ -253,7 +257,7 @@ Panel 使用 schema `2.1`。`validate_review_panel.py` 除了检查任务 ID、
 
 独立报告完成后，Root Agent 将每条意见写入
 `reviews/concern_ledger.tsv`。每行包含问题 ID、跨 reviewer 的 issue key、
-角色范围、原文位置、证据位置、严重度、置信度和可观察的解决标准。每位
+角色范围、原文位置、证据位置、严重度、四类问题判定、收窄 Claim 后的可辩护性、处理方式、置信度和可观察的解决标准。每位
 reviewer 最多保留 8 条优先问题。只有至少两个独立
 reviewer 提出相同问题，才可标记为 `CONSENSUS`；意见冲突保留为
 `DISAGREEMENT`。reviewer 两两 issue-key 重合超过 35% 会产生角色重复警告，
@@ -278,6 +282,7 @@ bulk/single-cell/spatial omics、AI/计算方法、系统综述/meta-analysis，
 | 阶段 | 主要能力 |
 |---|---|
 | 期刊推荐与规则核实 | 宿主提供的 Web、浏览器、学术数据库或 MCP 能力 |
+| 录用尺度校准 | 期刊官网近期同类型论文、公开同行评审材料和 `evidence-calibration.md` |
 | DOCX/PDF 读取与视觉检查 | 宿主提供的文件读取、转换、渲染和页面检查能力 |
 | 独立审稿 | 非 fork 的独立上下文子 Agent；至少 5 个真实任务 |
 | 期刊档案验证 | `<SKILL_ROOT>/scripts/validate_journal_profile.py` |
@@ -308,9 +313,9 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
    检查编号或 author–date 格式、作者截断、期刊缩写、重复文献和正文–文献表闭环。
 
 3. **文献是否真正支持这句话？**
-   将复合句拆分为 atomic claims，逐条判断证据是否直接、部分、间接、矛盾或无法评估。
+   核心物质性 Claim（A）和支持性 Claim（B）逐条全文核查；普通背景 Claim（C）进行真实性检查和有记录的语义抽查。
 
-一篇真实文献仍然可能是错误引用。标题相关、搜索摘要或 metadata-only 结果不能被当作直接证据。
+一篇真实文献仍然可能是错误引用。标题相关、搜索摘要或 metadata-only 结果不能被当作直接证据。高质量综述可以直接支持范围匹配的综合性或共识性表述，但不能替代具体实验、效应量、因果结果或安全性结果的原始证据。
 
 ## 9. 正式 manuscript 排版
 
@@ -324,13 +329,17 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
 
 ## 10. Fail-Closed Release Gate
 
-最终状态只能是：
+最终同时报告：
+
+- `MANUSCRIPT READINESS: PASS | FAIL | NOT ASSESSABLE`
+- `WORKFLOW ASSURANCE: PASS | NOT ASSESSABLE`
+- 一个总体状态：
 
 - `RELEASE PASS`
 - `RELEASE FAIL`
 - `RELEASE NOT ASSESSABLE`
 
-任何关键材料缺失、期刊规则无法核实、文献支持未关闭、图表与正文冲突或少于 5 个独立审稿 Agents，都会阻止 `RELEASE PASS`。
+已知且未解决的科学、伦理、数据、引用或投稿包缺陷导致 `RELEASE FAIL`。少于 5 个独立审稿 Agents 或缺少任务收据只会使工作流保证及总体状态成为 `NOT ASSESSABLE`，不会被写成稿件本身的科学缺陷。只有稿件就绪度和工作流保证都通过时才返回 `RELEASE PASS`。
 
 该状态只表示稿件是否通过当前证据支持的投稿前检查，不预测编辑或期刊是否接收。
 
@@ -403,6 +412,7 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
     ├── references/
     │   ├── journal-discovery-and-profile.md
     │   ├── journal-tier-rubrics.md
+    │   ├── evidence-calibration.md
     │   ├── biomedical-review-gates.md
     │   ├── concern-ledger-and-adjudication.md
     │   ├── review-panel-receipt-schema.md
@@ -413,6 +423,7 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
     │   └── release-gates.md
     ├── scripts/
     │   ├── validate_journal_profile.py
+    │   ├── validate_acceptance_tolerance.py
     │   ├── validate_review_panel.py
     │   ├── validate_concern_ledger.py
     │   ├── validate_reference_audit.py
@@ -425,7 +436,7 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
 ## 13. 当前验证状态
 
 - Skill 结构验证通过；
-- 12 项代表性自动测试通过；
+- 自动测试覆盖四类问题判定、阻断测试、分层引用审计和原有工作流门槛；
 - Agent 收据能够阻止重复任务 ID、输入不一致和报告哈希错配；
 - 问题台账能够阻止单人伪共识和缺少证据位置的意见；
 - DOCX 蓝色标题和装饰样式检查通过正反例测试；
@@ -441,7 +452,7 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
 - 运行产物应保存在独立工作目录，避免与 Skill 源码混合；
 - 在访问外部服务前，应确认稿件保密要求、机构政策和数据使用权限；
 - 本 Skill 提供结构化审查和验证流程，不替代作者责任、统计咨询、伦理审查、法律意见或期刊编辑判断；
-- `RELEASE PASS` 只表示通过当前材料可支持的投稿前检查，不代表或预测期刊接收。
+- `RELEASE PASS` 只表示稿件就绪度与工作流保证均通过当前检查，不代表或预测期刊接收。
 
 ## 15. 贡献与复用
 
@@ -453,4 +464,4 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
 - Claim–Evidence–Reference 逐项闭环；
 - 关键材料缺失时 fail closed。
 
-**核心定位：** 这不是一个“自动美化论文”的工具，而是一套按目标期刊校准、先独立审稿、再经作者授权修改，并对文献、图表、排版和投稿完整性执行 Fail-Closed 检查的科研论文工作流。
+**核心定位：** 这不是一个“自动美化论文”或追求虚假完美的工具，而是一套结合期刊硬性规则与真实录用尺度、先独立审稿、再经作者授权修改，并对科学底线、文献、图表、排版和投稿完整性执行可追溯检查的科研论文工作流。

@@ -1,7 +1,7 @@
 ---
 name: manuscript-review-revision
 description: |
-  Run a platform-independent, journal-aware, review-first workflow for scientific manuscripts, including target-journal confirmation or Top-5 journal recommendation, live official-author-guideline research, at least five independent reviewer agents, scientific and statistical review, claim-reference verification, reviewer-response drafting, revision, formal DOCX/PDF manuscript formatting, and fail-closed release auditing. Use in Codex, Claude Code, or another compatible Agent Skills host when the user asks to review, revise, polish, format, submit, retarget, recommend journals for, verify references in, or respond to reviewers about a biomedical or scientific manuscript. Always establish the exact target journal before full review; never revise or cosmetically polish before the independent review gate is complete and the user authorizes revision.
+  Run a platform-independent, journal-aware, review-first workflow for scientific manuscripts, including target-journal confirmation or Top-5 journal recommendation, live official-author-guideline research, accepted-paper tolerance calibration, at least five independent reviewer agents, scientific and statistical review, risk-tiered claim-reference verification, reviewer-response drafting, revision, formal DOCX/PDF manuscript formatting, and fail-closed release auditing. Use in Codex, Claude Code, or another compatible Agent Skills host when the user asks to review, revise, polish, format, submit, retarget, recommend journals for, verify references in, or respond to reviewers about a biomedical or scientific manuscript. Always establish the exact target journal before full review; never revise or cosmetically polish before the independent review gate is complete and the user authorizes revision.
 ---
 
 # Manuscript Review & Revision
@@ -10,12 +10,15 @@ description: |
 
 Treat review, revision, and formatting as separate phases. Use this non-negotiable order:
 
-`target journal -> journal profile -> frozen input -> independent review -> synthesis -> user gate -> scientific revision -> reference/figure closure -> language -> formatting -> release gate`
+`target journal -> journal profile -> acceptance-tolerance card -> frozen input -> independent review -> synthesis -> user gate -> scientific revision -> reference/figure closure -> language -> formatting -> release gate`
 
 - Keep the manuscript read-only through review.
 - Do not turn a polished file into a submission-ready claim.
 - Do not invent experiments, analyses, citations, journal rules, reviewer identities, line numbers, or completed changes.
 - Use `PASS`, `FAIL`, or `NOT ASSESSABLE` for critical gates.
+- Classify concerns as fatal flaws, correctable issues, acceptable inherent
+  limitations, or optional strengthening; absence of ideal evidence is not an
+  automatic blocker.
 - Explain findings in the user's language while preserving exact manuscript text, filenames, identifiers, and journal wording.
 
 ## Host capability contract
@@ -45,6 +48,17 @@ Before reviewing, inspect the invocation for an exact target journal.
 - Do not start full review until the primary target is fixed.
 
 For every fixed target, browse current official journal sources. Resolve article type and submission stage from the command or manuscript; ask only when ambiguity would materially change the rules. Record URLs and access dates. If current official sources cannot be inspected, mark journal-specific work `NOT ASSESSABLE`.
+
+For full scientific review, load
+[references/evidence-calibration.md](references/evidence-calibration.md),
+inspect recent accepted same-type papers, and create
+`01b_acceptance_tolerance_card.json`. Official rules and scientific validity
+outrank publication precedent. Validate it with:
+
+```bash
+python3 "$SKILL_ROOT/scripts/validate_acceptance_tolerance.py" \
+  01b_acceptance_tolerance_card.json
+```
 
 ## Step 1: freeze and inventory the input
 
@@ -84,6 +98,7 @@ If the user supplies a target and manuscript but no mode, default to `scientific
 
 Load [references/multi-agent-review.md](references/multi-agent-review.md),
 [references/journal-tier-rubrics.md](references/journal-tier-rubrics.md), and
+[references/evidence-calibration.md](references/evidence-calibration.md),
 [references/review-panel-receipt-schema.md](references/review-panel-receipt-schema.md),
 [references/concern-ledger-and-adjudication.md](references/concern-ledger-and-adjudication.md)
 completely. Load the applicable sections of
@@ -135,6 +150,19 @@ Then consolidate without averaging away disagreements. Create:
 - `04_cross_review_matrix.tsv`
 - `05_review_verdict.md`
 
+Every ledger concern must record one of:
+
+- `FATAL_VALIDITY_FLAW`
+- `CORRECTABLE_BEFORE_SUBMISSION`
+- `ACCEPTABLE_INHERENT_LIMITATION`
+- `OPTIONAL_STRENGTHENING`
+
+Use `BLOCKING` only when accurate claim narrowing and transparent limitation
+disclosure still leave the central inference invalid or the manuscript not a
+defensible submission to the selected target, and the defect is anchored to
+located manuscript evidence. Otherwise use a lower class/severity or
+`NOT_ASSESSABLE`.
+
 Use one matrix row per normalized issue and keep the author-facing verdict at
 or below 900 word-equivalent units. Put detail in the traceable ledger; do not
 repeat every reviewer report in the verdict.
@@ -172,13 +200,20 @@ Preserve the original. Produce a tracked/review copy, a clean revised copy, and 
 
 ## Step 6: audit references and exact claim support
 
-Load [references/reference-integrity.md](references/reference-integrity.md). Build `06_reference_audit.tsv` with one row per atomic claim-citation relationship, then run:
+Load [references/reference-integrity.md](references/reference-integrity.md).
+Classify claims as `A_MATERIAL`, `B_SUPPORTING`, or `C_CONTEXT`. Build
+`06_reference_audit.tsv` with one row per tier-A/tier-B relationship and each
+audited tier-C sample, then run:
 
 ```bash
 python3 "$SKILL_ROOT/scripts/validate_reference_audit.py" 06_reference_audit.tsv
 ```
 
-Metadata verification and semantic support are separate. A real paper can still be the wrong citation. A related title, metadata-only result, or review article does not establish direct support.
+Metadata verification and semantic support are separate. A real paper can
+still be the wrong citation. A related title or metadata-only result does not
+establish direct support. A full-text review may directly support an
+appropriately scoped synthesis or consensus claim, but not a specific primary
+experiment, effect estimate, causal result, or safety outcome.
 
 ## Step 7: format as a submission manuscript
 
@@ -200,11 +235,13 @@ A mechanical pass does not replace official-template or rendered visual review.
 
 Load [references/release-gates.md](references/release-gates.md). Re-run targeted reviewer agents when revisions changed the claim architecture, core evidence, statistics, figures, or references.
 
-Return exactly one final state:
+Report manuscript readiness separately from workflow assurance. Missing Agent
+capacity or task receipts makes workflow assurance `NOT ASSESSABLE`; it is not
+itself a scientific defect in the manuscript.
 
-- `RELEASE PASS`
-- `RELEASE FAIL`
-- `RELEASE NOT ASSESSABLE`
+Return the manuscript-readiness status, workflow-assurance status, and exactly
+one overall state: `RELEASE PASS`, `RELEASE FAIL`, or
+`RELEASE NOT ASSESSABLE`, using the mapping in `release-gates.md`.
 
 Never predict acceptance.
 
@@ -215,6 +252,7 @@ Use this stable order when the corresponding phase runs:
 ```text
 00_input_inventory.json
 01_journal_profile.json
+01b_acceptance_tolerance_card.json
 02_shared_fact_base.md
 03_review_panel_plan.json
 reviews/reviewer_01.md ...
@@ -240,6 +278,7 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 | [references/journal-discovery-and-profile.md](references/journal-discovery-and-profile.md) | Target journal is unknown or any journal-specific task begins |
 | [references/multi-agent-review.md](references/multi-agent-review.md) | Planning, running, or synthesizing reviewer agents |
 | [references/journal-tier-rubrics.md](references/journal-tier-rubrics.md) | Calibrating reviewer strictness or selecting specialist roles |
+| [references/evidence-calibration.md](references/evidence-calibration.md) | Building accepted-paper tolerance cards, applying the blocking test, and separating inherent limitations from fatal flaws |
 | [references/review-panel-receipt-schema.md](references/review-panel-receipt-schema.md) | Building and validating host task receipts and report hashes |
 | [references/concern-ledger-and-adjudication.md](references/concern-ledger-and-adjudication.md) | Normalizing findings, evidence anchors, consensus, disagreement, and resolution |
 | [references/biomedical-review-gates.md](references/biomedical-review-gates.md) | Applying design-specific clinical, wet-lab, omics, AI, review, or animal stress tests |

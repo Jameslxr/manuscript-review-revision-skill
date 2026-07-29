@@ -1,5 +1,5 @@
 name: manuscript-review-revision
-version: 1.4.0
+version: 1.5.0
 description: >
   Declarative routing manifest for journal-aware, review-first manuscript
   assessment and authorized revision across compatible Agent Skills hosts.
@@ -15,6 +15,8 @@ references:
       path: references/multi-agent-review.md
     - condition: calibrating editorial strictness or selecting the optional specialist seat
       path: references/journal-tier-rubrics.md
+    - condition: calibrating acceptance tolerance, applying the blocking test, or classifying limitations
+      path: references/evidence-calibration.md
     - condition: creating or validating panel receipts, axis ownership, or report budgets
       path: references/review-panel-receipt-schema.md
     - condition: creating the concern ledger, consensus states, or resolution tests

@@ -24,6 +24,11 @@ Resolve issues in this order:
 
 Do not use language polishing to conceal unresolved evidence or logic.
 
+For each issue, use the recorded resolution mode. Do not imply that a new
+experiment, cohort, or analysis is mandatory when claim narrowing, limitation
+disclosure, justified non-action, or retargeting leaves a defensible paper.
+Never rewrite an inherent limitation as though it has disappeared.
+
 ## Issue ledger
 
 Use stable issue IDs. Record:
@@ -55,4 +60,8 @@ Never claim `We have revised` unless the delivered manuscript contains the revis
 
 ## Post-revision review
 
-Reopen the agents responsible for affected critical gates. Re-run the full panel when revision changes the central claim, article architecture, study interpretation, core figures, or target journal.
+Reopen the agents responsible for affected critical gates. Re-run the full
+panel when revision changes the central inference, target journal, study
+interpretation, or the core evidence supporting the conclusion. An
+article-architecture change alone needs targeted review unless it also changes
+those scientific elements.

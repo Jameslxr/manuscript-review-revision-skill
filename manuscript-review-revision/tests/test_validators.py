@@ -37,6 +37,9 @@ CONCERN_COLUMNS = [
     "evidence_pointer",
     "evidence_status",
     "concern",
+    "finding_class",
+    "defensibility_after_claim_narrowing",
+    "resolution_mode",
     "resolution_test",
     "journal_gate",
     "confidence",
@@ -125,7 +128,7 @@ def write_panel(
         json.dumps(
             {
                 "panel_schema_version": "2.1",
-                "skill_version": "1.4.0",
+                "skill_version": "1.5.0",
                 "host": "Test Host",
                 "host_version": "1.0",
                 "target_journal": "Example Journal",
@@ -154,6 +157,62 @@ def write_panel(
     return panel
 
 
+def write_tolerance_card(
+    path: Path,
+    *,
+    exact_matches: int = 5,
+    substitution_reason: str = "",
+) -> None:
+    comparators = []
+    for index in range(1, 6):
+        comparators.append(
+            {
+                "id": f"P{index:02d}",
+                "citation": f"Accepted comparator paper {index}",
+                "url": f"https://journal.example.org/article-{index}",
+                "publication_date": f"2026-0{index}-01",
+                "journal": "Example Journal",
+                "article_type": "Original Article",
+                "match_level": (
+                    "EXACT_JOURNAL_AND_TYPE"
+                    if index <= exact_matches
+                    else "EXACT_JOURNAL_ADJACENT_TYPE"
+                ),
+                "design": "Retrospective cohort",
+                "unit_of_inference": "Patient",
+                "scale": "100 patients",
+                "validation": "Internal validation",
+                "limitations": ["Single-center design"],
+                "claim_ceiling": "Association only",
+                "data_code_access": "Controlled access",
+                "comparability_notes": "Same disease area and outcome family",
+            }
+        )
+    path.write_text(
+        json.dumps(
+            {
+                "target_journal": "Example Journal",
+                "article_type": "Original Article",
+                "accessed_at": "2026-07-29",
+                "status": "PASS",
+                "comparators": comparators,
+                "substitution_reason": substitution_reason,
+                "synthesis": {
+                    "mandatory_official_requirements": ["Ethics statement"],
+                    "validity_floor": ["Correct unit of analysis"],
+                    "competitiveness_expectations": ["Field-level contribution"],
+                    "accepted_with_limitations": ["Disclosed single-center design"],
+                    "optional_strengthening": ["Additional external cohort"],
+                    "calibration_boundary": (
+                        "Published comparators calibrate scope, not scientific truth."
+                    ),
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def write_concern_ledger(path: Path, rows: list[dict[str, str]]) -> None:
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=CONCERN_COLUMNS, delimiter="\t")
@@ -173,7 +232,33 @@ def concern_row(
     axis: str = "experimental-design",
     role_scope: str = "PRIMARY",
     severity: str = "MAJOR",
+    finding_class: str = "CORRECTABLE_BEFORE_SUBMISSION",
+    defensibility: str | None = None,
+    resolution_mode: str | None = None,
+    disposition: str | None = None,
 ) -> dict[str, str]:
+    if defensibility is None:
+        defensibility = (
+            "NOT_ASSESSABLE"
+            if evidence_status == "NOT_ASSESSABLE"
+            else "NOT_DEFENSIBLE"
+            if severity == "BLOCKING"
+            else "REMAINS_DEFENSIBLE"
+        )
+    if resolution_mode is None:
+        resolution_mode = {
+            "FATAL_VALIDITY_FLAW": "NO_DEFENSIBLE_REMEDY",
+            "ACCEPTABLE_INHERENT_LIMITATION": "LIMITATION_DISCLOSURE",
+            "OPTIONAL_STRENGTHENING": "NEW_ANALYSIS_OR_EXPERIMENT",
+        }.get(finding_class, "CLAIM_NARROWING")
+    if disposition is None:
+        disposition = (
+            "NOT_ASSESSABLE"
+            if evidence_status == "NOT_ASSESSABLE"
+            else "ACCEPTABLE_LIMITATION"
+            if finding_class == "ACCEPTABLE_INHERENT_LIMITATION"
+            else "OPEN"
+        )
     return {
         "concern_id": concern_id,
         "issue_key": issue_key,
@@ -186,17 +271,35 @@ def concern_row(
         "evidence_pointer": evidence_pointer,
         "evidence_status": evidence_status,
         "concern": "The stated generalization exceeds the tested cohort.",
+        "finding_class": finding_class,
+        "defensibility_after_claim_narrowing": defensibility,
+        "resolution_mode": resolution_mode,
         "resolution_test": "Narrow the claim or add an independent external cohort.",
         "journal_gate": "evidence threshold",
         "confidence": "0.9",
         "consensus_status": consensus_status,
-        "disposition": (
-            "NOT_ASSESSABLE" if evidence_status == "NOT_ASSESSABLE" else "OPEN"
-        ),
+        "disposition": disposition,
     }
 
 
 class ValidatorTests(unittest.TestCase):
+    def test_acceptance_tolerance_card_with_five_exact_matches_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            card = Path(temp) / "tolerance.json"
+            write_tolerance_card(card)
+            result = run_script("validate_acceptance_tolerance.py", card)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Acceptance-tolerance validation: PASS", result.stdout)
+            self.assertIn("Exact journal/type matches: 5", result.stdout)
+
+    def test_comparator_substitution_requires_disclosed_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            card = Path(temp) / "tolerance.json"
+            write_tolerance_card(card, exact_matches=4)
+            result = run_script("validate_acceptance_tolerance.py", card)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("requires a non-empty substitution_reason", result.stdout)
+
     def test_valid_journal_profile_passes(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "profile.json"
@@ -399,6 +502,99 @@ class ValidatorTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("requires a specific evidence_pointer", result.stdout)
 
+    def test_acceptable_inherent_limitation_is_not_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            write_concern_ledger(
+                ledger,
+                [
+                    concern_row(
+                        "C001",
+                        "single-center-generalizability",
+                        3,
+                        "study-design",
+                        finding_class="ACCEPTABLE_INHERENT_LIMITATION",
+                        severity="MAJOR",
+                    )
+                ],
+            )
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Concern ledger validation: PASS", result.stdout)
+
+    def test_blocking_requires_failure_after_claim_narrowing(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            write_concern_ledger(
+                ledger,
+                [
+                    concern_row(
+                        "C001",
+                        "overstated-claim",
+                        3,
+                        "study-design",
+                        severity="BLOCKING",
+                        defensibility="REMAINS_DEFENSIBLE",
+                    )
+                ],
+            )
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "BLOCKING requires NOT_DEFENSIBLE after claim narrowing",
+                result.stdout,
+            )
+
+    def test_optional_strengthening_cannot_be_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            write_concern_ledger(
+                ledger,
+                [
+                    concern_row(
+                        "C001",
+                        "extra-validation-cohort",
+                        3,
+                        "study-design",
+                        severity="BLOCKING",
+                        finding_class="OPTIONAL_STRENGTHENING",
+                        defensibility="NOT_DEFENSIBLE",
+                    )
+                ],
+            )
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("OPTIONAL_STRENGTHENING", result.stdout)
+
+    def test_blocking_requires_located_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            panel = write_panel(root)
+            ledger = root / "concerns.tsv"
+            write_concern_ledger(
+                ledger,
+                [
+                    concern_row(
+                        "C001",
+                        "suspected-invalidity",
+                        3,
+                        "study-design",
+                        severity="BLOCKING",
+                        evidence_status="LOCATION_NOT_PROVIDED",
+                        evidence_pointer="",
+                    )
+                ],
+            )
+            result = run_script("validate_concern_ledger.py", ledger, panel)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("BLOCKING requires located manuscript evidence", result.stdout)
+
     def test_high_overlap_warns_without_inventing_diversity(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
@@ -598,6 +794,7 @@ class ValidatorTests(unittest.TestCase):
             columns = [
                 "sentence_id",
                 "atomic_claim",
+                "claim_tier",
                 "citation_key",
                 "identifier",
                 "metadata_status",
@@ -615,6 +812,7 @@ class ValidatorTests(unittest.TestCase):
                     {
                         "sentence_id": "S001",
                         "atomic_claim": "The tested relationship was observed in HCC.",
+                        "claim_tier": "A_MATERIAL",
                         "citation_key": "REF001",
                         "identifier": "doi:10.1000/example",
                         "metadata_status": "VERIFIED",
@@ -636,6 +834,7 @@ class ValidatorTests(unittest.TestCase):
             columns = [
                 "sentence_id",
                 "atomic_claim",
+                "claim_tier",
                 "citation_key",
                 "identifier",
                 "metadata_status",
@@ -653,6 +852,7 @@ class ValidatorTests(unittest.TestCase):
                     {
                         "sentence_id": "S001",
                         "atomic_claim": "A causal mechanism is established.",
+                        "claim_tier": "A_MATERIAL",
                         "citation_key": "REF001",
                         "identifier": "doi:10.1000/example",
                         "metadata_status": "VERIFIED",
@@ -667,6 +867,88 @@ class ValidatorTests(unittest.TestCase):
             result = run_script("validate_reference_audit.py", ledger)
             self.assertEqual(result.returncode, 1)
             self.assertIn("requires FULL_TEXT or RESULTS_SECTION", result.stdout)
+
+    def test_unassessed_context_citation_is_advisory(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            ledger = Path(temp) / "references.tsv"
+            columns = [
+                "sentence_id",
+                "atomic_claim",
+                "claim_tier",
+                "citation_key",
+                "identifier",
+                "metadata_status",
+                "integrity_status",
+                "evidence_basis",
+                "support_grade",
+                "placement_status",
+                "format_status",
+                "action",
+            ]
+            with ledger.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=columns, delimiter="\t")
+                writer.writeheader()
+                writer.writerow(
+                    {
+                        "sentence_id": "S001",
+                        "atomic_claim": "HCC is a major form of primary liver cancer.",
+                        "claim_tier": "C_CONTEXT",
+                        "citation_key": "REF001",
+                        "identifier": "",
+                        "metadata_status": "UNVERIFIED",
+                        "integrity_status": "NOT_CHECKED",
+                        "evidence_basis": "UNAVAILABLE",
+                        "support_grade": "NOT_ASSESSABLE",
+                        "placement_status": "AMBIGUOUS",
+                        "format_status": "NOT_ASSESSABLE",
+                        "action": "sample for follow-up",
+                    }
+                )
+            result = run_script("validate_reference_audit.py", ledger)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("Reference audit validation: PASS", result.stdout)
+            self.assertIn("Advisory rows: [2]", result.stdout)
+
+    def test_unassessed_material_citation_blocks_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            ledger = Path(temp) / "references.tsv"
+            columns = [
+                "sentence_id",
+                "atomic_claim",
+                "claim_tier",
+                "citation_key",
+                "identifier",
+                "metadata_status",
+                "integrity_status",
+                "evidence_basis",
+                "support_grade",
+                "placement_status",
+                "format_status",
+                "action",
+            ]
+            with ledger.open("w", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=columns, delimiter="\t")
+                writer.writeheader()
+                writer.writerow(
+                    {
+                        "sentence_id": "S001",
+                        "atomic_claim": "The intervention improves overall survival.",
+                        "claim_tier": "A_MATERIAL",
+                        "citation_key": "REF001",
+                        "identifier": "",
+                        "metadata_status": "UNVERIFIED",
+                        "integrity_status": "NOT_CHECKED",
+                        "evidence_basis": "UNAVAILABLE",
+                        "support_grade": "NOT_ASSESSABLE",
+                        "placement_status": "AMBIGUOUS",
+                        "format_status": "NOT_ASSESSABLE",
+                        "action": "inspect the primary report",
+                    }
+                )
+            result = run_script("validate_reference_audit.py", ledger)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("Reference audit validation: NOT_ASSESSABLE", result.stdout)
+            self.assertIn("Blocked rows: [2]", result.stdout)
 
     def test_blue_heading_docx_fails_and_black_heading_passes(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

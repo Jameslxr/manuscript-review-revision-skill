@@ -31,7 +31,7 @@ python3 benchmarks/nature-vs-mrr-v1/score_runs.py \
   --expected-runs 1
 ```
 
-The current suite contains 22 representative tests covering:
+The current suite contains 30 representative tests covering:
 
 1. a complete journal profile passes;
 2. a journal profile with an unresolved mandatory rule fails;
@@ -55,8 +55,16 @@ The current suite contains 22 representative tests covering:
 19. an overlong or multiple-posture verdict fails;
 20. direct citation support passes only with full evidence;
 21. metadata-only evidence cannot be labeled direct support;
-22. blue or otherwise non-black manuscript headings fail the DOCX style audit,
-   while a plain black manuscript passes.
+22. an acceptable inherent limitation can pass without being promoted to a blocker;
+23. `BLOCKING` requires the manuscript to remain indefensible after claim narrowing;
+24. optional strengthening cannot be labeled `BLOCKING`;
+25. a blocking concern requires located manuscript evidence;
+26. an incomplete sampled tier-C context citation produces an advisory and can pass;
+27. the same unresolved evidence in a tier-A material claim blocks a pass;
+28. blue or otherwise non-black manuscript headings fail the DOCX style audit,
+    while a plain black manuscript passes;
+29. an acceptance-tolerance card with five exact comparators passes;
+30. comparator substitution without a disclosed reason fails.
 
 ## Syntax checks
 
@@ -77,15 +85,16 @@ This check confirms that:
 - the displayed version is synchronized;
 - every local Markdown link resolves;
 - the two release README files remain at or below 200 lines so that detailed
-  implementation material stays in `docs/`.
+  implementation material stays in `docs/`;
 - Codex and Claude Code are both named in the bilingual release pages;
 - Codex and Claude Code installation paths remain present in the bilingual
   README files and usage guide;
-- the Skill entrypoint loads the platform-compatibility contract.
+- the Skill entrypoint loads the platform-compatibility contract;
 - the Skill entrypoint loads the receipt schema, concern-ledger contract, and
-  biomedical review gates.
-- the Skill entrypoint invokes both concern-ledger and bounded-verdict
-  validators.
+  biomedical review gates;
+- the Skill entrypoint loads the accepted-paper evidence-calibration contract;
+- the Skill entrypoint invokes the acceptance-tolerance, concern-ledger, and
+  bounded-verdict validators.
 
 ## Manual forward test
 
@@ -101,6 +110,14 @@ totaled 8,379 word-equivalent units versus 21,194 and 27,200 in the two
 version-1.3.0 runs. This one post-run verifies the new budgets on the fixture;
 it is not a replicate-based stability estimate.
 
+Version 1.5.0 adds a separate acceptance-tolerance calibration audit using 24
+recent open-access HCC/iCCA papers across four editorial classes and four public
+Nature Communications peer-review packages. The frozen corpus, method,
+observed boundaries, and limitations are documented in
+[`benchmarks/acceptance-tolerance-v1/`](../benchmarks/acceptance-tolerance-v1/README.md).
+This audit motivated the four finding classes and risk-tiered reference gate;
+it is not a universal estimate of journal acceptance practice.
+
 This forward test ran in Codex. The repository's Claude Code compatibility is
 currently validated at the Agent Skills layout, installation-documentation,
 resource-path, and capability-contract levels; it has not yet completed a
@@ -113,6 +130,11 @@ Expected behavior:
 - the panel validator accepts completed execution receipts and report hashes;
 - the panel validator enforces axis ownership and per-seat output budgets;
 - the concern-ledger validator accepts evidence-anchored consensus and disagreement;
+- the concern ledger separates fatal flaws, correctable issues, acceptable
+  limitations, and optional strengthening;
+- a blocking finding fails the claim-narrowing and transparent-limitation test;
+- tier-A/tier-B citations remain fail-closed while incomplete sampled tier-C
+  context checks remain advisory;
 - the synthesis reports major scientific rework when warranted;
 - manuscript revision does not begin before explicit author authorization.
 
