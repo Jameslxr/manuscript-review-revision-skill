@@ -1,0 +1,4 @@
+interface:
+  display_name: "Manuscript DOCX Formatting"
+  short_description: "Create natural submission-style manuscript DOCX files"
+  default_prompt: "Use $manuscript-docx-formatting to turn this draft into a natural submission-style DOCX and verify every applicable formatting gate without scientific review."
