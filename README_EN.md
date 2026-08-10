@@ -2,7 +2,7 @@
 
 [中文说明](README.md)
 
-This Agent Skill supports scientific manuscript review and revision in Codex, Claude Code, and other compatible Agent Skills hosts. It first confirms the target journal and assigns 5–6 independent reviewer roles suited to that journal. Scientific revision, reference checking, language editing, and submission formatting begin only after the review is complete and the author explicitly approves revision.
+This Agent Skill supports scientific manuscript review and revision in Codex, Claude Code, and other compatible Agent Skills hosts. It first confirms the target journal and assigns 5–6 independent reviewer roles suited to that journal. Scientific revision, reference checking, language editing, and submission formatting begin only after the review is complete and the author explicitly approves revision. For DOCX formatting without scientific review, use the standalone [Manuscript DOCX Formatting Skill](https://github.com/Jameslxr/manuscript-docx-formatting).
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)

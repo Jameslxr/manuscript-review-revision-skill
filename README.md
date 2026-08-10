@@ -2,7 +2,7 @@
 
 [English](README_EN.md)
 
-这是一个用于科学论文审稿和修改的 Agent Skill，可安装在 Codex、Claude Code 及其他兼容 Agent Skills 的环境中。它会先确认目标期刊，并根据期刊定位安排 5–6 个相互独立的审稿角色。完成科学审查并取得作者授权后，才会进入内容修改、文献核查、语言润色和投稿格式检查。
+这是一个用于科学论文审稿和修改的 Agent Skill，可安装在 Codex、Claude Code 及其他兼容 Agent Skills 的环境中。它会先确认目标期刊，并根据期刊定位安排 5–6 个相互独立的审稿角色。完成科学审查并取得作者授权后，才会进入内容修改、文献核查、语言润色和投稿格式检查。如果只需要 DOCX 排版而不需要科学审稿，请使用独立的 [Manuscript DOCX Formatting Skill](https://github.com/Jameslxr/manuscript-docx-formatting)。
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
