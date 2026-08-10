@@ -84,7 +84,7 @@ flowchart LR
     class VERDICT gate;
 ```
 
-关键状态均有可检查的中间产物：`01_journal_profile.json`、`01b_acceptance_tolerance_card.json`、`03_review_panel_plan.json`、`reviews/concern_ledger.tsv`、`05_review_verdict.md`、`06_reference_audit.tsv` 和 `08_release_gate.md`。
+关键状态均有可检查的中间产物：`01_journal_profile.json`、`01a_journal_format_plan.json`、`01b_acceptance_tolerance_card.json`、`03_review_panel_plan.json`、`reviews/concern_ledger.tsv`、`05_review_verdict.md`、`06_reference_audit.tsv` 和 `08_release_gate.md`。
 
 ## 安装与宿主兼容性
 
@@ -286,11 +286,17 @@ bulk/single-cell/spatial omics、AI/计算方法、系统综述/meta-analysis，
 | DOCX/PDF 读取与视觉检查 | 宿主提供的文件读取、转换、渲染和页面检查能力 |
 | 独立审稿 | 非 fork 的独立上下文子 Agent；至少 5 个真实任务 |
 | 期刊档案验证 | `<SKILL_ROOT>/scripts/validate_journal_profile.py` |
+| 期刊个性化格式计划验证 | `<SKILL_ROOT>/scripts/validate_journal_format_plan.py` |
+| 期刊格式计划到输出闭环验证 | `<SKILL_ROOT>/scripts/validate_journal_format_audit.py` |
 | Agent Panel 验证 | `<SKILL_ROOT>/scripts/validate_review_panel.py` |
 | 问题台账验证 | `<SKILL_ROOT>/scripts/validate_concern_ledger.py` |
 | 文献支持验证 | Web 或出版社全文，加 `validate_reference_audit.py` |
 | 图表闭环与重制 | 宿主已安装的科学作图 Skill、脚本或 MCP 工具 |
-| DOCX 排版检查 | 渲染能力加 `audit_docx_manuscript_style.py` |
+| DOCX 连续行号/页码写入 | `<SKILL_ROOT>/scripts/enforce_docx_line_page_numbers.py` |
+| Manuscript 首页规范化 | `<SKILL_ROOT>/scripts/apply_manuscript_profile.py` |
+| Manuscript 首页语义/样式审计 | `<SKILL_ROOT>/scripts/audit_docx_front_matter.py` |
+| DOCX 排版与编号检查 | 渲染能力加 `audit_docx_manuscript_style.py` |
+| DOCX 综合格式发布门 | `<SKILL_ROOT>/scripts/validate_format_release.py` |
 | 最终独立检查 | 宿主可用的独立 release-gate 能力 |
 
 Codex 可以使用 collaboration/subagent delegation 以及已安装的 document、
@@ -325,7 +331,11 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
 - 不使用蓝色 Word 主题标题；
 - 不使用报告式封面、卡片、横幅、图标、callout 或装饰线；
 - 审稿表格和状态标签不得进入 clean manuscript；
-- DOCX 必须经过机械样式检查和逐页渲染检查。
+- 任何模式只要修改 DOCX，就对整份输出强制正文段前/段后间距为 0，并在相邻正文段之间插入一个真正的空段落；不允许用 Word paragraph spacing 模拟，也不允许期刊模板绕过该个人输出门槛；
+- 同一全局门槛还要求每个 section 连续逐行编号、禁止段落 suppress line numbers，并在所有 active page story 中使用连续动态 `PAGE` 字段；
+- 行距、字体、页边距、匿名化、章节顺序和投稿材料从本次通过验证的 `01a_journal_format_plan.json` 读取；真实空段落、连续行号和连续页码由 `USER_GLOBAL_INVARIANT` 固定；
+- manuscript 的标题、作者、单位、通讯信息、匿名状态、首页对齐和页码位置必须从本次 format plan 解析；没有精确官方覆盖时使用左对齐、unblinded、upper-right 的保守 profile；
+- DOCX 必须经过机械样式/编号检查和逐页渲染检查；manuscript 还必须通过独立首页审计、内容保留比较和 `FORMAT_RELEASE_PASS`。
 
 ## 10. Fail-Closed Release Gate
 
@@ -439,7 +449,7 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
 - 自动测试覆盖四类问题判定、阻断测试、分层引用审计和原有工作流门槛；
 - Agent 收据能够阻止重复任务 ID、输入不一致和报告哈希错配；
 - 问题台账能够阻止单人伪共识和缺少证据位置的意见；
-- DOCX 蓝色标题和装饰样式检查通过正反例测试；
+- DOCX 蓝色标题、真实空段落、连续行号和动态页码检查通过正反例测试；
 - Claim–Reference 检查能够阻止 metadata-only 证据被标记为直接支持；
 - 已使用肝癌模拟 manuscript 完成 6-Agent 前向测试；
 - 前向测试在审稿结论后正确暂停，没有提前修改原稿。

@@ -6,7 +6,7 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.5.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.6.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## 简要说明
@@ -18,7 +18,7 @@
 | 单一审稿视角可能遗漏重要问题 | 安排 5 个固定独立审稿角色；高风险研究最多增加 1 个专项角色，并限制职责与输出预算 |
 | 同一篇稿件多次交给通用大模型，审稿意见可能前后不一致，甚至相互矛盾 | 固定稿件、期刊要求和角色职责；记录每个 Agent 的任务收据和输出哈希，再逐条汇总共识与分歧 |
 | 文献存在并不代表它支持当前表述 | 分别核对文献真实性、引用格式及其对具体论断的支持程度 |
-| 输出文件可能不符合正式投稿的排版习惯 | 检查标题、章节、正文样式，并逐页查看 DOCX 或 PDF 的实际效果 |
+| 输出文件可能不符合正式投稿的排版习惯 | 任何 DOCX 修改都对整份输出强制真实空段落、显式行距、连续行号和动态页码，再逐页检查 DOCX 或 PDF |
 | 研究不可能在每个方面都达到理想配置 | 区分致命缺陷、投稿前可修正问题、可接受的固有局限和可选增强；只有收窄结论后仍无法成立的问题才阻断 |
 
 ## 主要用途
@@ -129,7 +129,7 @@ flowchart TB
 
 | 工作阶段 | 主要文件 |
 |---|---|
-| 期刊要求与录用尺度 | `00_input_inventory.json`、`01_journal_profile.json`、`01b_acceptance_tolerance_card.json` |
+| 期刊要求与录用尺度 | `00_input_inventory.json`、`01_journal_profile.json`、`01a_journal_format_plan.json`、`01b_acceptance_tolerance_card.json` |
 | 独立审稿 | `03_review_panel_plan.json`、各 reviewer 报告、`reviews/concern_ledger.tsv` |
 | 审稿意见汇总 | `04_cross_review_matrix.tsv`、`05_review_verdict.md` |
 | 文献核查 | `06_reference_audit.tsv` |
@@ -176,7 +176,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 
 ## 当前版本与验证
 
-当前版本为 **Beta**。1.5.0 在既有盲评和独立复测基础上加入录用尺度校准、四类问题判定和分层引用审计；既有复测曾保持 18/18 个预埋问题检出，并将原始审稿量减少 60%–69%。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
+当前版本为 **Beta**。1.6.0 将独立排版 Skill 的首页规范化、自然空段落、0/0 pt 段距、显式行距、连续行号/页码和综合格式发布门完整内嵌到 review/revision 流程。1.5.0 加入的录用尺度校准、四类问题判定和分层引用审计保持不变；既有复测曾保持 18/18 个预埋问题检出。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
 
 当前自动测试覆盖：
 
@@ -185,6 +185,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 - 单个 reviewer 不能把自己的意见标记为共识；每个问题必须记录四类判定、处理方式和收窄结论后的可辩护性，且可接受局限或可选增强不能被标成 `BLOCKING`；
 - 仅有文献元数据时不能标记为直接支持；核心/支持性 Claim 必须完整核查，普通背景 Claim 的未完成抽查只产生提示；
 - 标题或章节使用蓝色等非黑色样式时，格式检查不通过；
+- 手工 paragraph spacing、缺少真实空段落、首页居中/混合对齐、行号或动态页码不完整时，综合格式发布门不通过；
 - 合规的黑色标题和完整审计记录可以通过相应检查。
 
 [查看可复现验证命令与边界](docs/VALIDATION.md)
@@ -196,5 +197,4 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 - [验证范围与复现命令](docs/VALIDATION.md)
 - [设计来源与归因](ATTRIBUTION.md)
 - [Skill 执行入口](manuscript-review-revision/SKILL.md)
-
 本项目在模块组织和优先查阅原始来源的设计上参考了 [Nature Skills](https://github.com/Yuan1z0825/nature-skills)，并独立实现了按期刊要求配置审稿角色、多人独立审稿和作者授权后修改的工作流程。本项目与 Nature Portfolio、Springer Nature 及 Nature Skills 维护者不存在官方隶属关系。

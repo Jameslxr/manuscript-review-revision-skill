@@ -1,5 +1,5 @@
 name: manuscript-review-revision
-version: 1.5.0
+version: 1.6.0
 description: >
   Declarative routing manifest for journal-aware, review-first manuscript
   assessment and authorized revision across compatible Agent Skills hosts.
@@ -11,6 +11,8 @@ references:
   on_demand:
     - condition: target journal is unknown or journal requirements must be refreshed
       path: references/journal-discovery-and-profile.md
+    - condition: converting current journal requirements into an executable manuscript-format and submission-package plan
+      path: references/journal-format-plan.md
     - condition: planning, dispatching, validating, or synthesizing independent reviewer agents
       path: references/multi-agent-review.md
     - condition: calibrating editorial strictness or selecting the optional specialist seat
@@ -29,5 +31,7 @@ references:
       path: references/revision-and-response.md
     - condition: creating or checking a DOCX, PDF, LaTeX, or submission package
       path: references/manuscript-formatting.md
+    - condition: normalizing or auditing manuscript front matter and first-page layout
+      path: references/front-matter-contract.md
     - condition: deciding final submission readiness
       path: references/release-gates.md

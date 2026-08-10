@@ -31,6 +31,18 @@ ACCEPTANCE_TOLERANCE_VALIDATOR = (
     / "scripts"
     / "validate_acceptance_tolerance.py"
 )
+JOURNAL_FORMAT_PLAN_VALIDATOR = (
+    ROOT
+    / "manuscript-review-revision"
+    / "scripts"
+    / "validate_journal_format_plan.py"
+)
+JOURNAL_FORMAT_AUDIT_VALIDATOR = (
+    ROOT
+    / "manuscript-review-revision"
+    / "scripts"
+    / "validate_journal_format_audit.py"
+)
 MAX_README_LINES = 200
 LOCAL_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 VERSION_RE = re.compile(r"version-v(\d+\.\d+\.\d+)")
@@ -83,6 +95,16 @@ def main() -> int:
         errors.append(
             "missing acceptance-tolerance validator: "
             f"{ACCEPTANCE_TOLERANCE_VALIDATOR.relative_to(ROOT)}"
+        )
+    if not JOURNAL_FORMAT_PLAN_VALIDATOR.is_file():
+        errors.append(
+            "missing journal-format-plan validator: "
+            f"{JOURNAL_FORMAT_PLAN_VALIDATOR.relative_to(ROOT)}"
+        )
+    if not JOURNAL_FORMAT_AUDIT_VALIDATOR.is_file():
+        errors.append(
+            "missing journal-format-audit validator: "
+            f"{JOURNAL_FORMAT_AUDIT_VALIDATOR.relative_to(ROOT)}"
         )
     if not SKILL_MANIFEST.is_file():
         errors.append(
@@ -171,6 +193,40 @@ def main() -> int:
         errors.append(
             "SKILL.md does not invoke scripts/validate_acceptance_tolerance.py."
         )
+    if "scripts/validate_journal_format_plan.py" not in skill_entry:
+        errors.append(
+            "SKILL.md does not invoke scripts/validate_journal_format_plan.py."
+        )
+    if "scripts/validate_journal_format_audit.py" not in skill_entry:
+        errors.append(
+            "SKILL.md does not invoke scripts/validate_journal_format_audit.py."
+        )
+    for required_embedded_format_resource in (
+        "references/front-matter-contract.md",
+        "scripts/apply_manuscript_profile.py",
+        "scripts/audit_docx_front_matter.py",
+        "scripts/validate_format_release.py",
+        "FORMAT_RELEASE_PASS",
+    ):
+        if required_embedded_format_resource not in skill_entry:
+            errors.append(
+                "SKILL.md is missing embedded DOCX format resource: "
+                f"{required_embedded_format_resource}."
+            )
+    for required_docx_invariant in (
+        "## Global DOCX formatting invariant",
+        "Any mode that creates or modifies a DOCX",
+        "scripts/enforce_docx_line_page_numbers.py",
+        "restart=continuous",
+        "dynamic `PAGE` field",
+        "--exclude-style",
+        "There is no journal-template bypass",
+    ):
+        if required_docx_invariant not in skill_entry:
+            errors.append(
+                "SKILL.md is missing global DOCX invariant text: "
+                f"{required_docx_invariant!r}."
+            )
 
     for path, text in ((README_ZH, zh), (README_EN, en)):
         line_count = len(text.splitlines())

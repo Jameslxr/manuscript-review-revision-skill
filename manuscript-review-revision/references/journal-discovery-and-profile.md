@@ -12,6 +12,10 @@ Use current primary sources in this order:
 
 Do not infer a current rule from memory, a search snippet, a commercial journal-ranking page, or one published PDF. Record the access date and the exact stage: `initial`, `revision`, `final`, or `proof`.
 
+Refresh the profile for every manuscript run. A prior profile is routing
+evidence only, even when the journal name is unchanged: article type, stage,
+template, and author instructions may differ or have changed.
+
 ## Unknown target: journal-recommendation
 
 Request a full manuscript when available. Minimum usable evidence is the abstract, article type, core methods, principal results, sample/validation scope, and major figures or their descriptions. If only a title or short concept is available, label the output preliminary.
@@ -68,6 +72,12 @@ journal-requirement pass.
 
 Use requirement status `MET`, `NOT_MET`, `NOT_ASSESSABLE`, `NOT_APPLICABLE`, or `PENDING`. If an official rule is inaccessible or conflicting, keep the conflict visible and block a journal-specific pass.
 
+After the profile is complete, load
+[journal-format-plan.md](journal-format-plan.md) and create
+`01a_journal_format_plan.json`. Keep source extraction and implementation
+separate: the profile says what the journal requires; the plan says exactly how
+to implement and verify it in this manuscript and submission package.
+
 ## Required categories
 
 At minimum inspect:
@@ -78,8 +88,14 @@ At minimum inspect:
 - initial versus revised/final file requirements
 - reference style and linked-field policy
 - figure, table, extended-data, and supplement requirements
-- anonymization and line numbering
+- anonymization plus journal rules for line and page numbering; record any
+  conflict with the user's continuous-numbering invariant
 - reporting guidelines, statistics, ethics, and registration
 - data/code availability and repository requirements
 - author contributions, funding, competing interests, and AI-use disclosure
 - cover letter, checklist, source data, and other submission-package files
+
+For each category, distinguish four outcomes: an explicit official rule, an
+official statement that the item is not required, no journal specification
+with a documented conservative fallback, or `NOT_ASSESSABLE`. Do not convert
+silence into an invented journal rule.

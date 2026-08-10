@@ -6,7 +6,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.5.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.6.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -18,7 +18,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 | A single review perspective can miss important problems | Uses five fixed independent roles, at most one risk-triggered specialist, and explicit scope and output budgets |
 | Repeated reviews of the same manuscript by a general-purpose model may be inconsistent or internally contradictory | Freezes the manuscript, journal rules, and roles; records task receipts and output hashes before synthesizing consensus and disagreement concern by concern |
 | An existing reference may not support the statement where it is cited | Checks reference validity, citation format, and support for the specific statement separately |
-| Generated files may not follow standard manuscript conventions | Checks headings, sections, body styles, and the rendered DOCX or PDF pages |
+| Generated files may not follow standard manuscript conventions | Every DOCX modification enforces literal blank paragraphs, explicit line spacing, continuous line numbering, and dynamic page numbering across the whole output before rendered-page inspection |
 | No study can satisfy every ideal design feature | Separates fatal flaws, correctable issues, acceptable inherent limitations, and optional strengthening; only problems that survive honest claim narrowing can block |
 
 ## Main Uses
@@ -129,7 +129,7 @@ Step 6 assigns five fixed independent roles for journal fit, domain science, stu
 
 | Stage | Main files |
 |---|---|
-| Journal requirements and tolerance | `00_input_inventory.json`, `01_journal_profile.json`, `01b_acceptance_tolerance_card.json` |
+| Journal requirements and tolerance | `00_input_inventory.json`, `01_journal_profile.json`, `01a_journal_format_plan.json`, `01b_acceptance_tolerance_card.json` |
 | Independent review | `03_review_panel_plan.json`, reviewer reports, and `reviews/concern_ledger.tsv` |
 | Review synthesis | `04_cross_review_matrix.tsv`, `05_review_verdict.md` |
 | Reference audit | `06_reference_audit.tsv` |
@@ -176,7 +176,7 @@ Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/
 
 ## Current Status And Validation
 
-The current release is **Beta**. Version 1.5.0 adds accepted-paper tolerance calibration, four-class finding adjudication, and risk-tiered citation auditing to the existing blind and forward-test controls. The earlier independent rerun preserved 18/18 seeded-issue detection while reducing raw review volume by 60%–69%. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
+The current release is **Beta**. Version 1.6.0 embeds the standalone formatter's front-matter normalization, literal blank paragraphs, 0/0 pt paragraph spacing, explicit line spacing, continuous line/page numbering, and combined format-release gate into the review/revision workflow. Version 1.5.0's accepted-paper tolerance calibration, four-class finding adjudication, and risk-tiered citation audit remain intact; the earlier independent rerun preserved 18/18 seeded-issue detection. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
 
 Current automated coverage includes:
 
@@ -185,6 +185,7 @@ Current automated coverage includes:
 - one reviewer cannot label a concern as consensus; every concern records its four-class type, defensibility after claim narrowing, and resolution mode, while acceptable limitations and optional strengthening cannot be `BLOCKING`;
 - metadata-only evidence cannot be direct support; material/supporting claims require complete checks, while incomplete sampled context rows remain advisory;
 - blue or otherwise non-black manuscript headings fail;
+- manual paragraph spacing, missing literal blank paragraphs, centered or mixed-alignment neutral front matter, and incomplete line or dynamic page numbering block the combined format-release gate;
 - compliant black headings and complete audit records can pass.
 
 [Read the reproducible validation scope](docs/VALIDATION.md)
@@ -196,5 +197,4 @@ Current automated coverage includes:
 - [Validation scope and reproducible checks](docs/VALIDATION.md)
 - [Design basis and attribution](ATTRIBUTION.md)
 - [Skill execution entrypoint](manuscript-review-revision/SKILL.md)
-
 This project draws on the modular organization and preference for primary sources used in [Nature Skills](https://github.com/Yuan1z0825/nature-skills). Its journal-specific reviewer selection, independent multi-agent review, and author-approved revision process were implemented separately. The project is not affiliated with Nature Portfolio, Springer Nature, or the Nature Skills maintainers.
