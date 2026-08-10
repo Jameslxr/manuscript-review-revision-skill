@@ -14,6 +14,7 @@ Report:
 |---|---|---|---|---|
 | release-candidate integrity |  |  |  |  |
 | current journal profile |  |  |  |  |
+| source-linked journal format plan |  |  |  |  |
 | scientific claims and evidence |  |  |  |  |
 | methods, statistics, reproducibility |  |  |  |  |
 | reference reality and integrity |  |  |  |  |
@@ -21,6 +22,7 @@ Report:
 | figure/table/supplement integration |  |  |  |  |
 | reporting, ethics, and declarations |  |  |  |  |
 | journal-specific manuscript format |  |  |  |  |
+| combined DOCX format release |  |  |  |  |
 | rendered visual QA |  |  |  |  |
 | submission-package completeness |  |  |  |  |
 
@@ -58,6 +60,10 @@ Return `RELEASE FAIL` when:
 
 - manuscript components are not demonstrably the same version;
 - a mandatory official journal rule or article type is known and unmet;
+- the format plan does not match the current journal profile hash, article
+  type, submission stage, or release-candidate manuscript;
+- a required format-plan category is missing or `NOT_ASSESSABLE` while the
+  package is presented as journal-specific;
 - a material scientific claim remains unsupported after claim narrowing and
   transparent limitation disclosure;
 - a fatal validity, integrity, ethics, unit-of-analysis, leakage, or
@@ -66,7 +72,15 @@ Return `RELEASE FAIL` when:
 - figures, legends, tables, supplements, or source data conflict;
 - required ethics, reporting, registration, data/code, authorship, funding, or
   COI material is missing, without an allowed restriction or access mechanism;
-- the clean manuscript failed structural or rendered visual QA;
+- any delivered DOCX uses paragraph spacing in place of the required literal
+  empty paragraphs, has unclassified non-empty paragraph styles, omits
+  continuous Word-native line numbering in any section, suppresses line
+  numbers, omits a dynamic page number on any active page story, restarts page
+  numbering, or failed whole-document structural/rendered visual QA;
+- any manuscript DOCX has unresolved or decorative front matter, uses centered
+  or mixed-alignment title-block roles without a current source-linked
+  override, lacks the required manuscript-role audit, changes unauthorized text
+  during formatting, or does not reach `FORMAT_RELEASE_PASS`;
 - a revision changed core claims without the scientifically responsible
   re-review.
 

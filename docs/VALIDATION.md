@@ -31,7 +31,7 @@ python3 benchmarks/nature-vs-mrr-v1/score_runs.py \
   --expected-runs 1
 ```
 
-The current suite contains 30 representative tests covering:
+The current suite contains 69 representative tests covering:
 
 1. a complete journal profile passes;
 2. a journal profile with an unresolved mandatory rule fails;
@@ -64,7 +64,46 @@ The current suite contains 30 representative tests covering:
 28. blue or otherwise non-black manuscript headings fail the DOCX style audit,
     while a plain black manuscript passes;
 29. an acceptance-tolerance card with five exact comparators passes;
-30. comparator substitution without a disclosed reason fails.
+30. comparator substitution without a disclosed reason fails;
+31. non-zero body paragraph spacing and missing literal blank paragraphs fail the DOCX audit;
+32. exactly one real empty paragraph with zero spacing passes the DOCX audit;
+33. the DOCX audit rejects a journal-template attempt to bypass literal blank paragraphs;
+34. implicit or wrong body/separator line spacing fails the DOCX audit;
+35. exact and at-least point-based line-spacing tokens pass when encoded explicitly;
+36. a complete source-linked journal format plan passes;
+37. omission of any required journal-format category fails;
+38. a journal-template paragraph override is rejected even when official-template authority is claimed;
+39. literal-blank plans with non-zero paragraph spacing fail;
+40. a passing format plan cannot conceal an unresolved mandatory journal rule;
+41. the formatting gate rejects a structurally valid draft plan;
+42. a complete plan-to-manuscript journal format audit passes;
+43. omission of any format-plan check from the final audit fails;
+44. an overall format pass cannot conceal failed mechanical or visual QA;
+45. plan-to-output audit closure rejects a non-passing format plan;
+46. an unclassified custom paragraph style blocks DOCX delivery until explicitly excluded;
+47. a custom prose style must be explicitly included in the whole-document audit;
+48. the DOCX audit rejects attempts to disable the line-spacing gate;
+49. hidden Word before/after auto-spacing blocks delivery until disabled;
+50. a format plan cannot disable the continuous line/page-number invariant;
+51. missing Word-native line numbering or a dynamic page field blocks DOCX delivery;
+52. section restarts and paragraph-level line-number suppression block delivery;
+53. the bundled numbering enforcer covers multi-section first/default/even page stories;
+54. the integrated manuscript profile repairs all-Normal and adversarial title blocks;
+55. centered, mixed, oversized, table-based, and over-spaced front matter fails;
+56. the journal-neutral profile requires left-aligned title, authors, affiliations, and correspondence;
+57. upper-right and sourced lower-center dynamic page-number profiles are distinguished;
+58. the profile normalizer is idempotent and preserves non-empty text;
+59. front-matter blank-paragraph spacing is rejected and repaired;
+60. the combined format-release validator is fail-closed on unassessed rendering;
+61. the journal format plan requires explicit front-matter alignment, anonymization, and page-number position;
+62. plan-to-output closure rejects mismatched page-number placement;
+63. plan-to-output closure requires front-matter audit PASS;
+64. plan-to-output closure requires content-preservation PASS;
+65. plan-to-output closure requires `FORMAT_RELEASE_PASS`;
+66. custom styles must be classified in the embedded formatting lane;
+67. hidden automatic paragraph spacing fails in the embedded formatting lane;
+68. literal blank paragraphs and continuous numbering pass in the embedded lane;
+69. multi-section active page stories pass in the embedded lane.
 
 ## Syntax checks
 
@@ -94,7 +133,9 @@ This check confirms that:
   biomedical review gates;
 - the Skill entrypoint loads the accepted-paper evidence-calibration contract;
 - the Skill entrypoint invokes the acceptance-tolerance, concern-ledger, and
-  bounded-verdict validators.
+  bounded-verdict validators;
+- the Skill entrypoint embeds front-matter normalization/audit and the combined
+  DOCX format-release validator.
 
 ## Manual forward test
 
@@ -117,6 +158,15 @@ observed boundaries, and limitations are documented in
 [`benchmarks/acceptance-tolerance-v1/`](../benchmarks/acceptance-tolerance-v1/README.md).
 This audit motivated the four finding classes and risk-tiered reference gate;
 it is not a universal estimate of journal acceptance practice.
+
+Version 1.6.0 adds 16 formatting-focused tests: the standalone formatter's
+14-test corpus inside the integrated review/revision Skill plus two plan/audit
+closure tests. The
+tests cover adversarial front matter, literal blank paragraphs, hidden Word
+auto-spacing, explicit line spacing, continuous line/page numbering, content
+preservation, idempotence, and fail-closed format-release composition. Passing
+these fixtures validates the encoded contracts, not every possible DOCX or
+journal template.
 
 This forward test ran in Codex. The repository's Claude Code compatibility is
 currently validated at the Agent Skills layout, installation-documentation,
