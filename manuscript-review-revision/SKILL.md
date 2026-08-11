@@ -109,6 +109,26 @@ its own complete implementation for integrated review/revision runs and must
 not import the sibling at runtime; keep both copies synchronized when a global
 DOCX invariant changes.
 
+## Mandatory embedded formatting dispatch
+
+Load [references/generated-docx-release-contract.md](references/generated-docx-release-contract.md)
+whenever any mode will write a DOCX. After the last content mutation, route
+every final manuscript, tracked copy, clean copy, cover letter, response letter,
+declaration, and editable supplement through the embedded profile normalizer,
+numbering enforcer, content-preservation comparison, applicable audits,
+full-page render inspection, and combined release validator. Never bypass this
+dispatch because a source already looks formatted or the requested edit is
+small. Any later DOCX write invalidates its earlier pass.
+
+Keep final deliverables in one dedicated delivery root. Create a hash-bound
+receipt for each final DOCX and run
+`scripts/validate_generated_docx_release.py` over that root. Do not deliver any
+DOCX unless the scan returns
+`GENERATED_DOCX_RELEASE_PASS`; a missing file receipt, stale hash, missing audit
+gate, `NOT_ASSESSABLE`, or nonpassing release status blocks delivery. Validate
+non-DOCX artifacts with their native schemas instead of claiming DOCX format
+coverage; derive a submission PDF only from a released DOCX and inspect it.
+
 ## Host capability contract
 
 Load [references/platform-compatibility.md](references/platform-compatibility.md)
@@ -332,75 +352,20 @@ a manuscript, also load
 - Execute every plan check individually. Record the source rule, concrete
   implementation, verification evidence, and final status in
   `07_format_audit.json`; do not collapse them into a generic format pass.
-- When no color is explicitly required, use black title, headings, subheadings, and body text.
-- Do not use report-style covers, colored heading themes, cards, callouts, banners, icons, decorative rules, or business-document styling in the submission manuscript.
+- Use restrained black manuscript styling unless a current official source
+  requires otherwise; never introduce report-style decoration.
 - Keep audit reports separate from the clean manuscript.
-- Use literal body-paragraph separation: set effective body-paragraph spacing before/after to `0 pt` and insert exactly one structurally empty paragraph between adjacent body-prose paragraphs. Do not simulate that blank line with paragraph spacing or a manual line break.
-- Resolve body line spacing to an explicit token from the exact journal template or current author guide; if neither specifies it, use the conservative manuscript fallback `double`. Encode the value in the body style and the empty separator paragraph instead of inheriting Word's default line spacing.
-- Apply the resolved token manuscript-wide, including title block, headings,
-  Keywords, and declarations. Keep authors, affiliations, correspondence,
-  Keywords, headings, and CRediT/declaration text at the resolved body size.
-- Require the neutral title-author gap as one real empty paragraph, never
-  paragraph spacing; record `compact` only as a sourced journal override.
-- Enforce the semantic blank-line matrix: no blank before Keywords, exactly one
-  after Keywords, exactly one before each section/subsection/declaration block,
-  and none between a heading and its first body paragraph. Bold only recognized
-  Keywords and inline declaration labels.
+- Apply the complete global DOCX invariant; resolve line spacing from the exact
+  current guide/template or use `double`, and record any journal override.
 - Load [references/credit-authorship-contract.md](references/credit-authorship-contract.md)
-  for CRediT content or formatting. Keep supplied per-author entries
-  consecutive without empty separators and fail the semantic audit when a
-  CRediT-labelled statement lacks recognized official role vocabulary.
-- Keep entries after `References`/`Bibliography` in a dedicated non-body role;
-  never insert body-prose blank separators between reference entries.
-- Apply the same paragraph-structure rule to every modified DOCX. Do not ask the user to repair it manually: correct the generated file and re-run the audit until it passes.
-- Apply continuous Word-native line numbering to every section and a dynamic,
-  continuous `PAGE` field to every active page story in every modified DOCX.
-  Do not allow paragraph suppression, section restarts, typed page numerals, or
-  partial-section coverage.
-- For DOCX, use a reliable document runtime available in the host, run the mechanical style audit, render every page to PNG/PDF, inspect every page, fix, and re-render.
-
-```bash
-python3 "$SKILL_ROOT/scripts/apply_manuscript_profile.py" manuscript.docx \
-  --out manuscript.normalized.docx \
-  --line-spacing <resolved-token> \
-  --title-author-gap <natural-blank-or-sourced-compact> \
-  --body-style <each-prose-style> \
-  --title-paragraph <n> --authors-paragraph <n> \
-  --affiliation-paragraph <n> --correspondence-paragraph <n>
-
-python3 "$SKILL_ROOT/scripts/enforce_docx_line_page_numbers.py" \
-  manuscript.normalized.docx --out manuscript.numbered.docx \
-  --page-number-position <resolved-position>
-
-python3 "$SKILL_ROOT/scripts/audit_docx_manuscript_style.py" \
-  manuscript.numbered.docx --paragraph-separation literal-blank \
-  --expected-line-spacing <resolved-token> \
-  --body-style <each-prose-style> \
-  --exclude-style <each-semantic-nonbody-style> \
-  --output-json 07_structural_format_audit.json
-
-python3 "$SKILL_ROOT/scripts/audit_docx_front_matter.py" \
-  manuscript.numbered.docx --mode <blinded-or-unblinded> \
-  --front-matter-alignment <resolved-alignment> \
-  --expected-title-author-gap <natural-blank-or-sourced-compact> \
-  --expected-page-number-position <resolved-position> \
-  --expected-line-spacing <resolved-token> \
-  --output-json 07_front_matter_audit.json
-
-python3 "$SKILL_ROOT/scripts/audit_docx_semantic_rhythm.py" \
-  manuscript.numbered.docx \
-  --expected-line-spacing <resolved-token> \
-  --expected-body-font-size <resolved-body-size> \
-  --output-json 07_semantic_rhythm_audit.json
-```
-
-Replace `double` with the exact `style_contract.line_spacing` token from the
-validated journal format plan;
-accepted tokens include a multiple such as `1.5`, `exact:24pt`, or
-`at-least:14pt`.
-The global DOCX paragraph and numbering invariant remains mandatory in this
-phase. A mechanical pass does not replace official-template or rendered visual
-review.
+  for CRediT content or formatting, and preserve bibliography as non-body.
+- Run `scripts/apply_manuscript_profile.py`, then
+  `scripts/enforce_docx_line_page_numbers.py`,
+  `scripts/audit_docx_manuscript_style.py`,
+  `scripts/audit_docx_front_matter.py`, and
+  `scripts/audit_docx_semantic_rhythm.py` with the resolved role/style inputs.
+- Compare content, render and inspect every page, fix failures, then rerun from
+  normalization. A mechanical XML pass is not a release.
 
 After all plan checks, mechanical audits, and page inspections are recorded,
 validate closure from the plan to the delivered files:
@@ -463,6 +428,8 @@ revision/revision_log.tsv
 07_front_matter_audit.json
 07_semantic_rhythm_audit.json
 07_format_release.json
+07_generated_docx_release_receipt.json
+07_generated_docx_release.json
 08_release_gate.md
 ```
 
@@ -486,6 +453,7 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 | [references/ai-use-declaration.md](references/ai-use-declaration.md) | Adding, revising, or checking an AI-use statement |
 | [references/credit-authorship-contract.md](references/credit-authorship-contract.md) | Adding, revising, formatting, or auditing a CRediT authorship contribution statement |
 | [references/manuscript-formatting.md](references/manuscript-formatting.md) | Creating or checking DOCX/PDF/LaTeX submission files |
+| [references/generated-docx-release-contract.md](references/generated-docx-release-contract.md) | Closing every generated or modified DOCX against the embedded formatting lane before delivery |
 | [references/submission-package-contract.md](references/submission-package-contract.md) | Formatting or auditing cover letters, response letters, and editable package text |
 | [references/front-matter-contract.md](references/front-matter-contract.md) | Normalizing or auditing manuscript title, authors, affiliations, correspondence, anonymization, or first-page layout |
 | [references/release-gates.md](references/release-gates.md) | Deciding whether a package is ready |

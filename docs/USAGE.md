@@ -125,14 +125,15 @@ Codex 使用 `$manuscript-review-revision`；Claude Code 将第一行替换为
 cover letter 和投稿文件，并为每项写明来源、执行动作和验收方法。旧期刊档案
 不会直接当作本次合规证据。
 
-无论调用哪一种模式，只要生成或修改 DOCX，就会对整份输出执行全局 DOCX
-门槛，而不是只检查被修改的几段。段前/段后必须为 0，正文段之间必须存在
-一个真实空段落，行距检查不能关闭；每个 section 必须连续逐行编号，所有
-active page story 必须使用连续动态 `PAGE` 字段。任一项未通过都不会把文件
-标记为完成。对 manuscript 还会解析并审计标题、作者、单位、通讯信息、
-匿名状态和首页对齐；默认使用节制的左对齐首页，只有当前精确期刊模板或
-官网规则才能覆盖。最终必须同时通过结构、首页、内容保留、期刊和逐页渲染门，
-并返回 `FORMAT_RELEASE_PASS`。
+无论调用哪一种模式，只要生成或修改 DOCX，每个最终文件（包括 tracked、
+clean、cover letter、response letter、声明和 editable supplement）都必须在
+最后一次内容写入后经过内嵌排版通道。段前/段后必须为 0，正文段之间使用真实
+空段落，行距检查不能关闭；每个 section 连续逐行编号，所有 active page story
+使用连续动态 `PAGE` 字段。manuscript 必须达到 `FORMAT_RELEASE_PASS`，其他
+editable package 必须达到 `PACKAGE_FORMAT_RELEASE_PASS`。交付前还会扫描独立
+delivery root，以当前 SHA-256 核对每个 DOCX 的排版报告；漏掉一个文件、哈希
+过期或通过后再次写入都会阻断 `GENERATED_DOCX_RELEASE_PASS`。JSON、TSV 和
+Markdown 记录使用各自验证器，不会被伪称为经过 DOCX 排版。
 
 ## 只审稿，不修改
 

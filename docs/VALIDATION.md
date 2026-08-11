@@ -31,7 +31,7 @@ python3 benchmarks/nature-vs-mrr-v1/score_runs.py \
   --expected-runs 1
 ```
 
-The current suite contains 69 representative tests covering:
+The current suite contains 82 tests covering these representative cases:
 
 1. a complete journal profile passes;
 2. a journal profile with an unresolved mandatory rule fails;
@@ -104,6 +104,12 @@ The current suite contains 69 representative tests covering:
 67. hidden automatic paragraph spacing fails in the embedded formatting lane;
 68. literal blank paragraphs and continuous numbering pass in the embedded lane;
 69. multi-section active page stories pass in the embedded lane.
+70. a delivery root containing both manuscript and package DOCX files closes only
+    when every file has a matching embedded-format release report;
+71. an unreceipted tracked, clean, or package DOCX blocks delivery;
+72. a DOCX write after formatting release invalidates SHA-256 closure;
+73. a wrong embedded profile normalizer or nonpassing terminal release blocks
+    delivery.
 
 ## Syntax checks
 
@@ -135,7 +141,8 @@ This check confirms that:
 - the Skill entrypoint invokes the acceptance-tolerance, concern-ledger, and
   bounded-verdict validators;
 - the Skill entrypoint embeds front-matter normalization/audit and the combined
-  DOCX format-release validator.
+  DOCX format-release validator;
+- the Skill entrypoint invokes the delivery-root generated-DOCX release validator.
 
 ## Manual forward test
 
@@ -175,6 +182,11 @@ continuous line/page numbering, content preservation, idempotence, and
 fail-closed format-release composition. Passing
 these fixtures validates the encoded contracts, not every possible DOCX or
 journal template.
+
+Version 1.8.1 adds four cross-deliverable closure regressions. They scan a
+dedicated delivery root, require one current SHA-256-bound receipt per DOCX,
+parse the corresponding manuscript or package release report, and fail on
+omissions, post-pass writes, profile mismatches, or nonpassing terminal states.
 
 This forward test ran in Codex. The repository's Claude Code compatibility is
 currently validated at the Agent Skills layout, installation-documentation,

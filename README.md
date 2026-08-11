@@ -6,7 +6,7 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.8.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.8.1-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## 简要说明
@@ -18,7 +18,7 @@
 | 单一审稿视角可能遗漏重要问题 | 安排 5 个固定独立审稿角色；高风险研究最多增加 1 个专项角色，并限制职责与输出预算 |
 | 同一篇稿件多次交给通用大模型，审稿意见可能前后不一致，甚至相互矛盾 | 固定稿件、期刊要求和角色职责；记录每个 Agent 的任务收据和输出哈希，再逐条汇总共识与分歧 |
 | 文献存在并不代表它支持当前表述 | 分别核对文献真实性、引用格式及其对具体论断的支持程度 |
-| 输出文件可能不符合正式投稿的排版习惯 | 任何 DOCX 修改都对整份输出强制真实空段落、显式行距、连续行号和动态页码，再逐页检查 DOCX 或 PDF |
+| 输出文件可能不符合正式投稿的排版习惯 | 每个最终 DOCX 都强制经过内嵌排版门、逐页检查及交付目录哈希收口；漏检任一文件即失败 |
 | 研究不可能在每个方面都达到理想配置 | 区分致命缺陷、投稿前可修正问题、可接受的固有局限和可选增强；只有收窄结论后仍无法成立的问题才阻断 |
 
 ## 主要用途
@@ -134,7 +134,7 @@ flowchart TB
 | 审稿意见汇总 | `04_cross_review_matrix.tsv`、`05_review_verdict.md` |
 | 文献核查 | `06_reference_audit.tsv` |
 | 授权后的修改 | 带修订痕迹的稿件、清洁稿、`revision_log.tsv` |
-| 投稿前检查 | `07_format_audit.json`、`08_release_gate.md` |
+| 投稿前检查 | `07_format_audit.json`、`07_generated_docx_release.json`、`08_release_gate.md` |
 
 ## 使用限制
 
@@ -176,7 +176,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 
 ## 当前版本与验证
 
-当前版本为 **Beta**。1.8.0 将 Title–Authors 间的一个真实 Enter 空段落设为可执行、可审计的中性首页默认，并新增紧凑 CRediT 区块、官方 14 种角色词汇及“作者条目间禁止空段落”的 fail-closed 检查。1.7.0 的投稿包排版通道和 AI 使用声明规则、1.6.1 的 manuscript 语义纵向节奏门，以及 1.5.0 的录用尺度校准和引用审计均保持不变。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
+当前版本为 **Beta**。1.8.1 新增交付目录全扫描：每个最终 DOCX 必须以当前 SHA-256 绑定内嵌 manuscript 或 submission-package 排版门的最终 PASS，任何漏检、过期哈希或通过后再次写入都会阻断交付。1.8.0 的 Title–Authors 真实空段落和紧凑 CRediT 检查，以及此前投稿包、语义节奏、录用尺度和引用审计规则均保持不变。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
 
 当前自动测试覆盖：
 
@@ -185,7 +185,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 - 单个 reviewer 不能把自己的意见标记为共识；每个问题必须记录四类判定、处理方式和收窄结论后的可辩护性，且可接受局限或可选增强不能被标成 `BLOCKING`；
 - 仅有文献元数据时不能标记为直接支持；核心/支持性 Claim 必须完整核查，普通背景 Claim 的未完成抽查只产生提示；
 - 标题或章节使用蓝色等非黑色样式时，格式检查不通过；
-- 手工 paragraph spacing、缺少真实空段落、首页居中/混合对齐、作者/单位字号偏小、角色行距混用、Keywords 未加粗、section/CRediT 空行错误、行号或动态页码不完整时，综合格式发布门不通过；
+- 手工 paragraph spacing、缺少真实空段落、首页居中/混合对齐、作者/单位字号偏小、角色行距混用、Keywords 未加粗、section/CRediT 空行错误、行号或动态页码不完整，或任一交付 DOCX 没有当前哈希对应的最终 PASS 时，综合格式发布门不通过；
 - 合规的黑色标题和完整审计记录可以通过相应检查。
 
 [查看可复现验证命令与边界](docs/VALIDATION.md)

@@ -1,5 +1,5 @@
 name: manuscript-review-revision
-version: 1.8.0
+version: 1.8.1
 description: >
   Declarative routing manifest for journal-aware, review-first manuscript
   assessment and authorized revision across compatible Agent Skills hosts.
@@ -35,6 +35,8 @@ references:
       path: references/credit-authorship-contract.md
     - condition: creating or checking a DOCX, PDF, LaTeX, or submission package
       path: references/manuscript-formatting.md
+    - condition: any integrated mode creates or modifies one or more final DOCX deliverables
+      path: references/generated-docx-release-contract.md
     - condition: formatting or auditing cover letters, response letters, or editable package text
       path: references/submission-package-contract.md
     - condition: normalizing or auditing manuscript front matter and first-page layout

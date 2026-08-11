@@ -4,20 +4,44 @@ Load this reference for cover letters, response letters, highlights,
 declarations, review proposals, and other editable submission text that is not
 a manuscript with title-page/front-matter semantics.
 
-Apply direct editor instructions, the current exact journal template, and the
-current official author guide before the journal-neutral fallback. Formatting
-must preserve text and fields. Use one explicit line-spacing token throughout
-the package file (`single` fallback), Times New Roman 12 pt, black,
-left-aligned text, 1-inch margins, `spaceBefore=0 pt`, `spaceAfter=0 pt`, and
-real empty Word paragraphs unless a current source resolves another token.
+## Source and content boundary
 
-For a cover letter, resolve salutation and closing from text or explicit
-one-based paragraph numbers. Require one empty paragraph after the salutation,
-between body paragraphs, before the closing, and before the first signature
-paragraph; keep consecutive signature/address paragraphs compact. For response
-letters and generic package text, use one empty paragraph between adjacent
-non-list blocks and keep consecutive list items compact. Stop rather than guess
-when cover-letter roles are ambiguous.
+Apply direct editor instructions, the current exact journal template, and the
+current official author guide before this fallback profile. Formatting work
+must preserve every text node, hyperlink target, comment, field, tracked
+change, figure, and table. The format-only Skill must not add, rewrite, or
+paraphrase an AI-use declaration or other declaration.
+
+## Package-wide profile
+
+- Use one explicit line-spacing token throughout the package file. Use the
+  exact journal/user value when specified; otherwise use `single` for a
+  journal-neutral letter/package file.
+- Use Times New Roman 12 pt, black, left-aligned text and 1-inch margins unless
+  the current source resolves another value.
+- Set every visible body and table-cell paragraph, including empty separators,
+  to `spaceBefore=0 pt`, `spaceAfter=0 pt`, with automatic spacing disabled.
+- Keep run-level bold and italics. Do not preserve an accidental undersized
+  salutation, closing, author, signature, reviewer-comment, or declaration
+  style.
+- Use real empty Word paragraphs for vertical separation. Do not substitute
+  paragraph spacing or manual line breaks.
+
+For a cover letter, resolve the salutation and closing from exact text or pass
+their one-based top-level paragraph numbers. Require one empty paragraph after
+the salutation, between body paragraphs, before the closing, and between the
+closing and first signature paragraph. Keep consecutive signature/address
+paragraphs compact. Preserve existing compact sender/recipient blocks before
+the salutation, collapse duplicate blank runs, and require one blank immediately
+before the salutation when a preamble exists. If salutation or closing is
+missing/ambiguous, stop and inventory instead of guessing.
+
+For response letters and generic editable package text, use one real empty
+paragraph between adjacent non-list top-level blocks. Keep consecutive list
+items compact, with one empty paragraph around the list block. Do not insert
+blank paragraphs inside tables.
+
+## Deterministic sequence
 
 ```bash
 python3 "$SKILL_ROOT/scripts/apply_submission_package_profile.py" input.docx \
@@ -33,17 +57,21 @@ python3 "$SKILL_ROOT/scripts/audit_docx_submission_package.py" \
   package.release.docx \
   --artifact-type <cover-letter|response-letter|generic> \
   --expected-line-spacing <resolved-token> \
+  --expected-font-name "Times New Roman" --expected-font-size 12 \
+  --expected-margin-inches 1 \
   --output-json package.audit.json
 
 python3 "$SKILL_ROOT/scripts/validate_submission_package_release.py" \
-  package.audit.json --content-preservation-status PASS \
+  package.audit.json \
+  --content-preservation-status PASS \
   --journal-status <PASS|NOT_APPLICABLE|NOT_ASSESSABLE> \
-  --render-status PASS --output-json package.format-release.json
+  --render-status PASS \
+  --output-json package.format-release.json
 ```
 
-The package audit covers all visible body and table-cell paragraphs, including
-salutation, body, closing, signature, comments, responses, declarations, and
-empty separators. It checks font, size, color, alignment, margins, global line
-spacing, 0/0 spacing, semantic blank boundaries, continuous line numbering, and
-dynamic page numbering. Only `PACKAGE_FORMAT_RELEASE_PASS` closes the package
-contract. Render and inspect every page after the final change.
+Apply explicit `--salutation-paragraph` and `--closing-paragraph` selectors
+when text-based cover-letter role resolution is ambiguous. The package audit
+includes whole-document font, size, color, alignment, margin, line-spacing,
+0/0 spacing, natural blank-boundary, continuous line-number, and dynamic
+page-number checks. Only `PACKAGE_FORMAT_RELEASE_PASS` closes this contract.
+Render and inspect every page after the last layout-sensitive change.

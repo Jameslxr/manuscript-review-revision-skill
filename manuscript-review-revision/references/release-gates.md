@@ -24,6 +24,7 @@ Report:
 | journal-specific manuscript format |  |  |  |  |
 | combined DOCX format release |  |  |  |  |
 | submission-package DOCX format release |  |  |  |  |
+| all-delivered-DOCX receipt and hash closure |  |  |  |  |
 | rendered visual QA |  |  |  |  |
 | submission-package completeness |  |  |  |  |
 
@@ -91,6 +92,9 @@ Return `RELEASE FAIL` when:
   mixes fonts, sizes, line spacing, or paragraph spacing across roles; lacks
   the required natural blank boundaries, package audit, preservation check, or
   rendered-page review; or does not reach `PACKAGE_FORMAT_RELEASE_PASS`;
+- any DOCX under the final delivery root lacks an exact receipt, current file
+  hash, embedded profile normalizer, applicable passing release report, or the
+  complete root scan does not reach `GENERATED_DOCX_RELEASE_PASS`;
 - a revision changed core claims without the scientifically responsible
   re-review.
 
