@@ -72,6 +72,13 @@ journal-requirement pass.
 
 Use requirement status `MET`, `NOT_MET`, `NOT_ASSESSABLE`, `NOT_APPLICABLE`, or `PENDING`. If an official rule is inaccessible or conflicting, keep the conflict visible and block a journal-specific pass.
 
+For every font or line-spacing requirement, also record `source_excerpt` and
+`rule_strength`. Load
+[journal-typography-resolution.md](journal-typography-resolution.md) and use
+`MANDATORY`, `EXPLICIT_REQUIREMENT`, `EXAMPLE_ONLY`, `UNSPECIFIED`, or
+`NOT_ASSESSABLE`. An `e.g.`/example-only value is not mandatory and cannot
+become an official style override.
+
 After the profile is complete, load
 [journal-format-plan.md](journal-format-plan.md) and create
 `01a_journal_format_plan.json`. Keep source extraction and implementation

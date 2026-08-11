@@ -44,7 +44,13 @@ STYLE_FIELDS = {
     "anonymization_mode",
     "body_font_family",
     "body_font_size_pt",
+    "title_font_size_pt",
+    "table_font_size_pt",
     "font_basis",
+    "font_rule_strength",
+    "font_source_excerpt",
+    "line_spacing_rule_strength",
+    "line_spacing_source_excerpt",
     "text_color_hex",
     "space_before_pt",
     "space_after_pt",
@@ -67,6 +73,15 @@ OFFICIAL_BASIS_VALUES = {
     "OFFICIAL_TEMPLATE",
     "OFFICIAL_GUIDE",
 }
+RULE_STRENGTH_VALUES = {
+    "MANDATORY",
+    "EXPLICIT_REQUIREMENT",
+    "EXAMPLE_ONLY",
+    "UNSPECIFIED",
+    "NOT_ASSESSABLE",
+}
+OFFICIAL_RULE_STRENGTHS = {"MANDATORY", "EXPLICIT_REQUIREMENT"}
+FALLBACK_RULE_STRENGTHS = {"EXAMPLE_ONLY", "UNSPECIFIED"}
 REQUIRED_CHECK_CATEGORIES = {
     "article-type",
     "file-format",
@@ -163,8 +178,8 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
         if field not in plan:
             errors.append(f"Missing top-level field: {field}")
 
-    if str(plan.get("schema_version", "")).strip() != "1.0":
-        errors.append("schema_version must be '1.0'.")
+    if str(plan.get("schema_version", "")).strip() != "1.1":
+        errors.append("schema_version must be '1.1'.")
 
     for field in ("target_journal", "article_type"):
         if not non_empty_string(plan.get(field)):
@@ -318,6 +333,83 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
     body_font_size = style.get("body_font_size_pt")
     if not isinstance(body_font_size, (int, float)) or body_font_size <= 0:
         errors.append("style_contract.body_font_size_pt must be a positive number.")
+    title_font_size = style.get("title_font_size_pt")
+    if not isinstance(title_font_size, (int, float)) or title_font_size <= 0:
+        errors.append("style_contract.title_font_size_pt must be a positive number.")
+    table_font_size = style.get("table_font_size_pt")
+    if not isinstance(table_font_size, (int, float)) or table_font_size <= 0:
+        errors.append("style_contract.table_font_size_pt must be a positive number.")
+
+    font_strength = str(style.get("font_rule_strength", "")).strip().upper()
+    line_strength = str(
+        style.get("line_spacing_rule_strength", "")
+    ).strip().upper()
+    for field, strength in (
+        ("font_rule_strength", font_strength),
+        ("line_spacing_rule_strength", line_strength),
+    ):
+        if strength not in RULE_STRENGTH_VALUES:
+            errors.append(
+                f"style_contract.{field} must be one of "
+                f"{sorted(RULE_STRENGTH_VALUES)}."
+            )
+    for field in ("font_source_excerpt", "line_spacing_source_excerpt"):
+        if not non_empty_string(style.get(field)):
+            errors.append(f"style_contract.{field} must be non-empty.")
+
+    font_basis = style_basis_values.get("font_basis", "")
+    line_basis = style_basis_values.get("line_spacing_basis", "")
+    if font_strength in OFFICIAL_RULE_STRENGTHS and font_basis not in OFFICIAL_BASIS_VALUES:
+        errors.append(
+            "Binding/direct font evidence requires an official font_basis."
+        )
+    if font_strength in FALLBACK_RULE_STRENGTHS:
+        if font_basis != "CONSERVATIVE_FALLBACK":
+            errors.append(
+                "Example-only or unspecified font evidence requires "
+                "font_basis CONSERVATIVE_FALLBACK."
+            )
+        if (
+            str(style.get("body_font_family", "")).strip().casefold()
+            != "times new roman"
+            or body_font_size != 12
+            or title_font_size != 15
+            or table_font_size != 12
+        ):
+            errors.append(
+                "Example-only or unspecified font evidence requires the "
+                "Times New Roman 15/12/12 pt fallback."
+            )
+    if font_basis in OFFICIAL_BASIS_VALUES and font_strength not in OFFICIAL_RULE_STRENGTHS:
+        errors.append(
+            "Official font_basis requires MANDATORY or EXPLICIT_REQUIREMENT evidence."
+        )
+
+    if line_strength in OFFICIAL_RULE_STRENGTHS and line_basis not in OFFICIAL_BASIS_VALUES:
+        errors.append(
+            "Binding/direct line-spacing evidence requires an official line_spacing_basis."
+        )
+    if line_strength in FALLBACK_RULE_STRENGTHS:
+        if line_basis != "CONSERVATIVE_FALLBACK":
+            errors.append(
+                "Example-only or unspecified line-spacing evidence requires "
+                "line_spacing_basis CONSERVATIVE_FALLBACK."
+            )
+        if normalized_token(line_spacing) != "double":
+            errors.append(
+                "Example-only or unspecified line-spacing evidence requires double spacing."
+            )
+    if line_basis in OFFICIAL_BASIS_VALUES and line_strength not in OFFICIAL_RULE_STRENGTHS:
+        errors.append(
+            "Official line_spacing_basis requires MANDATORY or "
+            "EXPLICIT_REQUIREMENT evidence."
+        )
+    if plan_status == "PASS" and (
+        font_strength == "NOT_ASSESSABLE" or line_strength == "NOT_ASSESSABLE"
+    ):
+        errors.append(
+            "plan_status PASS cannot use NOT_ASSESSABLE typography evidence."
+        )
     if not HEX_COLOR_RE.fullmatch(str(style.get("text_color_hex", "")).strip()):
         errors.append("style_contract.text_color_hex must contain six hexadecimal digits.")
 

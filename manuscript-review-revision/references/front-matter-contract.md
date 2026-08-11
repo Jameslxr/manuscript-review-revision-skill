@@ -66,7 +66,8 @@ Additional rules:
 - use superscript affiliation markers when multiple affiliations require a map;
 - include corresponding-author contact information for an unblinded
   submission-ready file;
-- keep the title within 12-16 pt and each semantic block visually restrained;
+- require the resolved title size exactly (15 pt fallback) and keep each
+  semantic block visually restrained;
 - default the resolved global line-spacing token to double and apply it to the
   complete manuscript, including the author block, headings, Keywords, and
   declarations; use 1.5 or another token only when resolved from the current
@@ -81,7 +82,10 @@ Additional rules:
 - keep continuous Word-native line numbering as the user's global invariant.
 
 The exact journal may require a separate title page, different page-number
-location, or a different font. Record and apply that as a sourced override.
+location, or a different font. Load
+[journal-typography-resolution.md](journal-typography-resolution.md) and apply
+only a binding/direct sourced override; example-only wording does not replace
+the 15/12 pt fallback.
 
 ## Blinded profile
 

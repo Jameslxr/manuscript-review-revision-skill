@@ -57,9 +57,6 @@ ROLE_ORDER = {
     "correspondence": 4,
     "orcid": 5,
 }
-ROLE_SIZE_RANGES = {
-    "title": (12.0, 16.0),
-}
 ALIGNMENT_VALUES = {
     "left": WD_ALIGN_PARAGRAPH.LEFT,
     "center": WD_ALIGN_PARAGRAPH.CENTER,
@@ -92,6 +89,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--allow-missing-correspondence", action="store_true")
     parser.add_argument("--expected-body-font-size", type=float, default=12.0)
+    parser.add_argument("--expected-title-font-size", type=float, default=15.0)
     parser.add_argument("--expected-line-spacing", default="double")
     for role in ROLE_ORDER:
         option_role = role.replace("_", "-")
@@ -330,12 +328,13 @@ def audit(
     expected_page_number_position: str = "upper-right",
     allow_missing_correspondence: bool = False,
     expected_body_font_size: float = 12.0,
+    expected_title_font_size: float = 15.0,
     expected_line_spacing: object = "double",
     explicit_styles: dict[str, set[str]] | None = None,
     explicit_paragraphs: dict[str, set[int]] | None = None,
 ) -> dict[str, object]:
-    if expected_body_font_size <= 0:
-        raise ValueError("expected body font size must be positive")
+    if expected_body_font_size <= 0 or expected_title_font_size <= 0:
+        raise ValueError("expected body and title font sizes must be positive")
     line_spacing_spec = parse_line_spacing_spec(expected_line_spacing)
     document = Document(str(path))
     explicit_styles = explicit_styles or {role: set() for role in ROLE_ORDER}
@@ -438,10 +437,12 @@ def audit(
                 }
             )
         else:
-            low, high = ROLE_SIZE_RANGES.get(
-                role,
-                (expected_body_font_size, expected_body_font_size),
+            expected_size = (
+                expected_title_font_size
+                if role == "title"
+                else expected_body_font_size
             )
+            low, high = expected_size, expected_size
             if min(sizes) < low or max(sizes) > high:
                 issues.append(
                     {
@@ -656,6 +657,7 @@ def audit(
             "expected_page_number_position": expected_page_number_position,
             "front_matter_block_gap": "one-real-empty-paragraph",
             "expected_body_font_size": expected_body_font_size,
+            "expected_title_font_size": expected_title_font_size,
             "expected_line_spacing": line_spacing_spec["label"],
         },
         "role_counts": role_counts,
@@ -702,6 +704,7 @@ def main() -> int:
             expected_page_number_position=args.expected_page_number_position,
             allow_missing_correspondence=args.allow_missing_correspondence,
             expected_body_font_size=args.expected_body_font_size,
+            expected_title_font_size=args.expected_title_font_size,
             expected_line_spacing=args.expected_line_spacing,
             explicit_styles=explicit_styles,
             explicit_paragraphs=explicit_paragraphs,

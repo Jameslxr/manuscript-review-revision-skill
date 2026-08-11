@@ -30,6 +30,14 @@ REQUIREMENT_FIELDS = {
     "mandatory",
     "status",
 }
+TYPOGRAPHY_CATEGORIES = {"font", "typography", "spacing", "line-spacing"}
+RULE_STRENGTH_VALUES = {
+    "MANDATORY",
+    "EXPLICIT_REQUIREMENT",
+    "EXAMPLE_ONLY",
+    "UNSPECIFIED",
+    "NOT_ASSESSABLE",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -157,6 +165,26 @@ def validate(profile: object) -> dict[str, object]:
             value = requirement.get(field)
             if not isinstance(value, (str, list)) or not value:
                 errors.append(f"{prefix}.{field} must be non-empty.")
+
+        category = str(requirement.get("category", "")).strip().lower().replace("_", "-")
+        if category in TYPOGRAPHY_CATEGORIES or any(
+            field in requirement for field in ("source_excerpt", "rule_strength")
+        ):
+            excerpt = requirement.get("source_excerpt")
+            strength = str(requirement.get("rule_strength", "")).strip().upper()
+            if not isinstance(excerpt, str) or not excerpt.strip():
+                errors.append(
+                    f"{prefix}.source_excerpt is required for typography rules."
+                )
+            if strength not in RULE_STRENGTH_VALUES:
+                errors.append(
+                    f"{prefix}.rule_strength must be one of "
+                    f"{sorted(RULE_STRENGTH_VALUES)}."
+                )
+            if strength in {"EXAMPLE_ONLY", "UNSPECIFIED"} and requirement.get("mandatory") is True:
+                errors.append(
+                    f"{prefix} example-only/unspecified typography cannot be mandatory."
+                )
 
         source_url = str(requirement.get("source_url", "")).strip()
         if not valid_url(source_url):

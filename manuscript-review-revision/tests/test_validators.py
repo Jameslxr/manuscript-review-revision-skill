@@ -320,7 +320,7 @@ def write_format_plan(
     path.write_text(
         json.dumps(
             {
-                "schema_version": "1.0",
+                "schema_version": "1.1",
                 "target_journal": "Example Journal",
                 "article_type": "Original Article",
                 "submission_stage": "initial",
@@ -339,7 +339,11 @@ def write_format_plan(
                     "paragraph_separation": paragraph_separation,
                     "paragraph_separation_basis": paragraph_separation_basis,
                     "line_spacing": "double",
-                    "line_spacing_basis": "OFFICIAL_GUIDE",
+                    "line_spacing_basis": "CONSERVATIVE_FALLBACK",
+                    "line_spacing_rule_strength": "UNSPECIFIED",
+                    "line_spacing_source_excerpt": (
+                        "No binding line-spacing value appears in the current guide."
+                    ),
                     "line_numbering": line_numbering,
                     "line_numbering_basis": line_numbering_basis,
                     "page_numbering": page_numbering,
@@ -351,7 +355,13 @@ def write_format_plan(
                     "anonymization_mode": "unblinded",
                     "body_font_family": "Times New Roman",
                     "body_font_size_pt": 12,
+                    "title_font_size_pt": 15,
+                    "table_font_size_pt": 12,
                     "font_basis": "CONSERVATIVE_FALLBACK",
+                    "font_rule_strength": "UNSPECIFIED",
+                    "font_source_excerpt": (
+                        "No binding font value appears in the current guide."
+                    ),
                     "text_color_hex": "000000",
                     "space_before_pt": 0,
                     "space_after_pt": space_after_pt,
@@ -624,6 +634,84 @@ class ValidatorTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("Journal format plan validation: PASS", result.stdout)
             self.assertIn("Required categories covered: 20/20", result.stdout)
+
+    def test_example_only_ten_point_font_cannot_override_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "format-plan-example-font.json"
+            write_format_plan(path)
+            plan = json.loads(path.read_text(encoding="utf-8"))
+            style = plan["style_contract"]
+            style["body_font_size_pt"] = 10
+            style["font_rule_strength"] = "EXAMPLE_ONLY"
+            style["font_source_excerpt"] = (
+                "Use a normal font, e.g., 10-point Times Roman."
+            )
+            path.write_text(json.dumps(plan), encoding="utf-8")
+            result = run_script("validate_journal_format_plan.py", path)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("15/12/12 pt fallback", result.stdout)
+
+    def test_explicit_twelve_point_and_one_point_five_rules_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "format-plan-explicit-typography.json"
+            write_format_plan(path)
+            plan = json.loads(path.read_text(encoding="utf-8"))
+            style = plan["style_contract"]
+            style["font_basis"] = "OFFICIAL_GUIDE"
+            style["font_rule_strength"] = "EXPLICIT_REQUIREMENT"
+            style["font_source_excerpt"] = "Use 12-point Times New Roman."
+            style["line_spacing"] = "1.5"
+            style["line_spacing_basis"] = "OFFICIAL_GUIDE"
+            style["line_spacing_rule_strength"] = "EXPLICIT_REQUIREMENT"
+            style["line_spacing_source_excerpt"] = "Use 1.5 line spacing."
+            path.write_text(json.dumps(plan), encoding="utf-8")
+            result = run_script(
+                "validate_journal_format_plan.py", path, "--require-pass"
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_example_only_typography_cannot_be_mandatory_profile_rule(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "profile-example-font.json"
+            source_url = "https://journal.example.org/authors"
+            path.write_text(
+                json.dumps(
+                    {
+                        "target_journal": "Example Journal",
+                        "article_type": "Original Article",
+                        "submission_stage": "initial",
+                        "accessed_at": "2026-08-11",
+                        "profile_status": "PASS",
+                        "official_sources": [
+                            {
+                                "title": "Author guide",
+                                "url": source_url,
+                                "accessed_at": "2026-08-11",
+                                "official": True,
+                            }
+                        ],
+                        "requirements": [
+                            {
+                                "id": "FONT-1",
+                                "category": "font",
+                                "text": "Example font wording inspected.",
+                                "source_excerpt": (
+                                    "Use a normal font, e.g., 10-point Times Roman."
+                                ),
+                                "rule_strength": "EXAMPLE_ONLY",
+                                "source_url": source_url,
+                                "applies_to": "initial manuscript",
+                                "mandatory": True,
+                                "status": "MET",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            result = run_script("validate_journal_profile.py", path)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("cannot be mandatory", result.stdout)
 
     def test_journal_format_plan_requires_resolved_front_matter_contract(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
