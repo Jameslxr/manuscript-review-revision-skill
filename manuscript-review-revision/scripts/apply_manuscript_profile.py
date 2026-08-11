@@ -41,16 +41,31 @@ from audit_docx_manuscript_style import (  # noqa: E402
 )
 
 
+from docx_semantic_rules import (  # noqa: E402
+    BODY_FONT_SIZE_PT,
+    DECLARATION_HEADING_RE,
+    DECLARATION_INLINE_RE,
+    HEADING_STYLE_RE,
+    KEYWORD_LABEL_RE,
+    bold_leading_label,
+)
+
+
 PROFILE_STYLES = {
     "title": ("Manuscript Title", 15.0, True, 1.0),
-    "authors": ("Manuscript Authors", 12.0, False, 1.0),
-    "affiliation": ("Manuscript Affiliation", 10.5, False, 1.0),
-    "correspondence": ("Manuscript Correspondence", 10.5, False, 1.0),
-    "keywords": ("Manuscript Keywords", 11.0, False, 1.0),
-    "heading": ("Manuscript Heading", 12.0, True, 1.0),
-    "body": ("Manuscript Body", 12.0, False, 2.0),
+    "authors": ("Manuscript Authors", BODY_FONT_SIZE_PT, False, 1.0),
+    "affiliation": ("Manuscript Affiliation", BODY_FONT_SIZE_PT, False, 1.0),
+    "correspondence": (
+        "Manuscript Correspondence",
+        BODY_FONT_SIZE_PT,
+        False,
+        1.0,
+    ),
+    "keywords": ("Manuscript Keywords", BODY_FONT_SIZE_PT, False, 1.0),
+    "heading": ("Manuscript Heading", BODY_FONT_SIZE_PT, True, 1.0),
+    "body": ("Manuscript Body", BODY_FONT_SIZE_PT, False, 2.0),
+    "reference": ("Manuscript Reference", BODY_FONT_SIZE_PT, False, 1.0),
 }
-HEADING_STYLE_RE = re.compile(r"^(?:heading\s*[1-9]|manuscript heading)$", re.I)
 
 
 def parse_args() -> argparse.Namespace:
@@ -354,6 +369,152 @@ def normalize_body_separators(
         index += 1
 
 
+def adjacent_blank_nodes_before(document: Any, node: Any) -> list[Any]:
+    body = document.element.body
+    children = list(body)
+    index = children.index(node) - 1
+    blanks: list[Any] = []
+    while index >= 0:
+        candidate = children[index]
+        if candidate.tag != qn("w:p"):
+            break
+        paragraph = Paragraph(candidate, document._body)
+        if not paragraph_is_structurally_empty(paragraph):
+            break
+        blanks.insert(0, candidate)
+        index -= 1
+    return blanks
+
+
+def adjacent_blank_nodes_after(document: Any, node: Any) -> list[Any]:
+    body = document.element.body
+    children = list(body)
+    index = children.index(node) + 1
+    blanks: list[Any] = []
+    while index < len(children):
+        candidate = children[index]
+        if candidate.tag != qn("w:p"):
+            break
+        paragraph = Paragraph(candidate, document._body)
+        if not paragraph_is_structurally_empty(paragraph):
+            break
+        blanks.append(candidate)
+        index += 1
+    return blanks
+
+
+def format_separator(node: Any, document: Any, style: Any, line_spacing: dict[str, object]) -> None:
+    format_paragraph(
+        Paragraph(node, document._body),
+        style,
+        size_pt=BODY_FONT_SIZE_PT,
+        bold=False,
+        alignment=WD_ALIGN_PARAGRAPH.LEFT,
+        line_spacing=line_spacing,
+    )
+
+
+def set_blank_count_before(
+    document: Any,
+    node: Any,
+    desired: int,
+    separator_style: Any,
+    line_spacing: dict[str, object],
+) -> None:
+    body = document.element.body
+    blanks = adjacent_blank_nodes_before(document, node)
+    for duplicate in blanks[desired:]:
+        body.remove(duplicate)
+    blanks = blanks[:desired]
+    while len(blanks) < desired:
+        blank = OxmlElement("w:p")
+        body.insert(body.index(node), blank)
+        blanks.append(blank)
+    for blank in blanks:
+        format_separator(blank, document, separator_style, line_spacing)
+
+
+def set_blank_count_after(
+    document: Any,
+    node: Any,
+    desired: int,
+    separator_style: Any,
+    line_spacing: dict[str, object],
+) -> None:
+    body = document.element.body
+    blanks = adjacent_blank_nodes_after(document, node)
+    for duplicate in blanks[desired:]:
+        body.remove(duplicate)
+    blanks = blanks[:desired]
+    while len(blanks) < desired:
+        blank = OxmlElement("w:p")
+        body.insert(body.index(node) + 1, blank)
+        blanks.insert(0, blank)
+    for blank in blanks:
+        format_separator(blank, document, separator_style, line_spacing)
+
+
+def previous_nonblank_paragraph(document: Any, node: Any) -> Any | None:
+    body = document.element.body
+    children = list(body)
+    index = children.index(node) - 1
+    while index >= 0:
+        candidate = children[index]
+        if candidate.tag != qn("w:p"):
+            return None
+        paragraph = Paragraph(candidate, document._body)
+        if not paragraph_is_structurally_empty(paragraph):
+            return candidate
+        index -= 1
+    return None
+
+
+def normalize_semantic_vertical_rhythm(
+    document: Any,
+    *,
+    heading_nodes: set[Any],
+    abstract_node: Any | None,
+    keyword_nodes: set[Any],
+    declaration_inline_nodes: set[Any],
+    separator_style: Any,
+    line_spacing: dict[str, object],
+) -> None:
+    """Enforce the manuscript's semantic blank-line matrix."""
+    body = document.element.body
+    ordered = [node for node in list(body) if node.tag == qn("w:p")]
+
+    # Headings use the global line spacing and sit directly on their first paragraph.
+    for node in ordered:
+        if node in heading_nodes:
+            set_blank_count_after(
+                document, node, 0, separator_style, line_spacing
+            )
+
+    # Keywords follow the abstract directly and are followed by one natural empty line.
+    for node in ordered:
+        if node in keyword_nodes:
+            set_blank_count_before(
+                document, node, 0, separator_style, line_spacing
+            )
+            set_blank_count_after(
+                document, node, 1, separator_style, line_spacing
+            )
+
+    # Every new section/subsection/declaration block has exactly one empty line
+    # before it, except Abstract (handled by the front-matter contract) and
+    # consecutive headings, which remain together.
+    for node in ordered:
+        if node == abstract_node:
+            continue
+        if node not in heading_nodes and node not in declaration_inline_nodes:
+            continue
+        previous = previous_nonblank_paragraph(document, node)
+        desired = 0 if previous in heading_nodes else 1
+        set_blank_count_before(
+            document, node, desired, separator_style, line_spacing
+        )
+
+
 def apply_profile(
     document_path: Path,
     output_path: Path,
@@ -368,24 +529,22 @@ def apply_profile(
     if document_path.resolve() == output_path.resolve():
         raise ValueError("--out must differ from the input path; preserve the source DOCX.")
     document = Document(str(document_path))
-    original_text_nodes = text_node_values(document)
+    original_text_stream = "".join(text_node_values(document))
     flattened_tables = flatten_recognized_front_matter_tables(
         document, explicit_styles
     )
 
     alignment = ALIGNMENT_VALUES[front_matter_alignment]
     body_spacing = parse_line_spacing_spec(line_spacing_token)
-    single_spacing = parse_line_spacing_spec("single")
     styles: dict[str, Any] = {}
     for role, (name, size, bold, _) in PROFILE_STYLES.items():
-        spacing = body_spacing if role == "body" else single_spacing
         role_alignment = alignment if role in ROLE_ORDER else WD_ALIGN_PARAGRAPH.LEFT
         styles[role] = ensure_style(
             document,
             name,
             size_pt=size,
             bold=bold,
-            line_spacing=spacing,
+            line_spacing=body_spacing,
             alignment=role_alignment,
         )
 
@@ -402,7 +561,7 @@ def apply_profile(
             size_pt=size,
             bold=bold,
             alignment=alignment,
-            line_spacing=single_spacing,
+            line_spacing=body_spacing,
         )
 
     if abstract is not None:
@@ -412,7 +571,7 @@ def apply_profile(
             size_pt=12.0,
             bold=True,
             alignment=WD_ALIGN_PARAGRAPH.LEFT,
-            line_spacing=single_spacing,
+            line_spacing=body_spacing,
         )
 
     normalized_body_tokens = set(DEFAULT_BODY_STYLES)
@@ -424,7 +583,13 @@ def apply_profile(
         if role != "body"
     }
     body_paragraphs: list[Any] = []
+    heading_nodes: set[Any] = set()
+    keyword_nodes: set[Any] = set()
+    declaration_inline_nodes: set[Any] = set()
+    if abstract is not None:
+        heading_nodes.add(abstract._p)
     abstract_seen = False
+    reference_section_seen = False
     for paragraph in document.paragraphs:
         if paragraph_is_abstract(paragraph):
             abstract_seen = True
@@ -438,13 +603,18 @@ def apply_profile(
             format_paragraph(
                 paragraph,
                 styles["keywords"],
-                size_pt=11.0,
+                size_pt=BODY_FONT_SIZE_PT,
                 bold=False,
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
-                line_spacing=single_spacing,
+                line_spacing=body_spacing,
             )
+            bold_leading_label(paragraph, KEYWORD_LABEL_RE)
+            keyword_nodes.add(paragraph._p)
             continue
-        if HEADING_STYLE_RE.match(style_name) or (
+        if (
+            HEADING_STYLE_RE.match(style_name)
+            or DECLARATION_HEADING_RE.fullmatch(paragraph.text)
+        ) or (
             paragraph.text.strip() and style_name.lower().startswith("heading")
         ):
             format_paragraph(
@@ -453,14 +623,50 @@ def apply_profile(
                 size_pt=12.0,
                 bold=True,
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
-                line_spacing=single_spacing,
+                line_spacing=body_spacing,
             )
+            heading_nodes.add(paragraph._p)
+            if re.fullmatch(
+                r"(?:references|bibliography|literature cited)",
+                paragraph.text.strip(),
+                re.I,
+            ):
+                reference_section_seen = True
+            elif reference_section_seen:
+                reference_section_seen = False
+            continue
+        if DECLARATION_INLINE_RE.match(paragraph.text):
+            reference_section_seen = False
+            format_paragraph(
+                paragraph,
+                styles["body"],
+                size_pt=BODY_FONT_SIZE_PT,
+                bold=False,
+                alignment=WD_ALIGN_PARAGRAPH.LEFT,
+                line_spacing=body_spacing,
+            )
+            bold_leading_label(paragraph, DECLARATION_INLINE_RE)
+            body_paragraphs.append(paragraph)
+            declaration_inline_nodes.add(paragraph._p)
+            continue
+        if reference_section_seen and paragraph.text.strip():
+            if not re.search(r"bibliograph|reference", style_name, re.I):
+                format_paragraph(
+                    paragraph,
+                    styles["reference"],
+                    size_pt=BODY_FONT_SIZE_PT,
+                    bold=False,
+                    alignment=WD_ALIGN_PARAGRAPH.LEFT,
+                    line_spacing=body_spacing,
+                )
+                paragraph.paragraph_format.left_indent = Inches(0.5)
+                paragraph.paragraph_format.first_line_indent = Inches(-0.5)
             continue
         if paragraph_is_body(paragraph, normalized_body_tokens, excluded):
             format_paragraph(
                 paragraph,
                 styles["body"],
-                size_pt=12.0,
+                size_pt=BODY_FONT_SIZE_PT,
                 bold=False,
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
                 line_spacing=body_spacing,
@@ -473,10 +679,19 @@ def apply_profile(
         abstract,
         abstract_start,
         styles["body"],
-        single_spacing,
+        body_spacing,
     )
     normalize_body_separators(
         document, body_paragraphs, styles["body"], body_spacing
+    )
+    normalize_semantic_vertical_rhythm(
+        document,
+        heading_nodes=heading_nodes,
+        abstract_node=abstract._p if abstract is not None else None,
+        keyword_nodes=keyword_nodes,
+        declaration_inline_nodes=declaration_inline_nodes,
+        separator_style=styles["body"],
+        line_spacing=body_spacing,
     )
 
     for section in document.sections:
@@ -490,7 +705,7 @@ def apply_profile(
             section._sectPr.append(vertical)
         vertical.set(qn("w:val"), "top")
 
-    if text_node_values(document) != original_text_nodes:
+    if "".join(text_node_values(document)) != original_text_stream:
         raise ValueError("Text-node preservation check failed; output was not written.")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)

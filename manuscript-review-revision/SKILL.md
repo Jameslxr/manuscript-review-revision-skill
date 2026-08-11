@@ -1,7 +1,7 @@
 ---
 name: manuscript-review-revision
 description: |
-  Run a journal-aware, review-first workflow for biomedical and scientific manuscripts. Support target-journal confirmation or Top-5 recommendation, official-guideline research, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce whole-document literal blank paragraphs, zero paragraph spacing, explicit line spacing, left-aligned manuscript front matter, continuous Word line numbering, dynamic page numbering, rendered-page QA, and a combined format-release gate on every applicable modified DOCX. Use for integrated review, revision, response, retargeting, submission preparation, or journal-specific formatting tied to those phases. For format-only DOCX repair without scientific review, prefer `manuscript-docx-formatting`. Require the exact target journal before full review; never revise before the review gate and user authorization.
+  Run a journal-aware, review-first workflow for biomedical and scientific manuscripts. Support target-journal confirmation or recommendation, official-guideline research, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce natural empty paragraphs, zero paragraph spacing, one manuscript-wide line-spacing token, body-sized author/affiliation/declaration roles, semantic Keywords/section/CRediT spacing, left-aligned front matter, continuous Word line and page numbering, and rendered-page QA. Use for integrated review, revision, response, retargeting, submission preparation, or journal-specific formatting. For format-only DOCX repair, prefer `manuscript-docx-formatting`. Require the exact target journal before full review; never revise before the review gate and user authorization.
 ---
 
 # Manuscript Review & Revision
@@ -38,6 +38,15 @@ supplementary text.
   paragraphs. Never simulate it with paragraph spacing or a manual line break.
 - Give body prose and empty separators the explicit required line-spacing
   token; never inherit Word defaults and never disable the line-spacing check.
+- For manuscripts, apply that same resolved token to title, authors,
+  affiliations, correspondence, Keywords, every heading/subheading, and all
+  declaration/CRediT paragraphs. Authors, affiliations, correspondence,
+  Keywords, headings, and declarations use the resolved body font size (12 pt
+  fallback).
+- Bold only recognized `Keywords:` and inline declaration labels. Place no
+  empty paragraph before Keywords, exactly one after Keywords and before each
+  new section/subsection/declaration block, and none between a heading and its
+  first body paragraph.
 - Enable Word-native line numbering in every section with `countBy=1` and
   `restart=continuous`. Remove paragraph-level `suppressLineNumbers`; no section
   or paragraph may opt out.
@@ -61,8 +70,8 @@ supplementary text.
 - Compare extracted text before and after formatting and render every page
   after the last layout-sensitive change. A mechanical XML pass alone is not a
   release.
-- Combine the structural, front-matter, content-preservation, journal, and
-  rendered-page gates with `validate_format_release.py`. Every applicable gate
+- Combine the structural, front-matter, semantic-rhythm, content-preservation,
+  journal, and rendered-page gates with `validate_format_release.py`. Every applicable gate
   must pass; `NOT_ASSESSABLE` is never promoted to pass.
 
 ```bash
@@ -318,6 +327,15 @@ a manuscript, also load
 - Keep audit reports separate from the clean manuscript.
 - Use literal body-paragraph separation: set effective body-paragraph spacing before/after to `0 pt` and insert exactly one structurally empty paragraph between adjacent body-prose paragraphs. Do not simulate that blank line with paragraph spacing or a manual line break.
 - Resolve body line spacing to an explicit token from the exact journal template or current author guide; if neither specifies it, use the conservative manuscript fallback `double`. Encode the value in the body style and the empty separator paragraph instead of inheriting Word's default line spacing.
+- Apply the resolved token manuscript-wide, including title block, headings,
+  Keywords, and declarations. Keep authors, affiliations, correspondence,
+  Keywords, headings, and CRediT/declaration text at the resolved body size.
+- Enforce the semantic blank-line matrix: no blank before Keywords, exactly one
+  after Keywords, exactly one before each section/subsection/declaration block,
+  and none between a heading and its first body paragraph. Bold only recognized
+  Keywords and inline declaration labels.
+- Keep entries after `References`/`Bibliography` in a dedicated non-body role;
+  never insert body-prose blank separators between reference entries.
 - Apply the same paragraph-structure rule to every modified DOCX. Do not ask the user to repair it manually: correct the generated file and re-run the audit until it passes.
 - Apply continuous Word-native line numbering to every section and a dynamic,
   continuous `PAGE` field to every active page story in every modified DOCX.
@@ -348,7 +366,14 @@ python3 "$SKILL_ROOT/scripts/audit_docx_front_matter.py" \
   manuscript.numbered.docx --mode <blinded-or-unblinded> \
   --front-matter-alignment <resolved-alignment> \
   --expected-page-number-position <resolved-position> \
+  --expected-line-spacing <resolved-token> \
   --output-json 07_front_matter_audit.json
+
+python3 "$SKILL_ROOT/scripts/audit_docx_semantic_rhythm.py" \
+  manuscript.numbered.docx \
+  --expected-line-spacing <resolved-token> \
+  --expected-body-font-size <resolved-body-size> \
+  --output-json 07_semantic_rhythm_audit.json
 ```
 
 Replace `double` with the exact `style_contract.line_spacing` token from the
@@ -368,6 +393,7 @@ python3 "$SKILL_ROOT/scripts/validate_journal_format_audit.py" \
 
 python3 "$SKILL_ROOT/scripts/validate_format_release.py" \
   07_structural_format_audit.json 07_front_matter_audit.json \
+  07_semantic_rhythm_audit.json \
   --content-preservation-status PASS \
   --journal-status PASS --render-status PASS \
   --output-json 07_format_release.json
@@ -417,6 +443,7 @@ revision/revision_log.tsv
 07_format_audit.json
 07_structural_format_audit.json
 07_front_matter_audit.json
+07_semantic_rhythm_audit.json
 07_format_release.json
 08_release_gate.md
 ```

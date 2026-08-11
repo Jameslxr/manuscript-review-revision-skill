@@ -205,6 +205,7 @@ def main() -> int:
         "references/front-matter-contract.md",
         "scripts/apply_manuscript_profile.py",
         "scripts/audit_docx_front_matter.py",
+        "scripts/audit_docx_semantic_rhythm.py",
         "scripts/validate_format_release.py",
         "FORMAT_RELEASE_PASS",
     ):

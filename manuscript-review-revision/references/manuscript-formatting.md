@@ -48,15 +48,16 @@ The review report may use tables for issue tracking, but its visual system must 
 Load [front-matter-contract.md](front-matter-contract.md) for every manuscript
 DOCX. When no current exact journal template resolves a different token, use
 the restrained journal-neutral profile: left-aligned title, authors,
-affiliations, and correspondence; Times New Roman; compact single-spaced title
-block; 1-inch margins; top vertical alignment; no table, text box, centered
+affiliations, and correspondence; Times New Roman; one resolved manuscript-wide
+line-spacing token; body-sized author, affiliation, correspondence, Keywords,
+heading, and declaration text; 1-inch margins; top vertical alignment; no table, text box, centered
 display block, or decorative container. Use explicit role styles or one-based
 paragraph numbers after inventory; never infer author identities from visual
 appearance.
 
 Run `apply_manuscript_profile.py` before the numbering enforcer, then run
-`audit_docx_front_matter.py` separately from the whole-document structural
-audit. A journal-sourced override may change alignment, typography,
+`audit_docx_front_matter.py` and `audit_docx_semantic_rhythm.py` separately from
+the whole-document structural audit. A journal-sourced override may change alignment, typography,
 anonymization, title-page location, or page-number placement, but must be
 recorded in the validated format plan and checked explicitly.
 
@@ -71,7 +72,11 @@ Use this invariant for every modified DOCX:
 - Give the empty separator paragraph effective `spaceBefore=0 pt`, `spaceAfter=0 pt`, and the same line-spacing token as the surrounding body style. This is the structure produced by pressing `Enter` twice in consistently styled body text.
 - Use real semantic styles: `Title`/author/affiliation, `Heading`, `Normal` or `Body Text`, `Caption`, `List Paragraph`, and `Bibliography` as applicable. Do not style title blocks, lists, captions, or references as body prose merely to obtain spacing.
 - Do not substitute `spaceAfter`, `spaceBefore`, CSS/HTML margins, or a manual line break (`Shift+Enter`, `<w:br>`) for the empty paragraph.
-- Do not insert body separators around headings, list items, captions, figures, tables, equations, or bibliography entries.
+- Do not insert body separators around list items, captions, figures, tables,
+  equations, or bibliography entries. For manuscript semantics, require exactly
+  one real empty paragraph before a new section, subsection, or declaration
+  heading; none between a heading and its first body paragraph; none before
+  Keywords; and exactly one after Keywords.
 
 When authoring OOXML directly, the separator must be a real empty `<w:p>`
 between the two body `<w:p>` elements. When using a document library, create an
@@ -120,15 +125,16 @@ and do not claim simultaneous template compliance.
 5. For a manuscript, run `apply_manuscript_profile.py` with explicit role and prose-style arguments, then apply any source-linked journal overrides.
 6. Run `enforce_docx_line_page_numbers.py` on every modified DOCX with the resolved page-number position.
 7. Run `python3 "$SKILL_ROOT/scripts/audit_docx_manuscript_style.py" manuscript.numbered.docx --paragraph-separation literal-blank --expected-line-spacing double` on every modified DOCX, replacing only the spacing token with the validated `style_contract` value and passing all prose/non-body styles explicitly.
-8. For a manuscript, run `audit_docx_front_matter.py` with the resolved blinded/unblinded mode, front-matter alignment, role arguments, and page-number position.
-9. Compare extracted text before and after; any unauthorized text-node change fails content preservation.
-10. Render DOCX with a reliable renderer available in the current host and inspect every page at 100% zoom.
-11. Check title/heading color, clipping, overlap, tables, captions, page breaks, orphan headings, figures, headers/footers, visible continuous line numbers, dynamic page numbers, and references.
-12. If a mechanical audit reports a repairable failure, correct the generated DOCX automatically; do not ask the user to adjust it in Word.
-13. Map every format-plan check ID into `07_format_audit.json`, attach inspected evidence, and mark it `PASS`, `FAIL`, or `NOT_ASSESSABLE`.
-14. Validate plan-to-output closure with `validate_journal_format_audit.py`.
-15. For a manuscript, combine structural, front-matter, preservation, journal, and render results with `validate_format_release.py`; require `FORMAT_RELEASE_PASS`.
-16. Fix and re-render after every layout-sensitive change.
+8. For a manuscript, run `audit_docx_front_matter.py` with the resolved blinded/unblinded mode, front-matter alignment, role arguments, page-number position, body size, and global line-spacing token.
+9. For a manuscript, run `audit_docx_semantic_rhythm.py`; require identical resolved line spacing across the complete manuscript, body-sized author/affiliation/Keywords/declaration roles, a bold Keywords label, and exact semantic blank-line boundaries.
+10. Compare extracted text before and after; any unauthorized text change fails content preservation.
+11. Render DOCX with a reliable renderer available in the current host and inspect every page at 100% zoom.
+12. Check title/heading color, clipping, overlap, tables, captions, page breaks, orphan headings, figures, headers/footers, visible continuous line numbers, dynamic page numbers, and references.
+13. If a mechanical audit reports a repairable failure, correct the generated DOCX automatically; do not ask the user to adjust it in Word.
+14. Map every format-plan check ID into `07_format_audit.json`, attach inspected evidence, and mark it `PASS`, `FAIL`, or `NOT_ASSESSABLE`.
+15. Validate plan-to-output closure with `validate_journal_format_audit.py`.
+16. For a manuscript, combine structural, front-matter, semantic-rhythm, preservation, journal, and render results with `validate_format_release.py`; require `FORMAT_RELEASE_PASS`.
+17. Fix and re-render after every layout-sensitive change.
 
 Codex may use an installed document/PDF capability. Claude Code may use an
 available office converter, renderer, script, or MCP tool. If rendering is
@@ -145,6 +151,7 @@ When authorized to revise, normally produce:
 - `07_format_audit.json`
 - `07_structural_format_audit.json`
 - `07_front_matter_audit.json`
+- `07_semantic_rhythm_audit.json`
 - `07_format_release.json`
 
 Do not strip comments, tracked changes, citation fields, author identity, or metadata until the journal stage and user's requested deliverable are known.
@@ -165,7 +172,7 @@ review and rendered page inspection.
 
 The journal-format plan validator checks that all required rule categories have
 a source-linked implementation and verification method. The DOCX style audit
-checks only part of that plan, while the front-matter audit checks a separate
-semantic and visual surface. `validate_format_release.py` closes the applicable
+checks only part of that plan, while the front-matter and semantic-rhythm audits
+check separate semantic and visual surfaces. `validate_format_release.py` closes the applicable
 formatting gates but cannot establish scientific validity, citation validity,
 editorial acceptance, or successful submission.

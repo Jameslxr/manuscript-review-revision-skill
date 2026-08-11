@@ -6,7 +6,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.6.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.6.1-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -176,7 +176,7 @@ Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/
 
 ## Current Status And Validation
 
-The current release is **Beta**. Version 1.6.0 embeds the standalone formatter's front-matter normalization, literal blank paragraphs, 0/0 pt paragraph spacing, explicit line spacing, continuous line/page numbering, and combined format-release gate into the review/revision workflow. Version 1.5.0's accepted-paper tolerance calibration, four-class finding adjudication, and risk-tiered citation audit remain intact; the earlier independent rerun preserved 18/18 seeded-issue detection. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
+The current release is **Beta**. Version 1.6.1 extends the complete v1.6.0 DOCX release gate with semantic vertical rhythm: authors, affiliations, correspondence, Keywords, headings/subheadings, and CRediT/declarations share the journal-resolved global line spacing and body-size baseline; Keywords labels are bold; section/subsection/declaration boundaries follow a deterministic real-empty-paragraph matrix; and an independent fail-closed audit verifies these properties. Version 1.5.0's accepted-paper tolerance calibration, four-class finding adjudication, and risk-tiered citation audit remain intact; the earlier independent rerun preserved 18/18 seeded-issue detection. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
 
 Current automated coverage includes:
 
@@ -185,7 +185,7 @@ Current automated coverage includes:
 - one reviewer cannot label a concern as consensus; every concern records its four-class type, defensibility after claim narrowing, and resolution mode, while acceptable limitations and optional strengthening cannot be `BLOCKING`;
 - metadata-only evidence cannot be direct support; material/supporting claims require complete checks, while incomplete sampled context rows remain advisory;
 - blue or otherwise non-black manuscript headings fail;
-- manual paragraph spacing, missing literal blank paragraphs, centered or mixed-alignment neutral front matter, and incomplete line or dynamic page numbering block the combined format-release gate;
+- manual paragraph spacing, missing literal blank paragraphs, centered or mixed-alignment neutral front matter, undersized author/affiliation roles, mixed role line spacing, an unbold Keywords label, invalid section/CRediT blanks, and incomplete line or dynamic page numbering block the combined format-release gate;
 - compliant black headings and complete audit records can pass.
 
 [Read the reproducible validation scope](docs/VALIDATION.md)
