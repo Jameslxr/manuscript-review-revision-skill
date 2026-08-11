@@ -159,13 +159,15 @@ observed boundaries, and limitations are documented in
 This audit motivated the four finding classes and risk-tiered reference gate;
 it is not a universal estimate of journal acceptance practice.
 
-Version 1.6.0 added 16 formatting-focused tests. Version 1.6.1 adds three
-semantic-rhythm regressions, bringing this focused set to 19 tests: the
-standalone formatter's 17-test corpus inside the integrated review/revision
-Skill plus two plan/audit closure tests. The tests cover adversarial front
+Version 1.6.0 added 16 formatting-focused tests. Version 1.6.1 added three
+semantic-rhythm regressions, and version 1.7.0 adds five submission-package
+regressions, bringing this focused set to 24 tests: the standalone formatter's
+22-test corpus inside the integrated review/revision Skill plus two plan/audit
+closure tests. The tests cover adversarial front
 matter, body-sized author/affiliation/declaration roles, Keywords label
 emphasis, section/subsection/CRediT blank-line boundaries, literal blank
-paragraphs, consecutive non-body reference entries, generated-heading audit
+paragraphs, cover-letter salutation/body/closing/signature rhythm, compact list
+and signature blocks, consecutive non-body reference entries, generated-heading audit
 coverage, hidden Word auto-spacing, explicit manuscript-wide line spacing,
 continuous line/page numbering, content preservation, idempotence, and
 fail-closed format-release composition. Passing

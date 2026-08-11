@@ -6,7 +6,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.6.1-2563eb)
+![Version](https://img.shields.io/badge/version-v1.7.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -176,7 +176,7 @@ Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/
 
 ## Current Status And Validation
 
-The current release is **Beta**. Version 1.6.1 extends the complete v1.6.0 DOCX release gate with semantic vertical rhythm: authors, affiliations, correspondence, Keywords, headings/subheadings, and CRediT/declarations share the journal-resolved global line spacing and body-size baseline; Keywords labels are bold; section/subsection/declaration boundaries follow a deterministic real-empty-paragraph matrix; and an independent fail-closed audit verifies these properties. Version 1.5.0's accepted-paper tolerance calibration, four-class finding adjudication, and risk-tiered citation audit remain intact; the earlier independent rerun preserved 18/18 seeded-issue detection. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
+The current release is **Beta**. Version 1.7.0 adds a dedicated editable submission-package lane: cover letters, response letters, and other submission text now receive role-aware normalization, one whole-document line-spacing/font-size contract, real empty paragraphs, continuous line/page numbering, and a fail-closed package release gate. It also adds journal-priority, truth-bounded AI-use declaration guidance. Version 1.6.1's manuscript semantic-rhythm gate and version 1.5.0's accepted-paper tolerance calibration, four-class finding adjudication, and risk-tiered citation audit remain intact; the earlier independent rerun preserved 18/18 seeded-issue detection. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
 
 Current automated coverage includes:
 
