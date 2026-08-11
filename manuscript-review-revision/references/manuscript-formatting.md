@@ -46,9 +46,9 @@ Unless an official template explicitly requires otherwise:
 - do not use tables as layout containers
 - do not place audit statuses or reviewer notes inside the clean manuscript
 - preserve conventional scientific section hierarchy
-- when typography is unspecified or example-only, use Title 15 pt bold and
-  every other visible manuscript paragraph 12 pt; use 12 pt bold for section
-  and subsection headings and preserve their supplied capitalization
+- when typography is unspecified or example-only, use Title 15 pt bold,
+  visible top-level manuscript text 12 pt, table-cell text 10 pt, and 12 pt
+  bold section/subsection headings; preserve supplied capitalization
 
 The review report may use tables for issue tracking, but its visual system must never be copied into the submission manuscript.
 
@@ -146,14 +146,17 @@ and do not claim simultaneous template compliance.
 5. For a manuscript, run `apply_manuscript_profile.py` with explicit role and
    prose-style arguments plus the resolved `--font-name`, `--body-font-size`,
    `--title-font-size`, `--table-font-size`, and `--line-spacing` values.
+   Also pass `--table-line-spacing`; use `single` when no binding/direct
+   table-specific rule resolves another token.
 6. Run `enforce_docx_line_page_numbers.py` on every modified DOCX with the resolved page-number position.
 7. Run `python3 "$SKILL_ROOT/scripts/audit_docx_manuscript_style.py" manuscript.numbered.docx --paragraph-separation literal-blank --expected-line-spacing double` on every modified DOCX, replacing only the spacing token with the validated `style_contract` value and passing all prose/non-body styles explicitly.
 8. For a manuscript, run `audit_docx_front_matter.py` with the resolved blinded/unblinded mode, front-matter alignment, role arguments, page-number position, body size, and global line-spacing token.
 9. For a manuscript, run `audit_docx_semantic_rhythm.py` with the same resolved
-   font and size arguments; require identical resolved line spacing across the
-   complete manuscript, exact 15/12 pt fallbacks when no official override
-   exists, body-sized author/affiliation/Keywords/declaration/reference roles,
-   a bold Keywords label, and exact semantic blank-line boundaries.
+   font, size, manuscript-spacing, and table-spacing arguments; require the
+   manuscript token outside tables, the independently resolved table-cell token,
+   exact 15/12/10 pt fallbacks when no official override exists, body-sized
+   author/affiliation/Keywords/declaration/reference roles, a bold Keywords
+   label, and exact semantic blank-line boundaries.
 10. Compare extracted text before and after; any unauthorized text change fails content preservation.
 11. Render DOCX with a reliable renderer available in the current host and inspect every page at 100% zoom.
 12. Check title/heading color, clipping, overlap, tables, captions, page breaks, orphan headings, figures, headers/footers, visible continuous line numbers, dynamic page numbers, and references.

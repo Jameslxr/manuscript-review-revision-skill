@@ -1,4 +1,4 @@
 interface:
   display_name: "Manuscript Review & Revision"
   short_description: "Journal-aware review, revision, evidence, and DOCX release"
-  default_prompt: "Use $manuscript-review-revision to review this manuscript against current target-journal requirements, distinguish binding typography rules from examples, revise only after authorization, and require every generated or modified DOCX to pass the embedded font, spacing, front-matter, and hash-closure gates before delivery."
+  default_prompt: "Use $manuscript-review-revision to review this manuscript against current target-journal requirements, distinguish binding typography rules from examples, revise only after authorization, and require every generated or modified DOCX to pass independently resolved manuscript/table font and spacing, front-matter, and hash-closure gates before delivery."

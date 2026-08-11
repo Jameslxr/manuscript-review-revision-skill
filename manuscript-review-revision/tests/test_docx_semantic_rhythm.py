@@ -240,7 +240,7 @@ class SemanticRhythmTests(unittest.TestCase):
             self.assertEqual(first_credit.style.name, "Manuscript CRediT Entry")
             self.assertEqual(second_credit.style.name, "Manuscript CRediT Entry")
 
-    def test_custom_ten_point_body_and_table_are_normalized_to_fallback(self) -> None:
+    def test_custom_body_and_table_use_independent_fallbacks(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             source = root / "custom-source.docx"
@@ -274,7 +274,16 @@ class SemanticRhythmTests(unittest.TestCase):
                     if run.text.strip():
                         self.assertAlmostEqual(run.font.size.pt, 12.0)
             table_run = normalized.tables[0].cell(0, 0).paragraphs[0].runs[0]
-            self.assertAlmostEqual(table_run.font.size.pt, 12.0)
+            self.assertAlmostEqual(table_run.font.size.pt, 10.0)
+            self.assertAlmostEqual(
+                float(
+                    normalized.tables[0]
+                    .cell(0, 0)
+                    .paragraphs[0]
+                    .paragraph_format.line_spacing
+                ),
+                1.0,
+            )
 
             audited = run_script(
                 "audit_docx_semantic_rhythm.py",
@@ -291,6 +300,10 @@ class SemanticRhythmTests(unittest.TestCase):
             source = root / "source.docx"
             output = root / "normalized.docx"
             build_semantic_stress_sample(source)
+            document = Document(source)
+            table = document.add_table(rows=1, cols=1)
+            table.cell(0, 0).paragraphs[0].add_run("Official table text.")
+            document.save(source)
             result = run_script(
                 "apply_manuscript_profile.py",
                 source,
@@ -305,7 +318,9 @@ class SemanticRhythmTests(unittest.TestCase):
                 "--title-font-size",
                 "15",
                 "--table-font-size",
-                "10",
+                "9",
+                "--table-line-spacing",
+                "1.5",
                 "--body-style",
                 "Normal",
                 "--title-style",
@@ -332,10 +347,39 @@ class SemanticRhythmTests(unittest.TestCase):
                 "--expected-title-font-size",
                 "15",
                 "--expected-table-font-size",
-                "10",
+                "9",
+                "--expected-table-line-spacing",
+                "1.5",
                 "--json",
             )
             self.assertEqual(audited.returncode, 0, audited.stdout + audited.stderr)
+
+    def test_semantic_audit_rejects_double_spaced_table_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.docx"
+            normalized = root / "normalized.docx"
+            broken = root / "broken.docx"
+            build_semantic_stress_sample(source)
+            document = Document(source)
+            table = document.add_table(rows=1, cols=1)
+            table.cell(0, 0).paragraphs[0].add_run("Table body.")
+            document.save(source)
+            result = apply_profile(source, normalized)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+            document = Document(normalized)
+            document.tables[0].cell(0, 0).paragraphs[0].paragraph_format.line_spacing = 2.0
+            document.save(broken)
+            audited = run_script(
+                "audit_docx_semantic_rhythm.py",
+                broken,
+                "--expected-line-spacing",
+                "double",
+                "--json",
+            )
+            self.assertEqual(audited.returncode, 1)
+            self.assertIn("TABLE_LINE_SPACING_MISMATCH", audited.stdout)
 
     def test_semantic_audit_cannot_skip_unclassified_ten_point_text(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

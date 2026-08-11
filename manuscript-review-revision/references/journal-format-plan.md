@@ -51,7 +51,7 @@ are inaccessible or contradictory, mark the affected plan rule
 
 Create `01a_journal_format_plan.json` with:
 
-- `schema_version`: `1.1`
+- `schema_version`: `1.2`
 - `target_journal`
 - `article_type`
 - `submission_stage`
@@ -121,6 +121,7 @@ Resolve these machine-usable fields before editing DOCX:
 - `paragraph_separation_basis`
 - `line_spacing`
 - `line_spacing_basis`
+- `table_line_spacing`
 - `line_numbering`
 - `line_numbering_basis`
 - `page_numbering`
@@ -169,8 +170,9 @@ when no current exact source specifies another value. Record official-template
 or official-guide decisions with their corresponding basis and source URL.
 
 Use concrete conservative values for unspecified or example-only typography:
-Times New Roman, Title 15 pt bold, every other visible manuscript paragraph 12
-pt, table text 12 pt, headings/subheadings 12 pt bold, and double line spacing.
+Times New Roman, Title 15 pt bold, visible top-level manuscript text 12 pt,
+table titles/captions 12 pt, table-cell text 10 pt, headings/subheadings 12 pt
+bold, double line spacing outside tables, and single table-cell line spacing.
 Mark their basis `CONSERVATIVE_FALLBACK` and keep them distinct from official
 journal rules. Only `MANDATORY` or `EXPLICIT_REQUIREMENT` evidence may use an
 official typography basis. Never inherit Word theme defaults.

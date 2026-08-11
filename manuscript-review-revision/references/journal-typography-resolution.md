@@ -31,12 +31,13 @@ Otherwise apply the manuscript fallback:
 
 - Times New Roman;
 - Title: 15 pt bold;
-- every other visible manuscript paragraph: 12 pt;
+- every other visible top-level manuscript paragraph: 12 pt;
 - section and subsection headings: 12 pt bold, preserving supplied wording and
   capitalization unless the official source explicitly requires a case rule;
-- table-cell text: 12 pt unless an exact source explicitly resolves another
-  table token;
-- line spacing: double;
+- table titles/captions: 12 pt with the manuscript line-spacing token;
+- table-cell text, including notes placed inside the table: 10 pt with single
+  line spacing unless an exact source explicitly resolves another table token;
+- line spacing outside tables: double;
 - black text and 0/0 pt paragraph spacing.
 
 If the source explicitly requires 12 pt, use 12 pt. If it explicitly requires

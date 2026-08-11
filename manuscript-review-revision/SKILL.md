@@ -42,12 +42,17 @@ supplementary text.
   affiliations, author notes, correspondence, ORCID/identifiers, Keywords,
   every heading/subheading, and all declaration/CRediT paragraphs. These roles
   use the resolved body font size (12 pt fallback), except the title.
+- Resolve table cells independently. Unless a binding/direct current source
+  specifies otherwise, use 10 pt table-cell text with single line spacing and
+  0/0 pt paragraph spacing; keep table titles/captions at the body size and
+  manuscript line-spacing token.
 - Resolve typography and line spacing from binding/direct official wording,
   not illustrative examples. `e.g.`, `for example`, `for instance`, and `such
   as` do not override the fallback. When no binding/direct rule exists, use
-  Times New Roman, Title 15 pt bold, every other visible manuscript paragraph
-  12 pt, headings/subheadings 12 pt bold, and double line spacing. Preserve
-  supplied capitalization unless an official rule explicitly requires case.
+  Times New Roman, Title 15 pt bold, visible top-level manuscript text 12 pt,
+  headings/subheadings 12 pt bold, table-cell text 10 pt, double line spacing
+  outside tables, and single table-cell line spacing. Preserve supplied
+  capitalization unless an official rule explicitly requires case.
 - In a manuscript, place exactly one structurally empty Enter-created paragraph
   between every adjacent present front-matter block: Title, Authors,
   Affiliations, optional Author notes, Correspondence, optional ORCID/identifiers,
@@ -377,7 +382,8 @@ a manuscript, also load
   `scripts/audit_docx_manuscript_style.py`,
   `scripts/audit_docx_front_matter.py`, and
   `scripts/audit_docx_semantic_rhythm.py` with the resolved role/style,
-  font-family, title-size, body-size, table-size, and line-spacing inputs.
+  font-family, title-size, body-size, table-size, manuscript-spacing, and
+  table-spacing inputs.
 - Compare content, render and inspect every page, fix failures, then rerun from
   normalization. A mechanical XML pass is not a release.
 
