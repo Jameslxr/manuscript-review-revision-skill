@@ -18,12 +18,13 @@ NOT_ASSESSABLE = "NOT_ASSESSABLE"
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Combine structural, front-matter, preservation, journal, and "
-            "render gates into FORMAT_RELEASE_PASS only when all apply."
+            "Combine structural, front-matter, semantic-rhythm, preservation, "
+            "journal, and render gates into FORMAT_RELEASE_PASS only when all apply."
         )
     )
     parser.add_argument("structural_report", type=Path)
     parser.add_argument("front_matter_report", type=Path)
+    parser.add_argument("semantic_rhythm_report", type=Path)
     parser.add_argument(
         "--content-preservation-status",
         choices=(PASS, FAIL, NOT_ASSESSABLE),
@@ -65,6 +66,7 @@ def normalize_report_status(
 def combine(
     structural_report: dict[str, Any],
     front_matter_report: dict[str, Any],
+    semantic_rhythm_report: dict[str, Any],
     *,
     content_preservation_status: str,
     journal_status: str,
@@ -80,6 +82,11 @@ def combine(
             front_matter_report,
             expected_pass="FRONT_MATTER_PASS",
             gate="front-matter",
+        ),
+        "semantic_rhythm": normalize_report_status(
+            semantic_rhythm_report,
+            expected_pass="SEMANTIC_RHYTHM_PASS",
+            gate="semantic-rhythm",
         ),
         "content_preservation": content_preservation_status,
         "journal": journal_status,
@@ -112,6 +119,7 @@ def main() -> int:
         result = combine(
             read_json(args.structural_report),
             read_json(args.front_matter_report),
+            read_json(args.semantic_rhythm_report),
             content_preservation_status=args.content_preservation_status,
             journal_status=args.journal_status,
             render_status=args.render_status,

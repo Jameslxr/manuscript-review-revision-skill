@@ -22,7 +22,10 @@ except ImportError as exc:  # pragma: no cover - environment-dependent error pat
     raise SystemExit(2) from exc
 
 
-HEADING_STYLE_RE = re.compile(r"^(title|subtitle|heading\s*[1-9])$", re.IGNORECASE)
+HEADING_STYLE_RE = re.compile(
+    r"^(?:title|subtitle|heading\s*[1-9]|manuscript\s+(?:title|heading))$",
+    re.IGNORECASE,
+)
 SAFE_THEME_TOKENS = {"DARK", "TEXT_1", "TEXT_2", "NONE"}
 LINE_SPACING_ALIASES = {
     "single": ("multiple", 1.0),
@@ -43,7 +46,8 @@ DEFAULT_BODY_STYLES = {
     "正文文本",
 }
 NON_BODY_STYLE_RE = re.compile(
-    r"(?:title|subtitle|heading|author|affiliation|caption|bibliograph|reference|"
+    r"(?:title|subtitle|heading|author|affiliation|correspond|keyword|declaration|"
+    r"caption|bibliograph|reference|"
     r"list|quote|footnote|endnote|header|footer)",
     re.IGNORECASE,
 )

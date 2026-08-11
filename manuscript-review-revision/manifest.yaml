@@ -1,5 +1,5 @@
 name: manuscript-review-revision
-version: 1.6.0
+version: 1.6.1
 description: >
   Declarative routing manifest for journal-aware, review-first manuscript
   assessment and authorized revision across compatible Agent Skills hosts.

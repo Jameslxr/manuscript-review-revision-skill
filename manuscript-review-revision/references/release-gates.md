@@ -79,8 +79,11 @@ Return `RELEASE FAIL` when:
   numbering, or failed whole-document structural/rendered visual QA;
 - any manuscript DOCX has unresolved or decorative front matter, uses centered
   or mixed-alignment title-block roles without a current source-linked
-  override, lacks the required manuscript-role audit, changes unauthorized text
-  during formatting, or does not reach `FORMAT_RELEASE_PASS`;
+  override, uses undersized author/affiliation/declaration text, mixes line
+  spacing across manuscript roles, has a non-bold Keywords label or an invalid
+  section/Keywords/CRediT blank-line boundary, lacks the front-matter or
+  semantic-rhythm audit, changes unauthorized text during formatting, or does
+  not reach `FORMAT_RELEASE_PASS`;
 - a revision changed core claims without the scientifically responsible
   re-review.
 

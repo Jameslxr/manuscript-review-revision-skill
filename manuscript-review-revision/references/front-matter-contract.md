@@ -35,13 +35,14 @@ Use these exact defaults when no official source resolves a different token:
 
 | Role | Alignment | Typeface | Size | Weight | Line spacing | Space before/after |
 |---|---|---|---:|---|---|---|
-| Title | left | Times New Roman | 15 pt | bold | single | 0/0 pt |
-| Authors | left | Times New Roman | 12 pt | regular | single | 0/0 pt |
-| Affiliations | left | Times New Roman | 10.5 pt | regular | single | 0/0 pt |
-| Correspondence | left | Times New Roman | 10.5 pt | regular | single | 0/0 pt |
-| Abstract/section heading | left | Times New Roman | 12 pt | bold | single | 0/0 pt |
-| Body prose | left | Times New Roman | 12 pt | regular | double | 0/0 pt |
-| Keywords | left | Times New Roman | 11 pt | regular | single | 0/0 pt |
+| Title | left | Times New Roman | 15 pt | bold | resolved global token | 0/0 pt |
+| Authors | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
+| Affiliations | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
+| Correspondence | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
+| Abstract/section heading | left | Times New Roman | 12 pt | bold | resolved global token | 0/0 pt |
+| Body prose | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
+| Keywords | left | Times New Roman | 12 pt | bold label only | resolved global token | 0/0 pt |
+| Declarations/CRediT | left | Times New Roman | 12 pt | bold heading/label only | resolved global token | 0/0 pt |
 
 Additional rules:
 
@@ -59,6 +60,14 @@ Additional rules:
 - include corresponding-author contact information for an unblinded
   submission-ready file;
 - keep the title within 12-16 pt and the title block visually compact;
+- default the resolved global line-spacing token to double and apply it to the
+  complete manuscript, including the author block, headings, Keywords, and
+  declarations; use 1.5 or another token only when resolved from the current
+  journal/template or an explicit user instruction;
+- place no empty paragraph before Keywords and exactly one after Keywords;
+- place exactly one empty paragraph before each section, subsection, and
+  declaration/CRediT block, with none between its heading and first body
+  paragraph;
 - place dynamic page numbers in the upper-right header by default;
 - keep continuous Word-native line numbering as the user's global invariant.
 
@@ -110,6 +119,12 @@ The neutral profile must fail on:
 - identity material in blinded mode;
 - centered, right-aligned, or mixed-alignment title-block roles;
 - unresolved, undersized, or oversized front-matter typography;
+- any author, affiliation, correspondence, heading, Keywords, or declaration
+  paragraph whose size differs from the resolved body size;
+- any manuscript role or empty separator whose line spacing differs from the
+  resolved global token;
+- a non-bold Keywords label, a bold keyword value, or a missing/duplicated
+  semantic blank line;
 - non-black front-matter text;
 - role-order inversion;
 - empty paragraphs inside the title block;
@@ -118,8 +133,8 @@ The neutral profile must fail on:
 - non-top vertical page alignment;
 - PAGE fields outside the resolved location or duplicate PAGE fields.
 
-Run the existing whole-document style audit separately. Neither audit can
-replace the other.
+Run the existing whole-document style audit and semantic-rhythm audit
+separately. No one audit replaces the others.
 
 ## Rendered-page gates
 
@@ -146,6 +161,7 @@ Report these gates separately:
 ```text
 STRUCTURAL PASS
 FRONT-MATTER PASS
+SEMANTIC-RHYTHM PASS
 CONTENT-PRESERVATION PASS
 JOURNAL PASS or NOT APPLICABLE
 RENDER PASS

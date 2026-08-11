@@ -26,10 +26,13 @@ from audit_docx_manuscript_style import (  # noqa: E402
     PAGE_FIELD_RE,
     automatic_spacing_sources,
     effective_spacing,
+    effective_line_spacing,
     field_instruction,
     inspect_font,
     iter_style_chain,
+    line_spacing_matches,
     normalize_style_token,
+    parse_line_spacing_spec,
 )
 
 
@@ -44,9 +47,6 @@ ROLE_PATTERNS = {
 ROLE_ORDER = {"title": 0, "authors": 1, "affiliation": 2, "correspondence": 3}
 ROLE_SIZE_RANGES = {
     "title": (12.0, 16.0),
-    "authors": (10.0, 12.5),
-    "affiliation": (9.0, 11.5),
-    "correspondence": (9.0, 11.5),
 }
 ALIGNMENT_VALUES = {
     "left": WD_ALIGN_PARAGRAPH.LEFT,
@@ -79,6 +79,8 @@ def parse_args() -> argparse.Namespace:
         default="upper-right",
     )
     parser.add_argument("--allow-missing-correspondence", action="store_true")
+    parser.add_argument("--expected-body-font-size", type=float, default=12.0)
+    parser.add_argument("--expected-line-spacing", default="double")
     parser.add_argument(
         "--max-blank-paragraphs-before-abstract", type=int, default=1
     )
@@ -299,11 +301,16 @@ def audit(
     expected_page_number_position: str = "upper-right",
     allow_missing_correspondence: bool = False,
     max_blank_paragraphs_before_abstract: int = 1,
+    expected_body_font_size: float = 12.0,
+    expected_line_spacing: object = "double",
     explicit_styles: dict[str, set[str]] | None = None,
     explicit_paragraphs: dict[str, set[int]] | None = None,
 ) -> dict[str, object]:
     if max_blank_paragraphs_before_abstract < 0:
         raise ValueError("max blank paragraphs must be non-negative")
+    if expected_body_font_size <= 0:
+        raise ValueError("expected body font size must be positive")
+    line_spacing_spec = parse_line_spacing_spec(expected_line_spacing)
     document = Document(str(path))
     explicit_styles = explicit_styles or {role: set() for role in ROLE_ORDER}
     explicit_paragraphs = explicit_paragraphs or {
@@ -405,7 +412,10 @@ def audit(
                 }
             )
         else:
-            low, high = ROLE_SIZE_RANGES[role]
+            low, high = ROLE_SIZE_RANGES.get(
+                role,
+                (expected_body_font_size, expected_body_font_size),
+            )
             if min(sizes) < low or max(sizes) > high:
                 issues.append(
                     {
@@ -414,6 +424,19 @@ def audit(
                         "detail": {"allowed_pt": [low, high], "actual_pt": sizes},
                     }
                 )
+
+        actual_line_spacing = effective_line_spacing(paragraph)
+        if not line_spacing_matches(actual_line_spacing, line_spacing_spec):
+            issues.append(
+                {
+                    **record,
+                    "code": f"{role.upper()}_LINE_SPACING",
+                    "detail": {
+                        "expected": line_spacing_spec,
+                        "actual": actual_line_spacing,
+                    },
+                }
+            )
 
         colors = paragraph_color_issues(paragraph)
         if colors:
@@ -524,6 +547,18 @@ def audit(
                         "detail": {"points": round(points, 3), "source": source},
                     }
                 )
+        actual_line_spacing = effective_line_spacing(paragraph)
+        if not line_spacing_matches(actual_line_spacing, line_spacing_spec):
+            issues.append(
+                {
+                    "paragraph": blank_index + 1,
+                    "code": "FRONT_MATTER_BLANK_LINE_SPACING",
+                    "detail": {
+                        "expected": line_spacing_spec,
+                        "actual": actual_line_spacing,
+                    },
+                }
+            )
 
     for section_index, section in enumerate(document.sections, start=1):
         vertical_nodes = section._sectPr.xpath("./w:vAlign")
@@ -551,6 +586,8 @@ def audit(
             "front_matter_alignment": front_matter_alignment,
             "expected_page_number_position": expected_page_number_position,
             "max_blank_paragraphs_before_abstract": max_blank_paragraphs_before_abstract,
+            "expected_body_font_size": expected_body_font_size,
+            "expected_line_spacing": line_spacing_spec["label"],
         },
         "role_counts": role_counts,
         "page_number_position": page_summary,
@@ -596,6 +633,8 @@ def main() -> int:
             expected_page_number_position=args.expected_page_number_position,
             allow_missing_correspondence=args.allow_missing_correspondence,
             max_blank_paragraphs_before_abstract=args.max_blank_paragraphs_before_abstract,
+            expected_body_font_size=args.expected_body_font_size,
+            expected_line_spacing=args.expected_line_spacing,
             explicit_styles=explicit_styles,
             explicit_paragraphs=explicit_paragraphs,
         )

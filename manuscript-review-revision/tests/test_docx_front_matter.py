@@ -52,7 +52,7 @@ def add_style(
     style.font.color.rgb = RGBColor(0, 0, 0)
     style.paragraph_format.space_before = Pt(0)
     style.paragraph_format.space_after = Pt(0)
-    style.paragraph_format.line_spacing = 1.0
+    style.paragraph_format.line_spacing = 2.0
     return style
 
 
@@ -74,11 +74,11 @@ def build_sample(
     styles = {
         "title": add_style(document, "Manuscript Title", title_size, bold=True),
         "authors": add_style(document, "Manuscript Authors", 12),
-        "affiliation": add_style(document, "Manuscript Affiliation", 10.5),
+        "affiliation": add_style(document, "Manuscript Affiliation", 12),
         "correspondence": add_style(
-            document, "Manuscript Correspondence", 10.5
+            document, "Manuscript Correspondence", 12
         ),
-        "keywords": add_style(document, "Manuscript Keywords", 11),
+        "keywords": add_style(document, "Manuscript Keywords", 12),
         "body": add_style(document, "Manuscript Body", 12),
     }
     styles["body"].paragraph_format.line_spacing = 2.0
@@ -100,14 +100,14 @@ def build_sample(
             paragraph.style = style
             paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
             paragraph.add_run(text)
-        document.add_paragraph("")
+        document.add_paragraph("", style=styles["body"])
     else:
         assert alignments is not None
         for (text, style), alignment in zip(entries, alignments):
             paragraph = document.add_paragraph(text, style=style)
             paragraph.alignment = alignment
         for _ in range(extra_blanks):
-            document.add_paragraph("")
+            document.add_paragraph("", style=styles["body"])
 
     heading = document.add_heading("Abstract", level=1)
     heading.style.font.name = "Times New Roman"
@@ -116,6 +116,7 @@ def build_sample(
     heading.style.font.color.rgb = RGBColor(0, 0, 0)
     heading.paragraph_format.space_before = Pt(0)
     heading.paragraph_format.space_after = Pt(0)
+    heading.paragraph_format.line_spacing = 2.0
     heading.alignment = WD_ALIGN_PARAGRAPH.LEFT
     document.add_paragraph("First body paragraph.", style=styles["body"])
     separator = document.add_paragraph("", style=styles["body"])
@@ -440,16 +441,21 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
             root = Path(temp)
             structural = root / "structural.json"
             front = root / "front.json"
+            semantic = root / "semantic.json"
             structural.write_text(
                 json.dumps({"status": "MECHANICAL_PASS"}), encoding="utf-8"
             )
             front.write_text(
                 json.dumps({"status": "FRONT_MATTER_PASS"}), encoding="utf-8"
             )
+            semantic.write_text(
+                json.dumps({"status": "SEMANTIC_RHYTHM_PASS"}), encoding="utf-8"
+            )
             passed = run_script(
                 "validate_format_release.py",
                 structural,
                 front,
+                semantic,
                 "--content-preservation-status",
                 "PASS",
                 "--journal-status",
@@ -465,6 +471,7 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
                 "validate_format_release.py",
                 structural,
                 front,
+                semantic,
                 "--content-preservation-status",
                 "PASS",
                 "--journal-status",
