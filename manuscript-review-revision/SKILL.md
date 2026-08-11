@@ -277,6 +277,8 @@ Then pause and ask whether the user authorizes revision. Do not edit prose, rest
 ## Step 5: revise in scientific priority order
 
 After authorization, load [references/revision-and-response.md](references/revision-and-response.md).
+Load [references/ai-use-declaration.md](references/ai-use-declaration.md) when an
+AI-use statement is added, revised, or checked.
 
 Apply:
 
@@ -402,9 +404,9 @@ python3 "$SKILL_ROOT/scripts/validate_format_release.py" \
 Do not report journal-specific formatting `PASS` unless the plan-to-output
 validator passes. Do not deliver a manuscript DOCX as fully verified unless
 the combined validator returns `FORMAT_RELEASE_PASS`. For cover letters,
-response letters, and supplements without manuscript front matter, run and
-report the baseline structural, preservation, journal, and render gates without
-fabricating a title block.
+response letters, and editable package text without manuscript front matter,
+load [references/submission-package-contract.md](references/submission-package-contract.md)
+and require `PACKAGE_FORMAT_RELEASE_PASS` without fabricating a title block.
 
 ## Step 8: run the release gate
 
@@ -465,7 +467,9 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 | [references/biomedical-review-gates.md](references/biomedical-review-gates.md) | Applying design-specific clinical, wet-lab, omics, AI, review, or animal stress tests |
 | [references/reference-integrity.md](references/reference-integrity.md) | Auditing, adding, moving, or formatting citations |
 | [references/revision-and-response.md](references/revision-and-response.md) | Revising a manuscript or responding to reviewers |
+| [references/ai-use-declaration.md](references/ai-use-declaration.md) | Adding, revising, or checking an AI-use statement |
 | [references/manuscript-formatting.md](references/manuscript-formatting.md) | Creating or checking DOCX/PDF/LaTeX submission files |
+| [references/submission-package-contract.md](references/submission-package-contract.md) | Formatting or auditing cover letters, response letters, and editable package text |
 | [references/front-matter-contract.md](references/front-matter-contract.md) | Normalizing or auditing manuscript title, authors, affiliations, correspondence, anonymization, or first-page layout |
 | [references/release-gates.md](references/release-gates.md) | Deciding whether a package is ready |
 

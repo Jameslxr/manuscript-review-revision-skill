@@ -1,5 +1,5 @@
 name: manuscript-review-revision
-version: 1.6.1
+version: 1.7.0
 description: >
   Declarative routing manifest for journal-aware, review-first manuscript
   assessment and authorized revision across compatible Agent Skills hosts.
@@ -29,8 +29,12 @@ references:
       path: references/reference-integrity.md
     - condition: revising a manuscript or responding to reviewer comments after authorization
       path: references/revision-and-response.md
+    - condition: adding, revising, or checking an AI-use declaration
+      path: references/ai-use-declaration.md
     - condition: creating or checking a DOCX, PDF, LaTeX, or submission package
       path: references/manuscript-formatting.md
+    - condition: formatting or auditing cover letters, response letters, or editable package text
+      path: references/submission-package-contract.md
     - condition: normalizing or auditing manuscript front matter and first-page layout
       path: references/front-matter-contract.md
     - condition: deciding final submission readiness

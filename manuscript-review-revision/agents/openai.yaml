@@ -1,4 +1,4 @@
 interface:
   display_name: "Manuscript Review & Revision"
   short_description: "Journal-aware review, revision, evidence, and DOCX release"
-  default_prompt: "Use $manuscript-review-revision to review this manuscript against current target-journal requirements, revise only after authorization, and apply the embedded semantic-rhythm and DOCX format-release gates before delivery."
+  default_prompt: "Use $manuscript-review-revision to review this manuscript against current target-journal requirements, revise only after authorization, and apply the embedded manuscript or submission-package DOCX release gates before delivery."
