@@ -37,14 +37,26 @@ from audit_docx_manuscript_style import (  # noqa: E402
 
 
 ROLE_PATTERNS = {
-    "title": re.compile(r"(?:^|\b)(?:manuscript\s+)?title(?:\b|$)", re.I),
-    "authors": re.compile(r"(?:^|\b)(?:manuscript\s+)?authors?(?:\b|$)", re.I),
-    "affiliation": re.compile(r"(?:^|\b)affiliations?(?:\b|$)", re.I),
+    "title": re.compile(r"^(?:manuscript\s+)?title$", re.I),
+    "author_note": re.compile(
+        r"^(?:manuscript\s+)?(?:author\s+note|equal\s+contribution|present\s+address)$",
+        re.I,
+    ),
+    "orcid": re.compile(r"^(?:manuscript\s+)?(?:orcid|identifiers?)$", re.I),
+    "authors": re.compile(r"^(?:manuscript\s+)?authors?$", re.I),
+    "affiliation": re.compile(r"^(?:manuscript\s+)?affiliations?$", re.I),
     "correspondence": re.compile(
-        r"(?:^|\b)(?:correspondence|corresponding)(?:\b|$)", re.I
+        r"^(?:manuscript\s+)?(?:correspondence|corresponding\s+author)$", re.I
     ),
 }
-ROLE_ORDER = {"title": 0, "authors": 1, "affiliation": 2, "correspondence": 3}
+ROLE_ORDER = {
+    "title": 0,
+    "authors": 1,
+    "affiliation": 2,
+    "author_note": 3,
+    "correspondence": 4,
+    "orcid": 5,
+}
 ROLE_SIZE_RANGES = {
     "title": (12.0, 16.0),
 }
@@ -81,27 +93,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--allow-missing-correspondence", action="store_true")
     parser.add_argument("--expected-body-font-size", type=float, default=12.0)
     parser.add_argument("--expected-line-spacing", default="double")
-    parser.add_argument(
-        "--max-blank-paragraphs-before-abstract", type=int, default=1
-    )
-    parser.add_argument(
-        "--expected-title-author-gap",
-        choices=("natural-blank", "compact"),
-        default="natural-blank",
-        help=(
-            "Require one real empty paragraph after the title by default; use "
-            "compact only for a sourced journal/template override."
-        ),
-    )
     for role in ROLE_ORDER:
+        option_role = role.replace("_", "-")
+        style_flags = [f"--{option_role}-style"]
+        paragraph_flags = [f"--{option_role}-paragraph"]
+        if option_role != role:
+            style_flags.append(f"--{role}-style")
+            paragraph_flags.append(f"--{role}-paragraph")
         parser.add_argument(
-            f"--{role}-style",
+            *style_flags,
+            dest=f"{role}_style",
             action="append",
             default=[],
             help=f"Explicit paragraph style name or ID for {role}.",
         )
         parser.add_argument(
-            f"--{role}-paragraph",
+            *paragraph_flags,
+            dest=f"{role}_paragraph",
             action="append",
             type=int,
             default=[],
@@ -167,7 +175,19 @@ def classify_role(
     for role, pattern in ROLE_PATTERNS.items():
         if any(pattern.search(token) for token in tokens):
             return role
-    if re.match(r"^\s*\*?\s*correspond", paragraph.text, re.I):
+    text = paragraph.text.strip()
+    if re.search(
+        r"(?:\bco[\s\-–—]?(?:first|corresponding)\b|"
+        r"\b(?:these\s+authors\s+)?contributed\s+equally\b|"
+        r"\bequal\s+contribution\b|\bjoint\s+(?:first|corresponding)\b|"
+        r"\b(?:present|current)\s+address\b)",
+        text,
+        re.I,
+    ):
+        return "author_note"
+    if re.search(r"\bORCID\b|orcid\.org/", text, re.I):
+        return "orcid"
+    if re.match(r"^\s*\*?\s*correspond", text, re.I):
         return "correspondence"
     if first_nonempty:
         return "title"
@@ -309,19 +329,13 @@ def audit(
     front_matter_alignment: str = "left",
     expected_page_number_position: str = "upper-right",
     allow_missing_correspondence: bool = False,
-    max_blank_paragraphs_before_abstract: int = 1,
-    expected_title_author_gap: str = "natural-blank",
     expected_body_font_size: float = 12.0,
     expected_line_spacing: object = "double",
     explicit_styles: dict[str, set[str]] | None = None,
     explicit_paragraphs: dict[str, set[int]] | None = None,
 ) -> dict[str, object]:
-    if max_blank_paragraphs_before_abstract < 0:
-        raise ValueError("max blank paragraphs must be non-negative")
     if expected_body_font_size <= 0:
         raise ValueError("expected body font size must be positive")
-    if expected_title_author_gap not in {"natural-blank", "compact"}:
-        raise ValueError("unsupported title-author gap")
     line_spacing_spec = parse_line_spacing_spec(expected_line_spacing)
     document = Document(str(path))
     explicit_styles = explicit_styles or {role: set() for role in ROLE_ORDER}
@@ -479,7 +493,13 @@ def audit(
             }
         )
 
-    identity_roles = ("authors", "affiliation", "correspondence")
+    identity_roles = (
+        "authors",
+        "affiliation",
+        "author_note",
+        "correspondence",
+        "orcid",
+    )
     if mode == "blinded":
         for role in identity_roles:
             if role_counts[role]:
@@ -514,54 +534,66 @@ def audit(
 
     role_indices = [int(record["child_index"]) for record in records]
     if role_indices:
-        first_role, last_role = min(role_indices), max(role_indices)
-        title_records = [record for record in records if record["role"] == "title"]
-        author_records = [record for record in records if record["role"] == "authors"]
-        title_author_blanks: list[int] = []
-        if title_records and author_records:
-            title_index = min(int(record["child_index"]) for record in title_records)
-            author_index = min(int(record["child_index"]) for record in author_records)
-            title_author_blanks = [
-                i for i in blank_indices if title_index < i < author_index
+        ordered_records = sorted(records, key=lambda record: int(record["child_index"]))
+        covered_blank_indices: set[int] = set()
+        for previous, current in zip(ordered_records, ordered_records[1:]):
+            previous_index = int(previous["child_index"])
+            current_index = int(current["child_index"])
+            boundary_blanks = [
+                index
+                for index in blank_indices
+                if previous_index < index < current_index
             ]
-            expected_count = 1 if expected_title_author_gap == "natural-blank" else 0
-            if len(title_author_blanks) != expected_count:
+            covered_blank_indices.update(boundary_blanks)
+            same_block = previous["role"] == current["role"]
+            expected_count = 0 if same_block else 1
+            if len(boundary_blanks) != expected_count:
                 issues.append(
                     {
-                        "code": "TITLE_AUTHOR_BLANK_COUNT",
+                        "code": (
+                            "FRONT_MATTER_WITHIN_BLOCK_BLANK_COUNT"
+                            if same_block
+                            else "FRONT_MATTER_BLOCK_BLANK_COUNT"
+                        ),
                         "detail": {
+                            "from_role": previous["role"],
+                            "to_role": current["role"],
                             "expected": expected_count,
-                            "actual": len(title_author_blanks),
-                            "profile": expected_title_author_gap,
+                            "actual": len(boundary_blanks),
                         },
                     }
                 )
-        internal_blanks = [
-            i
-            for i in blank_indices
-            if first_role < i < last_role and i not in set(title_author_blanks)
-        ]
-        if internal_blanks:
+
+        if abstract_child_index is not None:
+            last_record = ordered_records[-1]
+            last_index = int(last_record["child_index"])
+            abstract_blanks = [
+                index
+                for index in blank_indices
+                if last_index < index < abstract_child_index
+            ]
+            covered_blank_indices.update(abstract_blanks)
+            if len(abstract_blanks) != 1:
+                issues.append(
+                    {
+                        "code": "FRONT_MATTER_BLOCK_BLANK_COUNT",
+                        "detail": {
+                            "from_role": last_record["role"],
+                            "to_role": "abstract",
+                            "expected": 1,
+                            "actual": len(abstract_blanks),
+                        },
+                    }
+                )
+
+        unscoped_blanks = sorted(set(blank_indices) - covered_blank_indices)
+        if unscoped_blanks:
             issues.append(
                 {
-                    "code": "FRONT_MATTER_UNEXPECTED_INTERNAL_BLANKS",
-                    "detail": {"count": len(internal_blanks)},
+                    "code": "FRONT_MATTER_UNSCOPED_BLANKS",
+                    "detail": {"count": len(unscoped_blanks)},
                 }
             )
-        if abstract_child_index is not None:
-            trailing_blanks = [
-                i for i in blank_indices if last_role < i < abstract_child_index
-            ]
-            if len(trailing_blanks) > max_blank_paragraphs_before_abstract:
-                issues.append(
-                    {
-                        "code": "EXCESSIVE_FRONT_MATTER_BLANKS",
-                        "detail": {
-                            "allowed": max_blank_paragraphs_before_abstract,
-                            "actual": len(trailing_blanks),
-                        },
-                    }
-                )
 
     for blank_index in blank_indices:
         paragraph = blank_paragraphs[blank_index]
@@ -622,8 +654,7 @@ def audit(
             "mode": mode,
             "front_matter_alignment": front_matter_alignment,
             "expected_page_number_position": expected_page_number_position,
-            "max_blank_paragraphs_before_abstract": max_blank_paragraphs_before_abstract,
-            "expected_title_author_gap": expected_title_author_gap,
+            "front_matter_block_gap": "one-real-empty-paragraph",
             "expected_body_font_size": expected_body_font_size,
             "expected_line_spacing": line_spacing_spec["label"],
         },
@@ -670,8 +701,6 @@ def main() -> int:
             front_matter_alignment=args.front_matter_alignment,
             expected_page_number_position=args.expected_page_number_position,
             allow_missing_correspondence=args.allow_missing_correspondence,
-            max_blank_paragraphs_before_abstract=args.max_blank_paragraphs_before_abstract,
-            expected_title_author_gap=args.expected_title_author_gap,
             expected_body_font_size=args.expected_body_font_size,
             expected_line_spacing=args.expected_line_spacing,
             explicit_styles=explicit_styles,

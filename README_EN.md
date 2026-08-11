@@ -6,7 +6,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.8.1-2563eb)
+![Version](https://img.shields.io/badge/version-v1.9.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -176,7 +176,7 @@ Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/
 
 ## Current Status And Validation
 
-The current release is **Beta**. Version 1.8.1 scans the delivery root and requires every final DOCX to bind its current SHA-256 to a terminal PASS from the embedded manuscript or submission-package formatting lane; omissions, stale hashes, and post-pass writes block delivery. Version 1.8.0's real Title–Authors blank and compact CRediT checks, together with the earlier package, semantic-rhythm, acceptance-tolerance, and citation controls, remain intact. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
+The current release is **Beta**. Version 1.9.0 expands the embedded front-matter contract from one Title–Authors gap to an exact semantic-block matrix through Abstract, including optional Author-note and ORCID roles, compact multi-paragraph blocks, and rejection of the legacy compact override. Version 1.8.1's delivery-root SHA-256 closure and the earlier package, CRediT, semantic-rhythm, acceptance-tolerance, and citation controls remain intact. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
 
 Current automated coverage includes:
 
@@ -185,7 +185,12 @@ Current automated coverage includes:
 - one reviewer cannot label a concern as consensus; every concern records its four-class type, defensibility after claim narrowing, and resolution mode, while acceptable limitations and optional strengthening cannot be `BLOCKING`;
 - metadata-only evidence cannot be direct support; material/supporting claims require complete checks, while incomplete sampled context rows remain advisory;
 - blue or otherwise non-black manuscript headings fail;
-- manual paragraph spacing, missing literal blank paragraphs, centered or mixed-alignment neutral front matter, undersized author/affiliation roles, mixed role line spacing, an unbold Keywords label, invalid section/CRediT blanks, incomplete line or dynamic page numbering, or any delivered DOCX without a current hash-bound terminal PASS blocks the combined release gate;
+- manual paragraph spacing, missing/duplicated semantic front-matter block gaps,
+  a blank within a multi-paragraph front-matter role, centered or mixed-alignment
+  neutral front matter, undersized semantic roles, mixed role line spacing, an
+  unbold Keywords label, invalid section/CRediT blanks, incomplete line or
+  dynamic page numbering, or any delivered DOCX without a current hash-bound
+  terminal PASS blocks the combined release gate;
 - compliant black headings and complete audit records can pass.
 
 [Read the reproducible validation scope](docs/VALIDATION.md)

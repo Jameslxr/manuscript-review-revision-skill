@@ -1,7 +1,7 @@
 ---
 name: manuscript-review-revision
 description: |
-  Run a journal-aware, review-first workflow for biomedical and scientific manuscripts. Support target-journal confirmation or recommendation, official-guideline research, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce natural empty paragraphs, zero paragraph spacing, one manuscript-wide line-spacing token, one real title-author blank, compact official-role CRediT blocks, body-sized semantic roles, left-aligned front matter, continuous Word line and page numbering, and rendered-page QA. Use for integrated review, revision, response, retargeting, submission preparation, or journal-specific formatting. For format-only DOCX repair, prefer `manuscript-docx-formatting`. Require the exact target journal before full review; never revise before the review gate and user authorization.
+  Run a journal-aware, review-first workflow for biomedical and scientific manuscripts. Support target-journal confirmation or recommendation, official-guideline research, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce natural empty paragraphs, zero paragraph spacing, one manuscript-wide line-spacing token, exact semantic front-matter block gaps, compact official-role CRediT blocks, body-sized semantic roles, left-aligned front matter, continuous Word line and page numbering, and rendered-page QA. Use for integrated review, revision, response, retargeting, submission preparation, or journal-specific formatting. For format-only DOCX repair, prefer `manuscript-docx-formatting`. Require the exact target journal before full review; never revise before the review gate and user authorization.
 ---
 
 # Manuscript Review & Revision
@@ -39,14 +39,15 @@ supplementary text.
 - Give body prose and empty separators the explicit required line-spacing
   token; never inherit Word defaults and never disable the line-spacing check.
 - For manuscripts, apply that same resolved token to title, authors,
-  affiliations, correspondence, Keywords, every heading/subheading, and all
-  declaration/CRediT paragraphs. Authors, affiliations, correspondence,
-  Keywords, headings, and declarations use the resolved body font size (12 pt
-  fallback).
-- In an unblinded neutral manuscript, place exactly one structurally empty
-  Enter-created paragraph between the title and first author. Keep it at `0/0
-  pt` with the resolved global line-spacing token; use the compact override only
-  when an exact current journal/template requires it.
+  affiliations, author notes, correspondence, ORCID/identifiers, Keywords,
+  every heading/subheading, and all declaration/CRediT paragraphs. These roles
+  use the resolved body font size (12 pt fallback), except the title.
+- In a manuscript, place exactly one structurally empty Enter-created paragraph
+  between every adjacent present front-matter block: Title, Authors,
+  Affiliations, optional Author notes, Correspondence, optional ORCID/identifiers,
+  and Abstract. Keep consecutive paragraphs within one role compact. Every
+  separator uses `0/0 pt` and the resolved global line-spacing token; there is no
+  journal/template bypass for this personal house-style invariant.
 - Treat CRediT as a compact semantic block. Use recognized official role
   vocabulary, place no blank between its heading and first entry, and never
   insert empty paragraphs between consecutive author entries. Do not infer or
@@ -70,11 +71,11 @@ supplementary text.
 - If the gate fails, correct the DOCX automatically and rerun it. Do not
   deliver the file as complete and do not ask the user to repair Word spacing,
   line numbering, or page numbering.
-- For a manuscript, normalize and audit title, authors, affiliations, and
-  correspondence as semantic front-matter roles. Use restrained left-aligned
-  journal-neutral defaults unless a current exact journal template records a
-  different rule. Do not guess roles from appearance or center a title block by
-  default.
+- For a manuscript, normalize and audit title, authors, affiliations, author
+  notes, correspondence, and ORCID/identifiers as semantic front-matter roles.
+  Use restrained left-aligned journal-neutral defaults unless a current exact
+  journal template records a different alignment rule. Do not guess roles from
+  appearance or center a title block by default.
 - Compare extracted text before and after formatting and render every page
   after the last layout-sensitive change. A mechanical XML pass alone is not a
   release.

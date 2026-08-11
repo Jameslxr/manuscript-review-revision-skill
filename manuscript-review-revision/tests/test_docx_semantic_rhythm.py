@@ -45,13 +45,17 @@ def build_semantic_stress_sample(path: Path) -> list[str]:
         "title": add_style(document, "Manuscript Title", 18),
         "authors": add_style(document, "Manuscript Authors", 8),
         "affiliation": add_style(document, "Manuscript Affiliation", 8),
+        "author_note": add_style(document, "Manuscript Author Note", 8),
         "correspondence": add_style(document, "Manuscript Correspondence", 9),
+        "orcid": add_style(document, "Manuscript ORCID", 9),
     }
     entries = (
         ("Metastasis in Hepatocellular Carcinoma", styles["title"]),
         ("James Li1 and Alex Smith1,*", styles["authors"]),
         ("1 Department of Pathology, Example University", styles["affiliation"]),
+        ("These authors contributed equally.", styles["author_note"]),
         ("*Correspondence: alex.smith@example.edu", styles["correspondence"]),
+        ("ORCID: https://orcid.org/0000-0001-2345-6789", styles["orcid"]),
     )
     for text, style in entries:
         paragraph = document.add_paragraph(text, style=style)
@@ -109,8 +113,12 @@ def apply_profile(
         "Manuscript Authors",
         "--affiliation-style",
         "Manuscript Affiliation",
+        "--author-note-style",
+        "Manuscript Author Note",
         "--correspondence-style",
         "Manuscript Correspondence",
+        "--orcid-style",
+        "Manuscript ORCID",
     )
 
 

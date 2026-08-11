@@ -49,17 +49,20 @@ The review report may use tables for issue tracking, but its visual system must 
 Load [front-matter-contract.md](front-matter-contract.md) for every manuscript
 DOCX. When no current exact journal template resolves a different token, use
 the restrained journal-neutral profile: left-aligned title, authors,
-affiliations, and correspondence; Times New Roman; one resolved manuscript-wide
-line-spacing token; body-sized author, affiliation, correspondence, Keywords,
-heading, and declaration text; 1-inch margins; top vertical alignment; no table, text box, centered
+affiliations, author notes, correspondence, and ORCID/identifiers; Times New
+Roman; one resolved manuscript-wide line-spacing token; body-sized author,
+affiliation, author-note, correspondence, ORCID, Keywords, heading, and
+declaration text; 1-inch margins; top vertical alignment; no table, text box, centered
 display block, or decorative container. Use explicit role styles or one-based
 paragraph numbers after inventory; never infer author identities from visual
 appearance.
 
-In the neutral profile, place exactly one real Enter-created empty paragraph
-between the title and first author. Keep authors, affiliations, and
-correspondence compact after that separator. Use the compact title-author
-override only when the exact current journal/template requires it.
+Place exactly one real Enter-created empty paragraph between every adjacent
+present block in this order: Title, Authors, Affiliations, optional Author notes,
+Correspondence, optional ORCID/identifiers, and Abstract. Keep consecutive
+paragraphs within one block compact. This semantic block-gap matrix has no
+journal-template bypass unless the user explicitly changes the personal
+house-style invariant.
 
 Run `apply_manuscript_profile.py` before the numbering enforcer, then run
 `audit_docx_front_matter.py` and `audit_docx_semantic_rhythm.py` separately from

@@ -44,11 +44,13 @@ from audit_docx_manuscript_style import (  # noqa: E402
 
 
 ROLE_STYLE_RE = {
-    "title": re.compile(r"(?:^|\b)(?:manuscript\s+)?title(?:\b|$)", re.I),
-    "authors": re.compile(r"(?:^|\b)(?:manuscript\s+)?authors?(?:\b|$)", re.I),
-    "affiliation": re.compile(r"(?:^|\b)affiliations?(?:\b|$)", re.I),
+    "title": re.compile(r"^(?:manuscript\s+)?title$", re.I),
+    "author_note": re.compile(r"^(?:manuscript\s+)?author\s+note$", re.I),
+    "orcid": re.compile(r"^(?:manuscript\s+)?(?:orcid|identifiers?)$", re.I),
+    "authors": re.compile(r"^(?:manuscript\s+)?authors?$", re.I),
+    "affiliation": re.compile(r"^(?:manuscript\s+)?affiliations?$", re.I),
     "correspondence": re.compile(
-        r"(?:^|\b)(?:correspondence|corresponding)(?:\b|$)", re.I
+        r"^(?:manuscript\s+)?(?:correspondence|corresponding\s+author)$", re.I
     ),
 }
 
@@ -247,7 +249,9 @@ def audit(
     same_size_roles = {
         "authors",
         "affiliation",
+        "author_note",
         "correspondence",
+        "orcid",
         "keywords",
         "heading",
         "body",

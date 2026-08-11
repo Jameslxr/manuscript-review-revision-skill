@@ -6,7 +6,7 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.8.1-2563eb)
+![Version](https://img.shields.io/badge/version-v1.9.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## 简要说明
@@ -176,7 +176,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 
 ## 当前版本与验证
 
-当前版本为 **Beta**。1.8.1 新增交付目录全扫描：每个最终 DOCX 必须以当前 SHA-256 绑定内嵌 manuscript 或 submission-package 排版门的最终 PASS，任何漏检、过期哈希或通过后再次写入都会阻断交付。1.8.0 的 Title–Authors 真实空段落和紧凑 CRediT 检查，以及此前投稿包、语义节奏、录用尺度和引用审计规则均保持不变。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
+当前版本为 **Beta**。1.9.0 将内嵌首页契约从单一 Title–Authors 空行扩展为一直到 Abstract 的完整语义模块矩阵，新增可选 Author-note 和 ORCID 角色、同一模块内多段紧凑检查，并拒绝旧 compact 覆盖。1.8.1 的交付目录 SHA-256 收口及此前投稿包、CRediT、语义节奏、录用尺度和引用审计规则均保持不变。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
 
 当前自动测试覆盖：
 
@@ -185,7 +185,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 - 单个 reviewer 不能把自己的意见标记为共识；每个问题必须记录四类判定、处理方式和收窄结论后的可辩护性，且可接受局限或可选增强不能被标成 `BLOCKING`；
 - 仅有文献元数据时不能标记为直接支持；核心/支持性 Claim 必须完整核查，普通背景 Claim 的未完成抽查只产生提示；
 - 标题或章节使用蓝色等非黑色样式时，格式检查不通过；
-- 手工 paragraph spacing、缺少真实空段落、首页居中/混合对齐、作者/单位字号偏小、角色行距混用、Keywords 未加粗、section/CRediT 空行错误、行号或动态页码不完整，或任一交付 DOCX 没有当前哈希对应的最终 PASS 时，综合格式发布门不通过；
+- 手工 paragraph spacing、首页相邻语义模块缺少/重复真实空段落、同一多段模块内部出现空行、首页居中/混合对齐、语义角色字号偏小、角色行距混用、Keywords 未加粗、section/CRediT 空行错误、行号或动态页码不完整，或任一交付 DOCX 没有当前哈希对应的最终 PASS 时，综合格式发布门不通过；
 - 合规的黑色标题和完整审计记录可以通过相应检查。
 
 [查看可复现验证命令与边界](docs/VALIDATION.md)

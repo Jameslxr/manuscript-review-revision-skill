@@ -31,7 +31,7 @@ python3 benchmarks/nature-vs-mrr-v1/score_runs.py \
   --expected-runs 1
 ```
 
-The current suite contains 82 tests covering these representative cases:
+The current suite contains 85 tests covering these representative cases:
 
 1. a complete journal profile passes;
 2. a journal profile with an unresolved mandatory rule fails;
@@ -167,13 +167,16 @@ This audit motivated the four finding classes and risk-tiered reference gate;
 it is not a universal estimate of journal acceptance practice.
 
 Version 1.6.0 added 16 formatting-focused tests. Version 1.6.1 added three
-semantic-rhythm regressions, and version 1.7.0 adds five submission-package
-regressions. Version 1.8.0 adds the sourced compact-title override regression,
-bringing this focused set to 25 tests: the standalone formatter's
-23-test corpus inside the integrated review/revision Skill plus two plan/audit
-closure tests. The tests cover adversarial front
-matter, body-sized author/affiliation/declaration roles, Keywords label
-emphasis, an exact real Title–Authors blank, compact CRediT author entries,
+semantic-rhythm regressions, and version 1.7.0 added five submission-package
+regressions. Version 1.8.0 added the earlier compact-title override regression;
+version 1.9.0 replaces that override with the fixed semantic front-matter block
+matrix and adds three regressions for optional Author-note/ORCID blocks and
+compact multi-paragraph roles. Together with the four version 1.8.1
+cross-deliverable closure tests and two plan/audit closure tests, the focused set
+now contains 32 tests. The tests cover adversarial front matter, body-sized
+front-matter/declaration roles, Keywords label emphasis, exact real blanks
+between every adjacent present front-matter block through Abstract, compact
+CRediT author entries,
 official-role vocabulary, section/subsection/CRediT blank-line boundaries, literal blank
 paragraphs, cover-letter salutation/body/closing/signature rhythm, compact list
 and signature blocks, consecutive non-body reference entries, generated-heading audit

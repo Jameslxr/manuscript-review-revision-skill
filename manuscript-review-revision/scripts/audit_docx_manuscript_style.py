@@ -47,7 +47,7 @@ DEFAULT_BODY_STYLES = {
 }
 NON_BODY_STYLE_RE = re.compile(
     r"(?:title|subtitle|heading|author|affiliation|correspond|keyword|declaration|"
-    r"credit|contribut|caption|bibliograph|reference|"
+    r"credit|contribut|orcid|identifier|caption|bibliograph|reference|"
     r"list|quote|footnote|endnote|header|footer)",
     re.IGNORECASE,
 )

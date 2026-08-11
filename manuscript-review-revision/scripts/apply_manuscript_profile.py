@@ -56,12 +56,14 @@ PROFILE_STYLES = {
     "title": ("Manuscript Title", 15.0, True, 1.0),
     "authors": ("Manuscript Authors", BODY_FONT_SIZE_PT, False, 1.0),
     "affiliation": ("Manuscript Affiliation", BODY_FONT_SIZE_PT, False, 1.0),
+    "author_note": ("Manuscript Author Note", BODY_FONT_SIZE_PT, False, 1.0),
     "correspondence": (
         "Manuscript Correspondence",
         BODY_FONT_SIZE_PT,
         False,
         1.0,
     ),
+    "orcid": ("Manuscript ORCID", BODY_FONT_SIZE_PT, False, 1.0),
     "keywords": ("Manuscript Keywords", BODY_FONT_SIZE_PT, False, 1.0),
     "heading": ("Manuscript Heading", BODY_FONT_SIZE_PT, True, 1.0),
     "credit-entry": ("Manuscript CRediT Entry", BODY_FONT_SIZE_PT, False, 1.0),
@@ -89,29 +91,28 @@ def parse_args() -> argparse.Namespace:
         "--abstract-start", choices=("integrated", "new-page"), default="integrated"
     )
     parser.add_argument(
-        "--title-author-gap",
-        choices=("natural-blank", "compact"),
-        default="natural-blank",
-        help=(
-            "Use one real empty paragraph after the title by default; select "
-            "compact only for a sourced journal/template override."
-        ),
-    )
-    parser.add_argument(
         "--body-style",
         action="append",
         default=[],
         help="Existing body-prose style name or ID. Repeat as needed.",
     )
     for role in ROLE_ORDER:
+        option_role = role.replace("_", "-")
+        style_flags = [f"--{option_role}-style"]
+        paragraph_flags = [f"--{option_role}-paragraph"]
+        if option_role != role:
+            style_flags.append(f"--{role}-style")
+            paragraph_flags.append(f"--{role}-paragraph")
         parser.add_argument(
-            f"--{role}-style",
+            *style_flags,
+            dest=f"{role}_style",
             action="append",
             default=[],
             help=f"Existing paragraph style name or ID for {role}.",
         )
         parser.add_argument(
-            f"--{role}-paragraph",
+            *paragraph_flags,
+            dest=f"{role}_paragraph",
             action="append",
             type=int,
             default=[],
@@ -296,7 +297,6 @@ def normalize_front_matter_blanks(
     records: list[tuple[Any, str]],
     abstract: Any | None,
     abstract_start: str,
-    title_author_gap: str,
     separator_style: Any,
     separator_spacing: dict[str, object],
 ) -> None:
@@ -304,8 +304,6 @@ def normalize_front_matter_blanks(
         return
     body = document.element.body
     record_nodes = [paragraph._p for paragraph, _ in records]
-    title_nodes = [paragraph._p for paragraph, role in records if role == "title"]
-    author_nodes = [paragraph._p for paragraph, role in records if role == "authors"]
     first_index = min(body.index(node) for node in record_nodes)
     last_index = max(body.index(node) for node in record_nodes)
     abstract_index = body.index(abstract._p)
@@ -314,14 +312,14 @@ def normalize_front_matter_blanks(
         if child.tag == qn("w:p") and not Paragraph(child, document._body).text.strip():
             body.remove(child)
 
-    # The neutral house style uses one real Enter-created paragraph after the
-    # title, never paragraph spacing. Other front-matter roles remain compact.
-    if title_author_gap == "natural-blank" and title_nodes and author_nodes:
-        title_node = min(title_nodes, key=body.index)
-        author_node = min(author_nodes, key=body.index)
-        if body.index(title_node) < body.index(author_node):
+    # Insert exactly one real Enter-created paragraph between adjacent present
+    # semantic blocks. Consecutive paragraphs with the same role stay compact.
+    ordered_records = sorted(records, key=lambda item: body.index(item[0]._p))
+    previous_role = ordered_records[0][1]
+    for paragraph, role in ordered_records[1:]:
+        if role != previous_role:
             blank = OxmlElement("w:p")
-            body.insert(body.index(author_node), blank)
+            body.insert(body.index(paragraph._p), blank)
             format_paragraph(
                 Paragraph(blank, document._body),
                 separator_style,
@@ -330,6 +328,7 @@ def normalize_front_matter_blanks(
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
                 line_spacing=separator_spacing,
             )
+        previous_role = role
 
     abstract_index = body.index(abstract._p)
     last_index = max(body.index(node) for node in record_nodes)
@@ -337,17 +336,17 @@ def normalize_front_matter_blanks(
         if child.tag == qn("w:p") and not Paragraph(child, document._body).text.strip():
             body.remove(child)
 
+    blank = OxmlElement("w:p")
+    body.insert(body.index(abstract._p), blank)
+    format_paragraph(
+        Paragraph(blank, document._body),
+        separator_style,
+        size_pt=BODY_FONT_SIZE_PT,
+        bold=False,
+        alignment=WD_ALIGN_PARAGRAPH.LEFT,
+        line_spacing=separator_spacing,
+    )
     if abstract_start == "integrated":
-        blank = OxmlElement("w:p")
-        body.insert(body.index(abstract._p), blank)
-        format_paragraph(
-            Paragraph(blank, document._body),
-            separator_style,
-            size_pt=12.0,
-            bold=False,
-            alignment=WD_ALIGN_PARAGRAPH.LEFT,
-            line_spacing=separator_spacing,
-        )
         abstract.paragraph_format.page_break_before = False
     else:
         abstract.paragraph_format.page_break_before = True
@@ -581,7 +580,6 @@ def apply_profile(
     front_matter_alignment: str,
     line_spacing_token: str,
     abstract_start: str,
-    title_author_gap: str,
     body_style_tokens: set[str],
     explicit_styles: dict[str, set[str]],
     explicit_paragraphs: dict[str, set[int]],
@@ -765,7 +763,6 @@ def apply_profile(
         records,
         abstract,
         abstract_start,
-        title_author_gap,
         styles["body"],
         body_spacing,
     )
@@ -822,7 +819,6 @@ def main() -> int:
             front_matter_alignment=args.front_matter_alignment,
             line_spacing_token=args.line_spacing,
             abstract_start=args.abstract_start,
-            title_author_gap=args.title_author_gap,
             body_style_tokens=body_style_tokens,
             explicit_styles=explicit_styles,
             explicit_paragraphs=explicit_paragraphs,

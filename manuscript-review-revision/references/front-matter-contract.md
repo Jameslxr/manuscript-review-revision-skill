@@ -14,8 +14,8 @@
 
 Turn an editable scientific draft into a restrained author-prepared submission
 manuscript, not a published-article facsimile, report cover, or designed title
-page. Treat title, authors, affiliations, correspondence, Abstract, and Keywords
-as semantic Word paragraph roles.
+page. Treat Title, Authors, Affiliations, Author notes, Correspondence,
+ORCID/identifiers, Abstract, and Keywords as semantic Word paragraph roles.
 
 The journal-neutral profile is the user's house style. It is not a claim that
 all journals prohibit centered title blocks. Apply this precedence:
@@ -38,7 +38,9 @@ Use these exact defaults when no official source resolves a different token:
 | Title | left | Times New Roman | 15 pt | bold | resolved global token | 0/0 pt |
 | Authors | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
 | Affiliations | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
+| Author notes | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
 | Correspondence | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
+| ORCID/identifiers | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
 | Abstract/section heading | left | Times New Roman | 12 pt | bold | resolved global token | 0/0 pt |
 | Body prose | left | Times New Roman | 12 pt | regular | resolved global token | 0/0 pt |
 | Keywords | left | Times New Roman | 12 pt | bold label only | resolved global token | 0/0 pt |
@@ -47,15 +49,15 @@ Use these exact defaults when no official source resolves a different token:
 Additional rules:
 
 - use 1-inch margins and top vertical page alignment;
-- order roles as title, one real empty paragraph, authors, affiliations,
-  correspondence, then Abstract;
-- require exactly one structurally empty Enter-created paragraph between the
-  title and first author; use `0/0 pt`, disable automatic spacing, and apply the
-  resolved global line-spacing token to that empty paragraph;
-- keep authors, affiliations, and correspondence compact with no other empty
-  paragraph inside the front-matter block;
-- allow exactly one empty paragraph between the block and Abstract in the
-  integrated-first-page profile;
+- order present roles as Title, Authors, Affiliations, optional Author notes,
+  Correspondence, optional ORCID/identifiers, then Abstract;
+- require exactly one structurally empty Enter-created paragraph between every
+  adjacent present semantic block, including the last present identity block
+  and Abstract;
+- give every separator `0/0 pt`, disable automatic spacing, and apply the
+  resolved global line-spacing token;
+- keep consecutive paragraphs inside one semantic block compact: multiple
+  authors or affiliations have no empty separator until the next role begins;
 - permit a page break before Abstract only when `abstract_start=new-page` is
   resolved by the journal or user;
 - do not center or right-align any title-block role in the neutral profile;
@@ -64,7 +66,7 @@ Additional rules:
 - use superscript affiliation markers when multiple affiliations require a map;
 - include corresponding-author contact information for an unblinded
   submission-ready file;
-- keep the title within 12-16 pt and the title block visually compact;
+- keep the title within 12-16 pt and each semantic block visually restrained;
 - default the resolved global line-spacing token to double and apply it to the
   complete manuscript, including the author block, headings, Keywords, and
   declarations; use 1.5 or another token only when resolved from the current
@@ -112,10 +114,12 @@ format checklist records all of:
 
 Do not treat a publisher-wide example or a published PDF as sufficient proof.
 If alignment is not specified, retain the journal-neutral left alignment.
-Use `--title-author-gap compact` together with
-`--expected-title-author-gap compact` only when the exact journal/template
-requires title and authors to remain consecutive; otherwise retain
-`natural-blank`.
+The exact semantic block-gap matrix is a personal output invariant. An official
+template may override alignment, typography, title-page location,
+anonymization, or page-number placement, but it does not authorize a compact
+block transition. If the template conflicts, record the conflict and do not
+claim simultaneous compliance unless the user explicitly changes the
+invariant.
 
 ## Mechanical gates
 
@@ -130,18 +134,20 @@ The neutral profile must fail on:
 - identity material in blinded mode;
 - centered, right-aligned, or mixed-alignment title-block roles;
 - unresolved, undersized, or oversized front-matter typography;
-- any author, affiliation, correspondence, heading, Keywords, or declaration
-  paragraph whose size differs from the resolved body size;
+- any author, affiliation, author-note, correspondence, ORCID/identifier,
+  heading, Keywords, or declaration paragraph whose size differs from the
+  resolved body size;
 - any manuscript role or empty separator whose line spacing differs from the
   resolved global token;
 - a non-bold Keywords label, a bold keyword value, or a missing/duplicated
   semantic blank line;
 - non-black front-matter text;
 - role-order inversion;
-- a missing or duplicated real empty paragraph between title and authors;
-- any other empty paragraph inside the title/author/affiliation/correspondence
-  block;
-- more than one empty paragraph before Abstract;
+- a missing or duplicated real empty paragraph at any adjacent present block
+  transition, including the transition to Abstract;
+- an empty paragraph within a multi-paragraph Author, Affiliation, Author-note,
+  Correspondence, or ORCID/identifier block;
+- an unclassified Author-note or ORCID/identifier paragraph;
 - front matter stored in a table or text box;
 - non-top vertical page alignment;
 - PAGE fields outside the resolved location or duplicate PAGE fields.
@@ -155,12 +161,11 @@ Inspect every rendered page. On page 1 verify:
 
 - the title block begins naturally below the top margin and is not vertically
   centered;
-- title, authors, affiliations, and correspondence share one left edge in the
-  neutral profile;
-- title and authors are separated by one natural empty line, not paragraph
-  before/after spacing;
+- all present front-matter roles share one left edge in the neutral profile;
+- every adjacent present semantic block is separated by one natural empty line,
+  not paragraph before/after spacing;
 - the title is prominent but not publication-banner sized;
-- front matter is compact and not surrounded by artificial whitespace;
+- paragraphs within each block are compact and block transitions are uniform;
 - Abstract begins at a natural transition or the sourced page break;
 - author/affiliation markers are readable and map correctly;
 - upper-right page numbering and continuous line numbering are visible;
