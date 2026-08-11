@@ -185,12 +185,7 @@ Current automated coverage includes:
 - one reviewer cannot label a concern as consensus; every concern records its four-class type, defensibility after claim narrowing, and resolution mode, while acceptable limitations and optional strengthening cannot be `BLOCKING`;
 - metadata-only evidence cannot be direct support; material/supporting claims require complete checks, while incomplete sampled context rows remain advisory;
 - blue or otherwise non-black manuscript headings fail;
-- manual paragraph spacing, missing/duplicated semantic front-matter block gaps,
-  a blank within a multi-paragraph front-matter role, centered or mixed-alignment
-  neutral front matter, undersized semantic roles, mixed role line spacing, an
-  unbold Keywords label, invalid section/CRediT blanks, incomplete line or
-  dynamic page numbering, or any delivered DOCX without a current hash-bound
-  terminal PASS blocks the combined release gate;
+- manual paragraph spacing, missing/duplicated semantic front-matter block gaps, a blank within a multi-paragraph front-matter role, centered or mixed-alignment neutral front matter, undersized semantic roles, mixed role line spacing, an unbold Keywords label, invalid section/CRediT blanks, incomplete line or dynamic page numbering, or any delivered DOCX without a current hash-bound terminal PASS blocks the combined release gate;
 - compliant black headings and complete audit records can pass.
 
 [Read the reproducible validation scope](docs/VALIDATION.md)
