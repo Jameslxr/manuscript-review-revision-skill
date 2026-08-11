@@ -74,7 +74,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--expected-table-font-size",
         type=float,
-        help="Expected table-cell size; defaults to the body size.",
+        default=10.0,
+        help="Expected table-cell size; defaults to 10 pt.",
+    )
+    parser.add_argument(
+        "--expected-table-line-spacing",
+        default="single",
+        help="Expected table-cell line spacing; defaults to single.",
     )
     parser.add_argument("--body-style", action="append", default=[])
     parser.add_argument("--json", action="store_true")
@@ -302,19 +308,21 @@ def audit(
     expected_font_name: str = "Times New Roman",
     expected_body_font_size: float = 12.0,
     expected_title_font_size: float = 15.0,
-    expected_table_font_size: float | None = None,
+    expected_table_font_size: float | None = 10.0,
+    expected_table_line_spacing: object = "single",
     body_style_names: set[str] | None = None,
 ) -> dict[str, object]:
     if not expected_font_name.strip():
         raise ValueError("expected font name must be non-empty")
     resolved_table_font_size = (
-        expected_body_font_size
+        10.0
         if expected_table_font_size is None
         else expected_table_font_size
     )
     if min(expected_body_font_size, expected_title_font_size, resolved_table_font_size) <= 0:
         raise ValueError("expected font sizes must be positive")
     spacing_spec = parse_line_spacing_spec(expected_line_spacing)
+    table_spacing_spec = parse_line_spacing_spec(expected_table_line_spacing)
     body_styles = {
         *(normalize_style_token(value) for value in DEFAULT_BODY_STYLES),
         normalize_style_token("Manuscript Body"),
@@ -372,19 +380,65 @@ def audit(
                     continue
                 seen_cells.add(id(cell._tc))
                 for paragraph_index, paragraph in enumerate(cell.paragraphs, start=1):
-                    if not paragraph.text.strip():
-                        continue
-                    paragraph_issues, record = typography_record(
-                        paragraph,
-                        location=(
-                            f"table {table_index} row {row_index} cell {cell_index} "
-                            f"paragraph {paragraph_index}"
-                        ),
-                        expected_font_name=expected_font_name,
-                        expected_font_size=resolved_table_font_size,
+                    location = (
+                        f"table {table_index} row {row_index} cell {cell_index} "
+                        f"paragraph {paragraph_index}"
                     )
-                    issues.extend(paragraph_issues)
-                    typography_inspected.append(record)
+                    table_record = {
+                        "location": location,
+                        "style": (
+                            paragraph.style.name
+                            if paragraph.style is not None
+                            else ""
+                        ),
+                        "text_preview": paragraph.text.strip()[:100],
+                    }
+                    actual_spacing = effective_line_spacing(paragraph)
+                    if not line_spacing_matches(actual_spacing, table_spacing_spec):
+                        issues.append(
+                            {
+                                **table_record,
+                                "code": "TABLE_LINE_SPACING_MISMATCH",
+                                "detail": {
+                                    "expected": table_spacing_spec,
+                                    "actual": actual_spacing,
+                                },
+                            }
+                        )
+                    for field, label in (
+                        ("space_before", "BEFORE"),
+                        ("space_after", "AFTER"),
+                    ):
+                        automatic = automatic_spacing_sources(paragraph, field)
+                        if automatic:
+                            issues.append(
+                                {
+                                    **table_record,
+                                    "code": f"TABLE_AUTOSPACING_{label}",
+                                    "detail": automatic,
+                                }
+                            )
+                        points, source = effective_spacing(paragraph, field)
+                        if abs(points) > 0.01:
+                            issues.append(
+                                {
+                                    **table_record,
+                                    "code": f"TABLE_SPACE_{label}",
+                                    "detail": {
+                                        "points": round(points, 3),
+                                        "source": source,
+                                    },
+                                }
+                            )
+                    if paragraph.text.strip():
+                        paragraph_issues, record = typography_record(
+                            paragraph,
+                            location=location,
+                            expected_font_name=expected_font_name,
+                            expected_font_size=resolved_table_font_size,
+                        )
+                        issues.extend(paragraph_issues)
+                        typography_inspected.append(record)
 
     same_size_roles = {
         "authors",
@@ -548,6 +602,7 @@ def audit(
         "expected_body_font_size_pt": expected_body_font_size,
         "expected_title_font_size_pt": expected_title_font_size,
         "expected_table_font_size_pt": resolved_table_font_size,
+        "expected_table_line_spacing": table_spacing_spec["label"],
         "issue_count": len(issues),
         "issues": issues,
         "inspected": inspected,
@@ -584,6 +639,7 @@ def main() -> int:
             expected_body_font_size=args.expected_body_font_size,
             expected_title_font_size=args.expected_title_font_size,
             expected_table_font_size=args.expected_table_font_size,
+            expected_table_line_spacing=args.expected_table_line_spacing,
             body_style_names={normalize_style_token(value) for value in args.body_style},
         )
     except (OSError, ValueError) as exc:

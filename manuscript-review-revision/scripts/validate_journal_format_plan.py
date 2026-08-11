@@ -33,6 +33,7 @@ STYLE_FIELDS = {
     "paragraph_separation_basis",
     "line_spacing",
     "line_spacing_basis",
+    "table_line_spacing",
     "line_numbering",
     "line_numbering_basis",
     "page_numbering",
@@ -178,8 +179,8 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
         if field not in plan:
             errors.append(f"Missing top-level field: {field}")
 
-    if str(plan.get("schema_version", "")).strip() != "1.1":
-        errors.append("schema_version must be '1.1'.")
+    if str(plan.get("schema_version", "")).strip() != "1.2":
+        errors.append("schema_version must be '1.2'.")
 
     for field in ("target_journal", "article_type"):
         if not non_empty_string(plan.get(field)):
@@ -327,6 +328,12 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
         errors.append(
             "style_contract.line_spacing must be an explicit multiple or point rule."
         )
+    table_line_spacing = str(style.get("table_line_spacing", "")).strip()
+    if not LINE_SPACING_RE.fullmatch(table_line_spacing):
+        errors.append(
+            "style_contract.table_line_spacing must be an explicit multiple or "
+            "point rule."
+        )
 
     if not non_empty_string(style.get("body_font_family")):
         errors.append("style_contract.body_font_family must be non-empty.")
@@ -374,11 +381,11 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
             != "times new roman"
             or body_font_size != 12
             or title_font_size != 15
-            or table_font_size != 12
+            or table_font_size != 10
         ):
             errors.append(
                 "Example-only or unspecified font evidence requires the "
-                "Times New Roman 15/12/12 pt fallback."
+                "Times New Roman 15/12/10 pt fallback."
             )
     if font_basis in OFFICIAL_BASIS_VALUES and font_strength not in OFFICIAL_RULE_STRENGTHS:
         errors.append(
@@ -398,6 +405,11 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
         if normalized_token(line_spacing) != "double":
             errors.append(
                 "Example-only or unspecified line-spacing evidence requires double spacing."
+            )
+        if normalized_token(table_line_spacing) != "single":
+            errors.append(
+                "Example-only or unspecified line-spacing evidence requires "
+                "single table-cell spacing."
             )
     if line_basis in OFFICIAL_BASIS_VALUES and line_strength not in OFFICIAL_RULE_STRENGTHS:
         errors.append(

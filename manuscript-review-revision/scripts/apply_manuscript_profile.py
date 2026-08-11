@@ -54,6 +54,7 @@ from docx_semantic_rules import (  # noqa: E402
 
 
 TITLE_FONT_SIZE_PT = 15.0
+TABLE_FONT_SIZE_PT = 10.0
 DEFAULT_FONT_NAME = "Times New Roman"
 
 
@@ -105,7 +106,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--table-font-size",
         type=float,
-        help="Table-cell font size; defaults to the resolved body font size.",
+        default=TABLE_FONT_SIZE_PT,
+        help="Table-cell font size; defaults to 10 pt.",
+    )
+    parser.add_argument(
+        "--table-line-spacing",
+        default="single",
+        help="Table-cell line spacing; defaults to single.",
     )
     parser.add_argument(
         "--abstract-start", choices=("integrated", "new-page"), default="integrated"
@@ -270,6 +277,7 @@ def apply_visible_typography(
     title_font_size: float,
     table_font_size: float,
     line_spacing: dict[str, object],
+    table_line_spacing: dict[str, object],
 ) -> dict[str, int]:
     """Apply the resolved font contract to every visible manuscript run."""
 
@@ -298,7 +306,9 @@ def apply_visible_typography(
                 for paragraph in cell.paragraphs:
                     paragraph.paragraph_format.space_before = Pt(0)
                     paragraph.paragraph_format.space_after = Pt(0)
-                    set_line_spacing(paragraph.paragraph_format, line_spacing)
+                    set_line_spacing(
+                        paragraph.paragraph_format, table_line_spacing
+                    )
                     remove_auto_spacing(paragraph._p.get_or_add_pPr())
                     if paragraph.text.strip():
                         table_count += 1
@@ -689,6 +699,7 @@ def apply_profile(
     body_font_size: float,
     title_font_size: float,
     table_font_size: float | None,
+    table_line_spacing_token: str,
     abstract_start: str,
     body_style_tokens: set[str],
     explicit_styles: dict[str, set[str]],
@@ -701,7 +712,7 @@ def apply_profile(
     if body_font_size <= 0 or title_font_size <= 0:
         raise ValueError("body and title font sizes must be positive")
     resolved_table_font_size = (
-        body_font_size if table_font_size is None else table_font_size
+        TABLE_FONT_SIZE_PT if table_font_size is None else table_font_size
     )
     if resolved_table_font_size <= 0:
         raise ValueError("table font size must be positive")
@@ -713,6 +724,7 @@ def apply_profile(
 
     alignment = ALIGNMENT_VALUES[front_matter_alignment]
     body_spacing = parse_line_spacing_spec(line_spacing_token)
+    table_spacing = parse_line_spacing_spec(table_line_spacing_token)
     profile_definitions = profile_styles(body_font_size, title_font_size)
     styles: dict[str, Any] = {}
     for role, (name, size, bold, _) in profile_definitions.items():
@@ -922,6 +934,7 @@ def apply_profile(
         title_font_size=title_font_size,
         table_font_size=resolved_table_font_size,
         line_spacing=body_spacing,
+        table_line_spacing=table_spacing,
     )
 
     for section in document.sections:
@@ -948,6 +961,7 @@ def apply_profile(
         "body_font_size_pt": body_font_size,
         "title_font_size_pt": title_font_size,
         "table_font_size_pt": resolved_table_font_size,
+        "table_line_spacing": table_spacing["label"],
         "role_counts": role_counts,
         "flattened_front_matter_tables": flattened_tables,
         "typography_counts": typography_counts,
@@ -971,6 +985,7 @@ def main() -> int:
             body_font_size=args.body_font_size,
             title_font_size=args.title_font_size,
             table_font_size=args.table_font_size,
+            table_line_spacing_token=args.table_line_spacing,
             abstract_start=args.abstract_start,
             body_style_tokens=body_style_tokens,
             explicit_styles=explicit_styles,

@@ -320,7 +320,7 @@ def write_format_plan(
     path.write_text(
         json.dumps(
             {
-                "schema_version": "1.1",
+                "schema_version": "1.2",
                 "target_journal": "Example Journal",
                 "article_type": "Original Article",
                 "submission_stage": "initial",
@@ -340,6 +340,7 @@ def write_format_plan(
                     "paragraph_separation_basis": paragraph_separation_basis,
                     "line_spacing": "double",
                     "line_spacing_basis": "CONSERVATIVE_FALLBACK",
+                    "table_line_spacing": "single",
                     "line_spacing_rule_strength": "UNSPECIFIED",
                     "line_spacing_source_excerpt": (
                         "No binding line-spacing value appears in the current guide."
@@ -356,7 +357,7 @@ def write_format_plan(
                     "body_font_family": "Times New Roman",
                     "body_font_size_pt": 12,
                     "title_font_size_pt": 15,
-                    "table_font_size_pt": 12,
+                    "table_font_size_pt": 10,
                     "font_basis": "CONSERVATIVE_FALLBACK",
                     "font_rule_strength": "UNSPECIFIED",
                     "font_source_excerpt": (
@@ -649,7 +650,18 @@ class ValidatorTests(unittest.TestCase):
             path.write_text(json.dumps(plan), encoding="utf-8")
             result = run_script("validate_journal_format_plan.py", path)
             self.assertEqual(result.returncode, 1)
-            self.assertIn("15/12/12 pt fallback", result.stdout)
+            self.assertIn("15/12/10 pt fallback", result.stdout)
+
+    def test_unspecified_table_spacing_must_use_single_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "format-plan-table-spacing.json"
+            write_format_plan(path)
+            plan = json.loads(path.read_text(encoding="utf-8"))
+            plan["style_contract"]["table_line_spacing"] = "double"
+            path.write_text(json.dumps(plan), encoding="utf-8")
+            result = run_script("validate_journal_format_plan.py", path)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("single table-cell spacing", result.stdout)
 
     def test_explicit_twelve_point_and_one_point_five_rules_pass(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
