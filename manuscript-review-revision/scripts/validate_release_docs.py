@@ -203,6 +203,7 @@ def main() -> int:
         )
     for required_embedded_format_resource in (
         "references/front-matter-contract.md",
+        "references/credit-authorship-contract.md",
         "scripts/apply_manuscript_profile.py",
         "scripts/audit_docx_front_matter.py",
         "scripts/audit_docx_semantic_rhythm.py",

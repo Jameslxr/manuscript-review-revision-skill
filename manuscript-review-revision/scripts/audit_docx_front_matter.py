@@ -84,6 +84,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--max-blank-paragraphs-before-abstract", type=int, default=1
     )
+    parser.add_argument(
+        "--expected-title-author-gap",
+        choices=("natural-blank", "compact"),
+        default="natural-blank",
+        help=(
+            "Require one real empty paragraph after the title by default; use "
+            "compact only for a sourced journal/template override."
+        ),
+    )
     for role in ROLE_ORDER:
         parser.add_argument(
             f"--{role}-style",
@@ -301,6 +310,7 @@ def audit(
     expected_page_number_position: str = "upper-right",
     allow_missing_correspondence: bool = False,
     max_blank_paragraphs_before_abstract: int = 1,
+    expected_title_author_gap: str = "natural-blank",
     expected_body_font_size: float = 12.0,
     expected_line_spacing: object = "double",
     explicit_styles: dict[str, set[str]] | None = None,
@@ -310,6 +320,8 @@ def audit(
         raise ValueError("max blank paragraphs must be non-negative")
     if expected_body_font_size <= 0:
         raise ValueError("expected body font size must be positive")
+    if expected_title_author_gap not in {"natural-blank", "compact"}:
+        raise ValueError("unsupported title-author gap")
     line_spacing_spec = parse_line_spacing_spec(expected_line_spacing)
     document = Document(str(path))
     explicit_styles = explicit_styles or {role: set() for role in ROLE_ORDER}
@@ -503,11 +515,36 @@ def audit(
     role_indices = [int(record["child_index"]) for record in records]
     if role_indices:
         first_role, last_role = min(role_indices), max(role_indices)
-        internal_blanks = [i for i in blank_indices if first_role < i < last_role]
+        title_records = [record for record in records if record["role"] == "title"]
+        author_records = [record for record in records if record["role"] == "authors"]
+        title_author_blanks: list[int] = []
+        if title_records and author_records:
+            title_index = min(int(record["child_index"]) for record in title_records)
+            author_index = min(int(record["child_index"]) for record in author_records)
+            title_author_blanks = [
+                i for i in blank_indices if title_index < i < author_index
+            ]
+            expected_count = 1 if expected_title_author_gap == "natural-blank" else 0
+            if len(title_author_blanks) != expected_count:
+                issues.append(
+                    {
+                        "code": "TITLE_AUTHOR_BLANK_COUNT",
+                        "detail": {
+                            "expected": expected_count,
+                            "actual": len(title_author_blanks),
+                            "profile": expected_title_author_gap,
+                        },
+                    }
+                )
+        internal_blanks = [
+            i
+            for i in blank_indices
+            if first_role < i < last_role and i not in set(title_author_blanks)
+        ]
         if internal_blanks:
             issues.append(
                 {
-                    "code": "FRONT_MATTER_INTERNAL_BLANKS",
+                    "code": "FRONT_MATTER_UNEXPECTED_INTERNAL_BLANKS",
                     "detail": {"count": len(internal_blanks)},
                 }
             )
@@ -586,6 +623,7 @@ def audit(
             "front_matter_alignment": front_matter_alignment,
             "expected_page_number_position": expected_page_number_position,
             "max_blank_paragraphs_before_abstract": max_blank_paragraphs_before_abstract,
+            "expected_title_author_gap": expected_title_author_gap,
             "expected_body_font_size": expected_body_font_size,
             "expected_line_spacing": line_spacing_spec["label"],
         },
@@ -633,6 +671,7 @@ def main() -> int:
             expected_page_number_position=args.expected_page_number_position,
             allow_missing_correspondence=args.allow_missing_correspondence,
             max_blank_paragraphs_before_abstract=args.max_blank_paragraphs_before_abstract,
+            expected_title_author_gap=args.expected_title_author_gap,
             expected_body_font_size=args.expected_body_font_size,
             expected_line_spacing=args.expected_line_spacing,
             explicit_styles=explicit_styles,

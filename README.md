@@ -6,7 +6,7 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.7.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.8.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## 简要说明
@@ -176,7 +176,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 
 ## 当前版本与验证
 
-当前版本为 **Beta**。1.7.0 新增独立的可编辑投稿包排版通道：cover letter、response letter 和其他 submission text 现在使用角色识别、全文统一行距/字号、真实空段落、连续行号/页码及 fail-closed package release gate；同时加入“期刊官方措辞优先、实际 AI 用途为准”的 AI 使用声明规则。1.6.1 的 manuscript 语义纵向节奏门及 1.5.0 的录用尺度校准、四类问题判定和分层引用审计保持不变；既有复测曾保持 18/18 个预埋问题检出。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
+当前版本为 **Beta**。1.8.0 将 Title–Authors 间的一个真实 Enter 空段落设为可执行、可审计的中性首页默认，并新增紧凑 CRediT 区块、官方 14 种角色词汇及“作者条目间禁止空段落”的 fail-closed 检查。1.7.0 的投稿包排版通道和 AI 使用声明规则、1.6.1 的 manuscript 语义纵向节奏门，以及 1.5.0 的录用尺度校准和引用审计均保持不变。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
 
 当前自动测试覆盖：
 

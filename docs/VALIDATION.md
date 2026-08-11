@@ -161,11 +161,13 @@ it is not a universal estimate of journal acceptance practice.
 
 Version 1.6.0 added 16 formatting-focused tests. Version 1.6.1 added three
 semantic-rhythm regressions, and version 1.7.0 adds five submission-package
-regressions, bringing this focused set to 24 tests: the standalone formatter's
-22-test corpus inside the integrated review/revision Skill plus two plan/audit
+regressions. Version 1.8.0 adds the sourced compact-title override regression,
+bringing this focused set to 25 tests: the standalone formatter's
+23-test corpus inside the integrated review/revision Skill plus two plan/audit
 closure tests. The tests cover adversarial front
 matter, body-sized author/affiliation/declaration roles, Keywords label
-emphasis, section/subsection/CRediT blank-line boundaries, literal blank
+emphasis, an exact real Title–Authors blank, compact CRediT author entries,
+official-role vocabulary, section/subsection/CRediT blank-line boundaries, literal blank
 paragraphs, cover-letter salutation/body/closing/signature rhythm, compact list
 and signature blocks, consecutive non-body reference entries, generated-heading audit
 coverage, hidden Word auto-spacing, explicit manuscript-wide line spacing,

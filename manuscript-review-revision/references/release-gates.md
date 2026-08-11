@@ -81,8 +81,10 @@ Return `RELEASE FAIL` when:
 - any manuscript DOCX has unresolved or decorative front matter, uses centered
   or mixed-alignment title-block roles without a current source-linked
   override, uses undersized author/affiliation/declaration text, mixes line
-  spacing across manuscript roles, has a non-bold Keywords label or an invalid
-  section/Keywords/CRediT blank-line boundary, lacks the front-matter or
+  spacing across manuscript roles, lacks the resolved title-author blank,
+  inserts empty paragraphs between CRediT author entries, uses no recognized
+  official role in a CRediT-labelled statement, has a non-bold Keywords label
+  or an invalid section/Keywords/CRediT blank-line boundary, lacks the front-matter or
   semantic-rhythm audit, changes unauthorized text during formatting, or does
   not reach `FORMAT_RELEASE_PASS`;
 - any editable cover letter, response letter, or other submission-package DOCX

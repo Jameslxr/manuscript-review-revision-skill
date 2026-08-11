@@ -6,7 +6,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.7.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.8.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -176,7 +176,7 @@ Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/
 
 ## Current Status And Validation
 
-The current release is **Beta**. Version 1.7.0 adds a dedicated editable submission-package lane: cover letters, response letters, and other submission text now receive role-aware normalization, one whole-document line-spacing/font-size contract, real empty paragraphs, continuous line/page numbering, and a fail-closed package release gate. It also adds journal-priority, truth-bounded AI-use declaration guidance. Version 1.6.1's manuscript semantic-rhythm gate and version 1.5.0's accepted-paper tolerance calibration, four-class finding adjudication, and risk-tiered citation audit remain intact; the earlier independent rerun preserved 18/18 seeded-issue detection. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
+The current release is **Beta**. Version 1.8.0 makes one real Enter-created Title–Authors paragraph an executable, audited neutral front-matter default and adds a compact CRediT block with the official 14-role vocabulary and a fail-closed prohibition on empty paragraphs between author entries. Version 1.7.0's submission-package lane and AI-use declaration guidance, version 1.6.1's manuscript semantic-rhythm gate, and version 1.5.0's acceptance-tolerance and citation-audit controls remain intact. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
 
 Current automated coverage includes:
 

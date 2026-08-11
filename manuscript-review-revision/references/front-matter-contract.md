@@ -47,8 +47,13 @@ Use these exact defaults when no official source resolves a different token:
 Additional rules:
 
 - use 1-inch margins and top vertical page alignment;
-- order roles as title, authors, affiliations, correspondence, then Abstract;
-- use no empty paragraph inside the title/author/affiliation/correspondence block;
+- order roles as title, one real empty paragraph, authors, affiliations,
+  correspondence, then Abstract;
+- require exactly one structurally empty Enter-created paragraph between the
+  title and first author; use `0/0 pt`, disable automatic spacing, and apply the
+  resolved global line-spacing token to that empty paragraph;
+- keep authors, affiliations, and correspondence compact with no other empty
+  paragraph inside the front-matter block;
 - allow exactly one empty paragraph between the block and Abstract in the
   integrated-first-page profile;
 - permit a page break before Abstract only when `abstract_start=new-page` is
@@ -68,6 +73,8 @@ Additional rules:
 - place exactly one empty paragraph before each section, subsection, and
   declaration/CRediT block, with none between its heading and first body
   paragraph;
+- load [credit-authorship-contract.md](credit-authorship-contract.md) for every
+  CRediT-labelled block and prohibit empty paragraphs between author entries;
 - place dynamic page numbers in the upper-right header by default;
 - keep continuous Word-native line numbering as the user's global invariant.
 
@@ -105,6 +112,10 @@ format checklist records all of:
 
 Do not treat a publisher-wide example or a published PDF as sufficient proof.
 If alignment is not specified, retain the journal-neutral left alignment.
+Use `--title-author-gap compact` together with
+`--expected-title-author-gap compact` only when the exact journal/template
+requires title and authors to remain consecutive; otherwise retain
+`natural-blank`.
 
 ## Mechanical gates
 
@@ -127,7 +138,9 @@ The neutral profile must fail on:
   semantic blank line;
 - non-black front-matter text;
 - role-order inversion;
-- empty paragraphs inside the title block;
+- a missing or duplicated real empty paragraph between title and authors;
+- any other empty paragraph inside the title/author/affiliation/correspondence
+  block;
 - more than one empty paragraph before Abstract;
 - front matter stored in a table or text box;
 - non-top vertical page alignment;
@@ -144,6 +157,8 @@ Inspect every rendered page. On page 1 verify:
   centered;
 - title, authors, affiliations, and correspondence share one left edge in the
   neutral profile;
+- title and authors are separated by one natural empty line, not paragraph
+  before/after spacing;
 - the title is prominent but not publication-banner sized;
 - front matter is compact and not surrounded by artificial whitespace;
 - Abstract begins at a natural transition or the sourced page break;

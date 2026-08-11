@@ -56,6 +56,11 @@ display block, or decorative container. Use explicit role styles or one-based
 paragraph numbers after inventory; never infer author identities from visual
 appearance.
 
+In the neutral profile, place exactly one real Enter-created empty paragraph
+between the title and first author. Keep authors, affiliations, and
+correspondence compact after that separator. Use the compact title-author
+override only when the exact current journal/template requires it.
+
 Run `apply_manuscript_profile.py` before the numbering enforcer, then run
 `audit_docx_front_matter.py` and `audit_docx_semantic_rhythm.py` separately from
 the whole-document structural audit. A journal-sourced override may change alignment, typography,
@@ -78,6 +83,10 @@ Use this invariant for every modified DOCX:
   one real empty paragraph before a new section, subsection, or declaration
   heading; none between a heading and its first body paragraph; none before
   Keywords; and exactly one after Keywords.
+- Treat CRediT entry paragraphs as a dedicated semantic non-body role. Load
+  [credit-authorship-contract.md](credit-authorship-contract.md), require
+  recognized official role vocabulary, and keep consecutive author entries
+  compact with no empty paragraph between them.
 
 When authoring OOXML directly, the separator must be a real empty `<w:p>`
 between the two body `<w:p>` elements. When using a document library, create an

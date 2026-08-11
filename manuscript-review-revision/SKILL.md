@@ -1,7 +1,7 @@
 ---
 name: manuscript-review-revision
 description: |
-  Run a journal-aware, review-first workflow for biomedical and scientific manuscripts. Support target-journal confirmation or recommendation, official-guideline research, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce natural empty paragraphs, zero paragraph spacing, one manuscript-wide line-spacing token, body-sized author/affiliation/declaration roles, semantic Keywords/section/CRediT spacing, left-aligned front matter, continuous Word line and page numbering, and rendered-page QA. Use for integrated review, revision, response, retargeting, submission preparation, or journal-specific formatting. For format-only DOCX repair, prefer `manuscript-docx-formatting`. Require the exact target journal before full review; never revise before the review gate and user authorization.
+  Run a journal-aware, review-first workflow for biomedical and scientific manuscripts. Support target-journal confirmation or recommendation, official-guideline research, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce natural empty paragraphs, zero paragraph spacing, one manuscript-wide line-spacing token, one real title-author blank, compact official-role CRediT blocks, body-sized semantic roles, left-aligned front matter, continuous Word line and page numbering, and rendered-page QA. Use for integrated review, revision, response, retargeting, submission preparation, or journal-specific formatting. For format-only DOCX repair, prefer `manuscript-docx-formatting`. Require the exact target journal before full review; never revise before the review gate and user authorization.
 ---
 
 # Manuscript Review & Revision
@@ -43,6 +43,14 @@ supplementary text.
   declaration/CRediT paragraphs. Authors, affiliations, correspondence,
   Keywords, headings, and declarations use the resolved body font size (12 pt
   fallback).
+- In an unblinded neutral manuscript, place exactly one structurally empty
+  Enter-created paragraph between the title and first author. Keep it at `0/0
+  pt` with the resolved global line-spacing token; use the compact override only
+  when an exact current journal/template requires it.
+- Treat CRediT as a compact semantic block. Use recognized official role
+  vocabulary, place no blank between its heading and first entry, and never
+  insert empty paragraphs between consecutive author entries. Do not infer or
+  rewrite author roles during format-only work.
 - Bold only recognized `Keywords:` and inline declaration labels. Place no
   empty paragraph before Keywords, exactly one after Keywords and before each
   new section/subsection/declaration block, and none between a heading and its
@@ -332,10 +340,16 @@ a manuscript, also load
 - Apply the resolved token manuscript-wide, including title block, headings,
   Keywords, and declarations. Keep authors, affiliations, correspondence,
   Keywords, headings, and CRediT/declaration text at the resolved body size.
+- Require the neutral title-author gap as one real empty paragraph, never
+  paragraph spacing; record `compact` only as a sourced journal override.
 - Enforce the semantic blank-line matrix: no blank before Keywords, exactly one
   after Keywords, exactly one before each section/subsection/declaration block,
   and none between a heading and its first body paragraph. Bold only recognized
   Keywords and inline declaration labels.
+- Load [references/credit-authorship-contract.md](references/credit-authorship-contract.md)
+  for CRediT content or formatting. Keep supplied per-author entries
+  consecutive without empty separators and fail the semantic audit when a
+  CRediT-labelled statement lacks recognized official role vocabulary.
 - Keep entries after `References`/`Bibliography` in a dedicated non-body role;
   never insert body-prose blank separators between reference entries.
 - Apply the same paragraph-structure rule to every modified DOCX. Do not ask the user to repair it manually: correct the generated file and re-run the audit until it passes.
@@ -349,6 +363,7 @@ a manuscript, also load
 python3 "$SKILL_ROOT/scripts/apply_manuscript_profile.py" manuscript.docx \
   --out manuscript.normalized.docx \
   --line-spacing <resolved-token> \
+  --title-author-gap <natural-blank-or-sourced-compact> \
   --body-style <each-prose-style> \
   --title-paragraph <n> --authors-paragraph <n> \
   --affiliation-paragraph <n> --correspondence-paragraph <n>
@@ -367,6 +382,7 @@ python3 "$SKILL_ROOT/scripts/audit_docx_manuscript_style.py" \
 python3 "$SKILL_ROOT/scripts/audit_docx_front_matter.py" \
   manuscript.numbered.docx --mode <blinded-or-unblinded> \
   --front-matter-alignment <resolved-alignment> \
+  --expected-title-author-gap <natural-blank-or-sourced-compact> \
   --expected-page-number-position <resolved-position> \
   --expected-line-spacing <resolved-token> \
   --output-json 07_front_matter_audit.json
@@ -468,6 +484,7 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 | [references/reference-integrity.md](references/reference-integrity.md) | Auditing, adding, moving, or formatting citations |
 | [references/revision-and-response.md](references/revision-and-response.md) | Revising a manuscript or responding to reviewers |
 | [references/ai-use-declaration.md](references/ai-use-declaration.md) | Adding, revising, or checking an AI-use statement |
+| [references/credit-authorship-contract.md](references/credit-authorship-contract.md) | Adding, revising, formatting, or auditing a CRediT authorship contribution statement |
 | [references/manuscript-formatting.md](references/manuscript-formatting.md) | Creating or checking DOCX/PDF/LaTeX submission files |
 | [references/submission-package-contract.md](references/submission-package-contract.md) | Formatting or auditing cover letters, response letters, and editable package text |
 | [references/front-matter-contract.md](references/front-matter-contract.md) | Normalizing or auditing manuscript title, authors, affiliations, correspondence, anonymization, or first-page layout |

@@ -61,6 +61,7 @@ def build_sample(
     *,
     alignments: tuple[object, object, object, object] | None = None,
     title_size: float = 15,
+    title_author_blanks: int = 1,
     extra_blanks: int = 1,
     table_front_matter: bool = False,
 ) -> None:
@@ -103,9 +104,12 @@ def build_sample(
         document.add_paragraph("", style=styles["body"])
     else:
         assert alignments is not None
-        for (text, style), alignment in zip(entries, alignments):
+        for index, ((text, style), alignment) in enumerate(zip(entries, alignments)):
             paragraph = document.add_paragraph(text, style=style)
             paragraph.alignment = alignment
+            if index == 0:
+                for _ in range(title_author_blanks):
+                    document.add_paragraph("", style=styles["body"])
         for _ in range(extra_blanks):
             document.add_paragraph("", style=styles["body"])
 
@@ -147,6 +151,7 @@ def build_all_normal_sample(path: Path) -> None:
     normal.paragraph_format.space_after = Pt(8)
     for text in (
         "Natural Manuscript Formatting Benchmark",
+        "",
         "James Li1 and Alex Smith1,*",
         "1 Department of Pathology, Example University, Chicago, IL, USA",
         "*Correspondence: alex.smith@example.edu",
@@ -184,11 +189,11 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
                 "--title-paragraph",
                 "1",
                 "--authors-paragraph",
-                "2",
-                "--affiliation-paragraph",
                 "3",
-                "--correspondence-paragraph",
+                "--affiliation-paragraph",
                 "4",
+                "--correspondence-paragraph",
+                "5",
             )
             applied = run_script(
                 "apply_manuscript_profile.py",
@@ -216,7 +221,7 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
             audited = front_audit(output, report)
             self.assertEqual(audited["status"], "FRONT_MATTER_PASS")
 
-    def test_five_adversarial_front_matters_are_rejected(self) -> None:
+    def test_seven_adversarial_front_matters_are_rejected(self) -> None:
         left = WD_ALIGN_PARAGRAPH.LEFT
         center = WD_ALIGN_PARAGRAPH.CENTER
         right = WD_ALIGN_PARAGRAPH.RIGHT
@@ -226,6 +231,14 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
             "oversized": {
                 "alignments": (left, left, left, left),
                 "title_size": 26,
+            },
+            "missing-title-author-blank": {
+                "alignments": (left, left, left, left),
+                "title_author_blanks": 0,
+            },
+            "duplicate-title-author-blank": {
+                "alignments": (left, left, left, left),
+                "title_author_blanks": 2,
             },
             "extra-blanks": {
                 "alignments": (left, left, left, left),
@@ -237,6 +250,8 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
             "centered": "TITLE_ALIGNMENT",
             "mixed": "AUTHORS_ALIGNMENT",
             "oversized": "TITLE_FONT_SIZE",
+            "missing-title-author-blank": "TITLE_AUTHOR_BLANK_COUNT",
+            "duplicate-title-author-blank": "TITLE_AUTHOR_BLANK_COUNT",
             "extra-blanks": "EXCESSIVE_FRONT_MATTER_BLANKS",
             "table": "FRONT_MATTER_TABLE_LAYOUT",
         }
@@ -254,7 +269,7 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
                     codes = {issue["code"] for issue in audited["issues"]}
                     self.assertIn(expected_codes[name], codes)
 
-    def test_profile_normalizer_repairs_all_five_adversarial_cases(self) -> None:
+    def test_profile_normalizer_repairs_all_seven_adversarial_cases(self) -> None:
         left = WD_ALIGN_PARAGRAPH.LEFT
         center = WD_ALIGN_PARAGRAPH.CENTER
         right = WD_ALIGN_PARAGRAPH.RIGHT
@@ -264,6 +279,14 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
             "oversized": {
                 "alignments": (left, left, left, left),
                 "title_size": 26,
+            },
+            "missing-title-author-blank": {
+                "alignments": (left, left, left, left),
+                "title_author_blanks": 0,
+            },
+            "duplicate-title-author-blank": {
+                "alignments": (left, left, left, left),
+                "title_author_blanks": 2,
             },
             "extra-blanks": {
                 "alignments": (left, left, left, left),
@@ -316,6 +339,42 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
                         "Manuscript Heading",
                     )
                     self.assertEqual(style.returncode, 0, style.stdout + style.stderr)
+
+    def test_compact_title_author_gap_requires_an_explicit_override(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.docx"
+            normalized = root / "normalized.docx"
+            release = root / "release.docx"
+            left = WD_ALIGN_PARAGRAPH.LEFT
+            build_sample(source, alignments=(left, left, left, left))
+
+            applied = run_script(
+                "apply_manuscript_profile.py",
+                source,
+                "--out",
+                normalized,
+                "--title-author-gap",
+                "compact",
+                "--body-style",
+                "Manuscript Body",
+                *ROLE_ARGS,
+            )
+            self.assertEqual(applied.returncode, 0, applied.stdout + applied.stderr)
+            enforce_numbering(normalized, release)
+            compact = front_audit(
+                release,
+                root / "compact.json",
+                "--expected-title-author-gap",
+                "compact",
+            )
+            self.assertEqual(compact["status"], "FRONT_MATTER_PASS")
+            default = front_audit(release, root / "default.json")
+            self.assertEqual(default["status"], "FAIL")
+            self.assertIn(
+                "TITLE_AUTHOR_BLANK_COUNT",
+                {issue["code"] for issue in default["issues"]},
+            )
 
     def test_page_number_position_profile_is_enforced(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

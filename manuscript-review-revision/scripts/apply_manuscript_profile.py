@@ -43,6 +43,7 @@ from audit_docx_manuscript_style import (  # noqa: E402
 
 from docx_semantic_rules import (  # noqa: E402
     BODY_FONT_SIZE_PT,
+    CREDIT_HEADING_RE,
     DECLARATION_HEADING_RE,
     DECLARATION_INLINE_RE,
     HEADING_STYLE_RE,
@@ -63,6 +64,7 @@ PROFILE_STYLES = {
     ),
     "keywords": ("Manuscript Keywords", BODY_FONT_SIZE_PT, False, 1.0),
     "heading": ("Manuscript Heading", BODY_FONT_SIZE_PT, True, 1.0),
+    "credit-entry": ("Manuscript CRediT Entry", BODY_FONT_SIZE_PT, False, 1.0),
     "body": ("Manuscript Body", BODY_FONT_SIZE_PT, False, 2.0),
     "reference": ("Manuscript Reference", BODY_FONT_SIZE_PT, False, 1.0),
 }
@@ -85,6 +87,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--line-spacing", default="double")
     parser.add_argument(
         "--abstract-start", choices=("integrated", "new-page"), default="integrated"
+    )
+    parser.add_argument(
+        "--title-author-gap",
+        choices=("natural-blank", "compact"),
+        default="natural-blank",
+        help=(
+            "Use one real empty paragraph after the title by default; select "
+            "compact only for a sourced journal/template override."
+        ),
     )
     parser.add_argument(
         "--body-style",
@@ -285,6 +296,7 @@ def normalize_front_matter_blanks(
     records: list[tuple[Any, str]],
     abstract: Any | None,
     abstract_start: str,
+    title_author_gap: str,
     separator_style: Any,
     separator_spacing: dict[str, object],
 ) -> None:
@@ -292,6 +304,8 @@ def normalize_front_matter_blanks(
         return
     body = document.element.body
     record_nodes = [paragraph._p for paragraph, _ in records]
+    title_nodes = [paragraph._p for paragraph, role in records if role == "title"]
+    author_nodes = [paragraph._p for paragraph, role in records if role == "authors"]
     first_index = min(body.index(node) for node in record_nodes)
     last_index = max(body.index(node) for node in record_nodes)
     abstract_index = body.index(abstract._p)
@@ -299,6 +313,23 @@ def normalize_front_matter_blanks(
     for child in list(body)[first_index + 1 : last_index]:
         if child.tag == qn("w:p") and not Paragraph(child, document._body).text.strip():
             body.remove(child)
+
+    # The neutral house style uses one real Enter-created paragraph after the
+    # title, never paragraph spacing. Other front-matter roles remain compact.
+    if title_author_gap == "natural-blank" and title_nodes and author_nodes:
+        title_node = min(title_nodes, key=body.index)
+        author_node = min(author_nodes, key=body.index)
+        if body.index(title_node) < body.index(author_node):
+            blank = OxmlElement("w:p")
+            body.insert(body.index(author_node), blank)
+            format_paragraph(
+                Paragraph(blank, document._body),
+                separator_style,
+                size_pt=BODY_FONT_SIZE_PT,
+                bold=False,
+                alignment=WD_ALIGN_PARAGRAPH.LEFT,
+                line_spacing=separator_spacing,
+            )
 
     abstract_index = body.index(abstract._p)
     last_index = max(body.index(node) for node in record_nodes)
@@ -469,6 +500,21 @@ def previous_nonblank_paragraph(document: Any, node: Any) -> Any | None:
     return None
 
 
+def next_nonblank_paragraph(document: Any, node: Any) -> Any | None:
+    body = document.element.body
+    children = list(body)
+    index = children.index(node) + 1
+    while index < len(children):
+        candidate = children[index]
+        if candidate.tag != qn("w:p"):
+            return None
+        paragraph = Paragraph(candidate, document._body)
+        if not paragraph_is_structurally_empty(paragraph):
+            return candidate
+        index += 1
+    return None
+
+
 def normalize_semantic_vertical_rhythm(
     document: Any,
     *,
@@ -476,6 +522,7 @@ def normalize_semantic_vertical_rhythm(
     abstract_node: Any | None,
     keyword_nodes: set[Any],
     declaration_inline_nodes: set[Any],
+    credit_entry_nodes: set[Any],
     separator_style: Any,
     line_spacing: dict[str, object],
 ) -> None:
@@ -500,6 +547,18 @@ def normalize_semantic_vertical_rhythm(
                 document, node, 1, separator_style, line_spacing
             )
 
+    # A CRediT block is compact. Preserve supplied author-entry paragraphs, but
+    # remove empty paragraphs between consecutive entries rather than treating
+    # them as ordinary body prose.
+    for node in ordered:
+        if node not in credit_entry_nodes:
+            continue
+        next_node = next_nonblank_paragraph(document, node)
+        if next_node in credit_entry_nodes:
+            set_blank_count_after(
+                document, node, 0, separator_style, line_spacing
+            )
+
     # Every new section/subsection/declaration block has exactly one empty line
     # before it, except Abstract (handled by the front-matter contract) and
     # consecutive headings, which remain together.
@@ -522,6 +581,7 @@ def apply_profile(
     front_matter_alignment: str,
     line_spacing_token: str,
     abstract_start: str,
+    title_author_gap: str,
     body_style_tokens: set[str],
     explicit_styles: dict[str, set[str]],
     explicit_paragraphs: dict[str, set[int]],
@@ -586,10 +646,12 @@ def apply_profile(
     heading_nodes: set[Any] = set()
     keyword_nodes: set[Any] = set()
     declaration_inline_nodes: set[Any] = set()
+    credit_entry_nodes: set[Any] = set()
     if abstract is not None:
         heading_nodes.add(abstract._p)
     abstract_seen = False
     reference_section_seen = False
+    credit_block_active = False
     for paragraph in document.paragraphs:
         if paragraph_is_abstract(paragraph):
             abstract_seen = True
@@ -610,6 +672,7 @@ def apply_profile(
             )
             bold_leading_label(paragraph, KEYWORD_LABEL_RE)
             keyword_nodes.add(paragraph._p)
+            credit_block_active = False
             continue
         if (
             HEADING_STYLE_RE.match(style_name)
@@ -626,6 +689,7 @@ def apply_profile(
                 line_spacing=body_spacing,
             )
             heading_nodes.add(paragraph._p)
+            credit_block_active = bool(CREDIT_HEADING_RE.fullmatch(paragraph.text))
             if re.fullmatch(
                 r"(?:references|bibliography|literature cited)",
                 paragraph.text.strip(),
@@ -637,6 +701,7 @@ def apply_profile(
             continue
         if DECLARATION_INLINE_RE.match(paragraph.text):
             reference_section_seen = False
+            credit_block_active = False
             format_paragraph(
                 paragraph,
                 styles["body"],
@@ -649,7 +714,29 @@ def apply_profile(
             body_paragraphs.append(paragraph)
             declaration_inline_nodes.add(paragraph._p)
             continue
+        paragraph_style_tokens = {
+            normalize_style_token(style_name),
+            normalize_style_token(
+                paragraph.style.style_id if paragraph.style is not None else ""
+            ),
+        }
+        if credit_block_active and paragraph.text.strip() and (
+            paragraph_is_body(paragraph, normalized_body_tokens, excluded)
+            or normalize_style_token("Manuscript CRediT Entry")
+            in paragraph_style_tokens
+        ):
+            format_paragraph(
+                paragraph,
+                styles["credit-entry"],
+                size_pt=BODY_FONT_SIZE_PT,
+                bold=False,
+                alignment=WD_ALIGN_PARAGRAPH.LEFT,
+                line_spacing=body_spacing,
+            )
+            credit_entry_nodes.add(paragraph._p)
+            continue
         if reference_section_seen and paragraph.text.strip():
+            credit_block_active = False
             if not re.search(r"bibliograph|reference", style_name, re.I):
                 format_paragraph(
                     paragraph,
@@ -678,6 +765,7 @@ def apply_profile(
         records,
         abstract,
         abstract_start,
+        title_author_gap,
         styles["body"],
         body_spacing,
     )
@@ -690,6 +778,7 @@ def apply_profile(
         abstract_node=abstract._p if abstract is not None else None,
         keyword_nodes=keyword_nodes,
         declaration_inline_nodes=declaration_inline_nodes,
+        credit_entry_nodes=credit_entry_nodes,
         separator_style=styles["body"],
         line_spacing=body_spacing,
     )
@@ -733,6 +822,7 @@ def main() -> int:
             front_matter_alignment=args.front_matter_alignment,
             line_spacing_token=args.line_spacing,
             abstract_start=args.abstract_start,
+            title_author_gap=args.title_author_gap,
             body_style_tokens=body_style_tokens,
             explicit_styles=explicit_styles,
             explicit_paragraphs=explicit_paragraphs,
