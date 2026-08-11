@@ -27,8 +27,12 @@ ROLE_ARGS = (
     "Manuscript Authors",
     "--affiliation-style",
     "Manuscript Affiliation",
+    "--author_note-style",
+    "Manuscript Author Note",
     "--correspondence-style",
     "Manuscript Correspondence",
+    "--orcid-style",
+    "Manuscript ORCID",
 )
 
 
@@ -61,6 +65,9 @@ def build_sample(
     *,
     alignments: tuple[object, object, object, object] | None = None,
     title_size: float = 15,
+    title_author_blanks: int = 1,
+    author_affiliation_blanks: int = 1,
+    affiliation_correspondence_blanks: int = 1,
     extra_blanks: int = 1,
     table_front_matter: bool = False,
 ) -> None:
@@ -103,9 +110,19 @@ def build_sample(
         document.add_paragraph("", style=styles["body"])
     else:
         assert alignments is not None
-        for (text, style), alignment in zip(entries, alignments):
+        gap_counts = (
+            title_author_blanks,
+            author_affiliation_blanks,
+            affiliation_correspondence_blanks,
+            0,
+        )
+        for (text, style), alignment, gap_count in zip(
+            entries, alignments, gap_counts
+        ):
             paragraph = document.add_paragraph(text, style=style)
             paragraph.alignment = alignment
+            for _ in range(gap_count):
+                document.add_paragraph("", style=styles["body"])
         for _ in range(extra_blanks):
             document.add_paragraph("", style=styles["body"])
 
@@ -130,6 +147,51 @@ def build_sample(
     document.save(path)
 
 
+def build_full_semantic_matrix_sample(path: Path) -> None:
+    document = Document()
+    styles = {
+        "title": add_style(document, "Manuscript Title", 15, bold=True),
+        "authors": add_style(document, "Manuscript Authors", 12),
+        "affiliation": add_style(document, "Manuscript Affiliation", 12),
+        "author_note": add_style(document, "Manuscript Author Note", 12),
+        "correspondence": add_style(
+            document, "Manuscript Correspondence", 12
+        ),
+        "orcid": add_style(document, "Manuscript ORCID", 12),
+        "body": add_style(document, "Manuscript Body", 12),
+    }
+    sequence = (
+        ("Natural Manuscript Formatting Benchmark", "title"),
+        ("James Li1 and Alex Smith1,*", "authors"),
+        ("", "body"),
+        ("", "body"),
+        ("1 Department of Pathology, Example University", "affiliation"),
+        ("", "body"),
+        ("2 Department of Medicine, Example University", "affiliation"),
+        ("These authors contributed equally and share first authorship.", "author_note"),
+        ("*Correspondence: alex.smith@example.edu", "correspondence"),
+        ("", "body"),
+        ("ORCID: James Li, https://orcid.org/0000-0001-2345-6789", "orcid"),
+        ("", "body"),
+        ("", "body"),
+    )
+    for text, role in sequence:
+        document.add_paragraph(text, style=styles[role])
+    heading = document.add_paragraph("Abstract", style=styles["body"])
+    heading.style = document.styles["Manuscript Body"]
+    document.add_paragraph("First body paragraph.", style=styles["body"])
+    document.save(path)
+
+
+def front_matter_text_sequence(path: Path) -> list[str]:
+    values: list[str] = []
+    for paragraph in Document(path).paragraphs:
+        values.append(paragraph.text)
+        if paragraph.text.strip().casefold() == "abstract":
+            break
+    return values
+
+
 def enforce_numbering(source: Path, output: Path, *args: object) -> None:
     result = run_script(
         "enforce_docx_line_page_numbers.py", source, "--out", output, *args
@@ -147,6 +209,7 @@ def build_all_normal_sample(path: Path) -> None:
     normal.paragraph_format.space_after = Pt(8)
     for text in (
         "Natural Manuscript Formatting Benchmark",
+        "",
         "James Li1 and Alex Smith1,*",
         "1 Department of Pathology, Example University, Chicago, IL, USA",
         "*Correspondence: alex.smith@example.edu",
@@ -184,11 +247,11 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
                 "--title-paragraph",
                 "1",
                 "--authors-paragraph",
-                "2",
-                "--affiliation-paragraph",
                 "3",
-                "--correspondence-paragraph",
+                "--affiliation-paragraph",
                 "4",
+                "--correspondence-paragraph",
+                "5",
             )
             applied = run_script(
                 "apply_manuscript_profile.py",
@@ -216,7 +279,7 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
             audited = front_audit(output, report)
             self.assertEqual(audited["status"], "FRONT_MATTER_PASS")
 
-    def test_five_adversarial_front_matters_are_rejected(self) -> None:
+    def test_seven_adversarial_front_matters_are_rejected(self) -> None:
         left = WD_ALIGN_PARAGRAPH.LEFT
         center = WD_ALIGN_PARAGRAPH.CENTER
         right = WD_ALIGN_PARAGRAPH.RIGHT
@@ -226,6 +289,14 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
             "oversized": {
                 "alignments": (left, left, left, left),
                 "title_size": 26,
+            },
+            "missing-title-author-blank": {
+                "alignments": (left, left, left, left),
+                "title_author_blanks": 0,
+            },
+            "duplicate-title-author-blank": {
+                "alignments": (left, left, left, left),
+                "title_author_blanks": 2,
             },
             "extra-blanks": {
                 "alignments": (left, left, left, left),
@@ -237,7 +308,9 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
             "centered": "TITLE_ALIGNMENT",
             "mixed": "AUTHORS_ALIGNMENT",
             "oversized": "TITLE_FONT_SIZE",
-            "extra-blanks": "EXCESSIVE_FRONT_MATTER_BLANKS",
+            "missing-title-author-blank": "FRONT_MATTER_BLOCK_BLANK_COUNT",
+            "duplicate-title-author-blank": "FRONT_MATTER_BLOCK_BLANK_COUNT",
+            "extra-blanks": "FRONT_MATTER_BLOCK_BLANK_COUNT",
             "table": "FRONT_MATTER_TABLE_LAYOUT",
         }
         with tempfile.TemporaryDirectory() as temp:
@@ -254,7 +327,7 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
                     codes = {issue["code"] for issue in audited["issues"]}
                     self.assertIn(expected_codes[name], codes)
 
-    def test_profile_normalizer_repairs_all_five_adversarial_cases(self) -> None:
+    def test_profile_normalizer_repairs_all_seven_adversarial_cases(self) -> None:
         left = WD_ALIGN_PARAGRAPH.LEFT
         center = WD_ALIGN_PARAGRAPH.CENTER
         right = WD_ALIGN_PARAGRAPH.RIGHT
@@ -264,6 +337,14 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
             "oversized": {
                 "alignments": (left, left, left, left),
                 "title_size": 26,
+            },
+            "missing-title-author-blank": {
+                "alignments": (left, left, left, left),
+                "title_author_blanks": 0,
+            },
+            "duplicate-title-author-blank": {
+                "alignments": (left, left, left, left),
+                "title_author_blanks": 2,
             },
             "extra-blanks": {
                 "alignments": (left, left, left, left),
@@ -316,6 +397,96 @@ class FrontMatterBenchmarkTests(unittest.TestCase):
                         "Manuscript Heading",
                     )
                     self.assertEqual(style.returncode, 0, style.stdout + style.stderr)
+
+    def test_legacy_compact_title_author_override_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.docx"
+            left = WD_ALIGN_PARAGRAPH.LEFT
+            build_sample(source, alignments=(left, left, left, left))
+
+            applied = run_script(
+                "apply_manuscript_profile.py",
+                source,
+                "--out",
+                root / "normalized.docx",
+                "--title-author-gap",
+                "compact",
+                "--body-style",
+                "Manuscript Body",
+                *ROLE_ARGS,
+            )
+            self.assertEqual(applied.returncode, 2)
+            self.assertIn("unrecognized arguments", applied.stderr)
+
+    def test_full_semantic_matrix_repairs_every_present_block_boundary(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.docx"
+            normalized = root / "normalized.docx"
+            release = root / "release.docx"
+            build_full_semantic_matrix_sample(source)
+            applied = run_script(
+                "apply_manuscript_profile.py",
+                source,
+                "--out",
+                normalized,
+                "--body-style",
+                "Manuscript Body",
+                *ROLE_ARGS,
+            )
+            self.assertEqual(applied.returncode, 0, applied.stdout + applied.stderr)
+            enforce_numbering(normalized, release)
+            audited = front_audit(release, root / "front.json")
+            self.assertEqual(audited["status"], "FRONT_MATTER_PASS")
+            self.assertEqual(
+                front_matter_text_sequence(release),
+                [
+                    "Natural Manuscript Formatting Benchmark",
+                    "",
+                    "James Li1 and Alex Smith1,*",
+                    "",
+                    "1 Department of Pathology, Example University",
+                    "2 Department of Medicine, Example University",
+                    "",
+                    "These authors contributed equally and share first authorship.",
+                    "",
+                    "*Correspondence: alex.smith@example.edu",
+                    "",
+                    "ORCID: James Li, https://orcid.org/0000-0001-2345-6789",
+                    "",
+                    "Abstract",
+                ],
+            )
+            self.assertEqual(audited["role_counts"]["author_note"], 1)
+            self.assertEqual(audited["role_counts"]["orcid"], 1)
+
+    def test_missing_optional_blocks_still_keep_one_natural_blank(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.docx"
+            release = root / "release.docx"
+            left = WD_ALIGN_PARAGRAPH.LEFT
+            build_sample(source, alignments=(left, left, left, left))
+            enforce_numbering(source, release)
+            audited = front_audit(release, root / "front.json")
+            self.assertEqual(audited["status"], "FRONT_MATTER_PASS")
+            self.assertEqual(audited["role_counts"]["author_note"], 0)
+            self.assertEqual(audited["role_counts"]["orcid"], 0)
+
+    def test_blank_inside_multi_paragraph_role_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.docx"
+            release = root / "release.docx"
+            build_full_semantic_matrix_sample(source)
+            enforce_numbering(source, release)
+            audited = front_audit(release, root / "front.json")
+            self.assertEqual(audited["status"], "FAIL")
+            self.assertIn(
+                "FRONT_MATTER_WITHIN_BLOCK_BLANK_COUNT",
+                {issue["code"] for issue in audited["issues"]},
+            )
 
     def test_page_number_position_profile_is_enforced(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

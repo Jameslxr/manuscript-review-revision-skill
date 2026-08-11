@@ -43,6 +43,12 @@ JOURNAL_FORMAT_AUDIT_VALIDATOR = (
     / "scripts"
     / "validate_journal_format_audit.py"
 )
+GENERATED_DOCX_RELEASE_VALIDATOR = (
+    ROOT
+    / "manuscript-review-revision"
+    / "scripts"
+    / "validate_generated_docx_release.py"
+)
 MAX_README_LINES = 200
 LOCAL_LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
 VERSION_RE = re.compile(r"version-v(\d+\.\d+\.\d+)")
@@ -105,6 +111,11 @@ def main() -> int:
         errors.append(
             "missing journal-format-audit validator: "
             f"{JOURNAL_FORMAT_AUDIT_VALIDATOR.relative_to(ROOT)}"
+        )
+    if not GENERATED_DOCX_RELEASE_VALIDATOR.is_file():
+        errors.append(
+            "missing generated-DOCX release validator: "
+            f"{GENERATED_DOCX_RELEASE_VALIDATOR.relative_to(ROOT)}"
         )
     if not SKILL_MANIFEST.is_file():
         errors.append(
@@ -201,13 +212,20 @@ def main() -> int:
         errors.append(
             "SKILL.md does not invoke scripts/validate_journal_format_audit.py."
         )
+    if "scripts/validate_generated_docx_release.py" not in skill_entry:
+        errors.append(
+            "SKILL.md does not invoke scripts/validate_generated_docx_release.py."
+        )
     for required_embedded_format_resource in (
         "references/front-matter-contract.md",
+        "references/credit-authorship-contract.md",
         "scripts/apply_manuscript_profile.py",
         "scripts/audit_docx_front_matter.py",
         "scripts/audit_docx_semantic_rhythm.py",
         "scripts/validate_format_release.py",
         "FORMAT_RELEASE_PASS",
+        "references/generated-docx-release-contract.md",
+        "GENERATED_DOCX_RELEASE_PASS",
     ):
         if required_embedded_format_resource not in skill_entry:
             errors.append(

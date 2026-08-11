@@ -6,7 +6,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.7.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.9.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## Summary
@@ -18,7 +18,7 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 | A single review perspective can miss important problems | Uses five fixed independent roles, at most one risk-triggered specialist, and explicit scope and output budgets |
 | Repeated reviews of the same manuscript by a general-purpose model may be inconsistent or internally contradictory | Freezes the manuscript, journal rules, and roles; records task receipts and output hashes before synthesizing consensus and disagreement concern by concern |
 | An existing reference may not support the statement where it is cited | Checks reference validity, citation format, and support for the specific statement separately |
-| Generated files may not follow standard manuscript conventions | Every DOCX modification enforces literal blank paragraphs, explicit line spacing, continuous line numbering, and dynamic page numbering across the whole output before rendered-page inspection |
+| Generated files may not follow standard manuscript conventions | Every final DOCX must pass the embedded formatting lane, rendered-page review, and delivery-root hash closure; one uncovered file fails the release |
 | No study can satisfy every ideal design feature | Separates fatal flaws, correctable issues, acceptable inherent limitations, and optional strengthening; only problems that survive honest claim narrowing can block |
 
 ## Main Uses
@@ -134,7 +134,7 @@ Step 6 assigns five fixed independent roles for journal fit, domain science, stu
 | Review synthesis | `04_cross_review_matrix.tsv`, `05_review_verdict.md` |
 | Reference audit | `06_reference_audit.tsv` |
 | Authorized revision | tracked manuscript, clean manuscript, `revision_log.tsv` |
-| Pre-submission check | `07_format_audit.json`, `08_release_gate.md` |
+| Pre-submission check | `07_format_audit.json`, `07_generated_docx_release.json`, `08_release_gate.md` |
 
 ## Limitations
 
@@ -176,7 +176,7 @@ Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/
 
 ## Current Status And Validation
 
-The current release is **Beta**. Version 1.7.0 adds a dedicated editable submission-package lane: cover letters, response letters, and other submission text now receive role-aware normalization, one whole-document line-spacing/font-size contract, real empty paragraphs, continuous line/page numbering, and a fail-closed package release gate. It also adds journal-priority, truth-bounded AI-use declaration guidance. Version 1.6.1's manuscript semantic-rhythm gate and version 1.5.0's accepted-paper tolerance calibration, four-class finding adjudication, and risk-tiered citation audit remain intact; the earlier independent rerun preserved 18/18 seeded-issue detection. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
+The current release is **Beta**. Version 1.9.0 expands the embedded front-matter contract from one Title–Authors gap to an exact semantic-block matrix through Abstract, including optional Author-note and ORCID roles, compact multi-paragraph blocks, and rejection of the legacy compact override. Version 1.8.1's delivery-root SHA-256 closure and the earlier package, CRediT, semantic-rhythm, acceptance-tolerance, and citation controls remain intact. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
 
 Current automated coverage includes:
 
@@ -185,7 +185,7 @@ Current automated coverage includes:
 - one reviewer cannot label a concern as consensus; every concern records its four-class type, defensibility after claim narrowing, and resolution mode, while acceptable limitations and optional strengthening cannot be `BLOCKING`;
 - metadata-only evidence cannot be direct support; material/supporting claims require complete checks, while incomplete sampled context rows remain advisory;
 - blue or otherwise non-black manuscript headings fail;
-- manual paragraph spacing, missing literal blank paragraphs, centered or mixed-alignment neutral front matter, undersized author/affiliation roles, mixed role line spacing, an unbold Keywords label, invalid section/CRediT blanks, and incomplete line or dynamic page numbering block the combined format-release gate;
+- manual paragraph spacing, missing/duplicated semantic front-matter block gaps, a blank within a multi-paragraph front-matter role, centered or mixed-alignment neutral front matter, undersized semantic roles, mixed role line spacing, an unbold Keywords label, invalid section/CRediT blanks, incomplete line or dynamic page numbering, or any delivered DOCX without a current hash-bound terminal PASS blocks the combined release gate;
 - compliant black headings and complete audit records can pass.
 
 [Read the reproducible validation scope](docs/VALIDATION.md)

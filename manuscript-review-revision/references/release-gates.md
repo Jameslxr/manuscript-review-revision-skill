@@ -24,6 +24,7 @@ Report:
 | journal-specific manuscript format |  |  |  |  |
 | combined DOCX format release |  |  |  |  |
 | submission-package DOCX format release |  |  |  |  |
+| all-delivered-DOCX receipt and hash closure |  |  |  |  |
 | rendered visual QA |  |  |  |  |
 | submission-package completeness |  |  |  |  |
 
@@ -81,14 +82,21 @@ Return `RELEASE FAIL` when:
 - any manuscript DOCX has unresolved or decorative front matter, uses centered
   or mixed-alignment title-block roles without a current source-linked
   override, uses undersized author/affiliation/declaration text, mixes line
-  spacing across manuscript roles, has a non-bold Keywords label or an invalid
-  section/Keywords/CRediT blank-line boundary, lacks the front-matter or
+  spacing across manuscript roles, lacks or duplicates any required semantic
+  front-matter block blank, inserts a blank inside a multi-paragraph
+  front-matter role, leaves an author note or ORCID block unclassified,
+  inserts empty paragraphs between CRediT author entries, uses no recognized
+  official role in a CRediT-labelled statement, has a non-bold Keywords label
+  or an invalid section/Keywords/CRediT blank-line boundary, lacks the front-matter or
   semantic-rhythm audit, changes unauthorized text during formatting, or does
   not reach `FORMAT_RELEASE_PASS`;
 - any editable cover letter, response letter, or other submission-package DOCX
   mixes fonts, sizes, line spacing, or paragraph spacing across roles; lacks
   the required natural blank boundaries, package audit, preservation check, or
   rendered-page review; or does not reach `PACKAGE_FORMAT_RELEASE_PASS`;
+- any DOCX under the final delivery root lacks an exact receipt, current file
+  hash, embedded profile normalizer, applicable passing release report, or the
+  complete root scan does not reach `GENERATED_DOCX_RELEASE_PASS`;
 - a revision changed core claims without the scientifically responsible
   re-review.
 

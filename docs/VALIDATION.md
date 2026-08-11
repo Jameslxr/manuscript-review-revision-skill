@@ -31,7 +31,7 @@ python3 benchmarks/nature-vs-mrr-v1/score_runs.py \
   --expected-runs 1
 ```
 
-The current suite contains 69 representative tests covering:
+The current suite contains 85 tests covering these representative cases:
 
 1. a complete journal profile passes;
 2. a journal profile with an unresolved mandatory rule fails;
@@ -104,6 +104,12 @@ The current suite contains 69 representative tests covering:
 67. hidden automatic paragraph spacing fails in the embedded formatting lane;
 68. literal blank paragraphs and continuous numbering pass in the embedded lane;
 69. multi-section active page stories pass in the embedded lane.
+70. a delivery root containing both manuscript and package DOCX files closes only
+    when every file has a matching embedded-format release report;
+71. an unreceipted tracked, clean, or package DOCX blocks delivery;
+72. a DOCX write after formatting release invalidates SHA-256 closure;
+73. a wrong embedded profile normalizer or nonpassing terminal release blocks
+    delivery.
 
 ## Syntax checks
 
@@ -135,7 +141,8 @@ This check confirms that:
 - the Skill entrypoint invokes the acceptance-tolerance, concern-ledger, and
   bounded-verdict validators;
 - the Skill entrypoint embeds front-matter normalization/audit and the combined
-  DOCX format-release validator.
+  DOCX format-release validator;
+- the Skill entrypoint invokes the delivery-root generated-DOCX release validator.
 
 ## Manual forward test
 
@@ -160,12 +167,17 @@ This audit motivated the four finding classes and risk-tiered reference gate;
 it is not a universal estimate of journal acceptance practice.
 
 Version 1.6.0 added 16 formatting-focused tests. Version 1.6.1 added three
-semantic-rhythm regressions, and version 1.7.0 adds five submission-package
-regressions, bringing this focused set to 24 tests: the standalone formatter's
-22-test corpus inside the integrated review/revision Skill plus two plan/audit
-closure tests. The tests cover adversarial front
-matter, body-sized author/affiliation/declaration roles, Keywords label
-emphasis, section/subsection/CRediT blank-line boundaries, literal blank
+semantic-rhythm regressions, and version 1.7.0 added five submission-package
+regressions. Version 1.8.0 added the earlier compact-title override regression;
+version 1.9.0 replaces that override with the fixed semantic front-matter block
+matrix and adds three regressions for optional Author-note/ORCID blocks and
+compact multi-paragraph roles. Together with the four version 1.8.1
+cross-deliverable closure tests and two plan/audit closure tests, the focused set
+now contains 32 tests. The tests cover adversarial front matter, body-sized
+front-matter/declaration roles, Keywords label emphasis, exact real blanks
+between every adjacent present front-matter block through Abstract, compact
+CRediT author entries,
+official-role vocabulary, section/subsection/CRediT blank-line boundaries, literal blank
 paragraphs, cover-letter salutation/body/closing/signature rhythm, compact list
 and signature blocks, consecutive non-body reference entries, generated-heading audit
 coverage, hidden Word auto-spacing, explicit manuscript-wide line spacing,
@@ -173,6 +185,11 @@ continuous line/page numbering, content preservation, idempotence, and
 fail-closed format-release composition. Passing
 these fixtures validates the encoded contracts, not every possible DOCX or
 journal template.
+
+Version 1.8.1 adds four cross-deliverable closure regressions. They scan a
+dedicated delivery root, require one current SHA-256-bound receipt per DOCX,
+parse the corresponding manuscript or package release report, and fail on
+omissions, post-pass writes, profile mismatches, or nonpassing terminal states.
 
 This forward test ran in Codex. The repository's Claude Code compatibility is
 currently validated at the Agent Skills layout, installation-documentation,

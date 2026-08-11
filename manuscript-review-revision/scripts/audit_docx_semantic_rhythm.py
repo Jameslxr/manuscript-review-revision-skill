@@ -22,10 +22,13 @@ except ImportError as exc:  # pragma: no cover - environment-dependent error pat
     raise SystemExit(2) from exc
 
 from docx_semantic_rules import (  # noqa: E402
+    CREDIT_HEADING_RE,
+    CREDIT_INLINE_RE,
     DECLARATION_HEADING_RE,
     DECLARATION_INLINE_RE,
     HEADING_STYLE_RE,
     KEYWORD_LABEL_RE,
+    credit_role_labels,
 )
 from audit_docx_front_matter import paragraph_font_sizes_pt  # noqa: E402
 from audit_docx_manuscript_style import (  # noqa: E402
@@ -41,11 +44,13 @@ from audit_docx_manuscript_style import (  # noqa: E402
 
 
 ROLE_STYLE_RE = {
-    "title": re.compile(r"(?:^|\b)(?:manuscript\s+)?title(?:\b|$)", re.I),
-    "authors": re.compile(r"(?:^|\b)(?:manuscript\s+)?authors?(?:\b|$)", re.I),
-    "affiliation": re.compile(r"(?:^|\b)affiliations?(?:\b|$)", re.I),
+    "title": re.compile(r"^(?:manuscript\s+)?title$", re.I),
+    "author_note": re.compile(r"^(?:manuscript\s+)?author\s+note$", re.I),
+    "orcid": re.compile(r"^(?:manuscript\s+)?(?:orcid|identifiers?)$", re.I),
+    "authors": re.compile(r"^(?:manuscript\s+)?authors?$", re.I),
+    "affiliation": re.compile(r"^(?:manuscript\s+)?affiliations?$", re.I),
     "correspondence": re.compile(
-        r"(?:^|\b)(?:correspondence|corresponding)(?:\b|$)", re.I
+        r"^(?:manuscript\s+)?(?:correspondence|corresponding\s+author)$", re.I
     ),
 }
 
@@ -87,12 +92,18 @@ def classify_role(paragraph: Any, body_styles: set[str]) -> str | None:
         r"keyword", style_name, re.I
     ):
         return "keywords"
+    if CREDIT_HEADING_RE.fullmatch(paragraph.text):
+        return "credit-heading"
+    if re.search(r"credit.*entry", style_name, re.I):
+        return "credit-entry"
     if (
         HEADING_STYLE_RE.match(style_name)
         or style_name.lower().startswith("heading")
         or DECLARATION_HEADING_RE.fullmatch(paragraph.text)
     ):
         return "heading"
+    if CREDIT_INLINE_RE.match(paragraph.text):
+        return "credit-inline"
     if DECLARATION_INLINE_RE.match(paragraph.text):
         return "declaration-inline"
     if style_tokens(paragraph) & body_styles:
@@ -176,6 +187,24 @@ def previous_nonblank_role(
     return None
 
 
+def next_nonblank_role(
+    document: Any,
+    node: Any,
+    roles: dict[Any, str | None],
+) -> str | None:
+    children = list(document.element.body)
+    index = children.index(node) + 1
+    while index < len(children):
+        candidate = children[index]
+        if candidate.tag != qn("w:p"):
+            return None
+        paragraph = Paragraph(candidate, document._body)
+        if not paragraph_is_structurally_empty(paragraph):
+            return roles.get(candidate)
+        index += 1
+    return None
+
+
 def audit(
     path: Path,
     *,
@@ -197,18 +226,39 @@ def audit(
         for node in list(body)
         if node.tag == qn("w:p")
     ]
-    roles = {paragraph._p: classify_role(paragraph, body_styles) for paragraph in paragraphs}
+    roles: dict[Any, str | None] = {}
+    credit_block_active = False
+    for paragraph in paragraphs:
+        role = classify_role(paragraph, body_styles)
+        if role == "credit-heading":
+            credit_block_active = True
+        elif role == "blank":
+            pass
+        elif role == "body" and credit_block_active:
+            role = "credit-entry"
+        elif role == "credit-entry":
+            pass
+        elif role == "credit-inline":
+            credit_block_active = False
+        else:
+            credit_block_active = False
+        roles[paragraph._p] = role
     issues: list[dict[str, object]] = []
     inspected: list[dict[str, object]] = []
 
     same_size_roles = {
         "authors",
         "affiliation",
+        "author_note",
         "correspondence",
+        "orcid",
         "keywords",
         "heading",
         "body",
         "declaration-inline",
+        "credit-heading",
+        "credit-inline",
+        "credit-entry",
     }
     for index, paragraph in enumerate(paragraphs, start=1):
         role = roles[paragraph._p]
@@ -283,13 +333,21 @@ def audit(
                     {**record, "code": "KEYWORDS_BLANK_AFTER", "detail": after}
                 )
 
-        if role == "declaration-inline":
+        if role in {"declaration-inline", "credit-inline"}:
+            pattern = (
+                CREDIT_INLINE_RE
+                if role == "credit-inline"
+                else DECLARATION_INLINE_RE
+            )
+            prefix = "CREDIT" if role == "credit-inline" else "DECLARATION"
             for issue in label_weight_issues(
-                paragraph, DECLARATION_INLINE_RE, prefix="DECLARATION"
+                paragraph, pattern, prefix=prefix
             ):
                 issues.append({**record, **issue})
+            if role == "credit-inline" and not credit_role_labels(paragraph.text):
+                issues.append({**record, "code": "CREDIT_ROLE_VOCABULARY_MISSING"})
 
-        if role == "heading":
+        if role in {"heading", "credit-heading"}:
             after = adjacent_blank_count(document, paragraph._p, 1)
             if after != 0:
                 issues.append(
@@ -298,9 +356,16 @@ def audit(
             if re.fullmatch(r"abstract", paragraph.text.strip(), re.I):
                 continue
 
-        if role in {"heading", "declaration-inline"}:
+        if role in {
+            "heading",
+            "credit-heading",
+            "declaration-inline",
+            "credit-inline",
+        }:
             previous_role = previous_nonblank_role(document, paragraph._p, roles)
-            expected_before = 0 if previous_role == "heading" else 1
+            expected_before = (
+                0 if previous_role in {"heading", "credit-heading"} else 1
+            )
             actual_before = adjacent_blank_count(document, paragraph._p, -1)
             if actual_before != expected_before:
                 issues.append(
@@ -314,6 +379,26 @@ def audit(
                         },
                     }
                 )
+
+        if role == "credit-heading":
+            if next_nonblank_role(document, paragraph._p, roles) != "credit-entry":
+                issues.append({**record, "code": "CREDIT_STATEMENT_MISSING"})
+
+        if role == "credit-entry":
+            if not credit_role_labels(paragraph.text):
+                issues.append(
+                    {**record, "code": "CREDIT_ENTRY_WITHOUT_STANDARD_ROLE"}
+                )
+            if next_nonblank_role(document, paragraph._p, roles) == "credit-entry":
+                between = adjacent_blank_count(document, paragraph._p, 1)
+                if between != 0:
+                    issues.append(
+                        {
+                            **record,
+                            "code": "CREDIT_ENTRY_BLANK_BETWEEN",
+                            "detail": between,
+                        }
+                    )
 
     return {
         "status": "SEMANTIC_RHYTHM_PASS" if not issues else "FAIL",

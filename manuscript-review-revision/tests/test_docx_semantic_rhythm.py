@@ -45,13 +45,17 @@ def build_semantic_stress_sample(path: Path) -> list[str]:
         "title": add_style(document, "Manuscript Title", 18),
         "authors": add_style(document, "Manuscript Authors", 8),
         "affiliation": add_style(document, "Manuscript Affiliation", 8),
+        "author_note": add_style(document, "Manuscript Author Note", 8),
         "correspondence": add_style(document, "Manuscript Correspondence", 9),
+        "orcid": add_style(document, "Manuscript ORCID", 9),
     }
     entries = (
         ("Metastasis in Hepatocellular Carcinoma", styles["title"]),
         ("James Li1 and Alex Smith1,*", styles["authors"]),
         ("1 Department of Pathology, Example University", styles["affiliation"]),
+        ("These authors contributed equally.", styles["author_note"]),
         ("*Correspondence: alex.smith@example.edu", styles["correspondence"]),
+        ("ORCID: https://orcid.org/0000-0001-2345-6789", styles["orcid"]),
     )
     for text, style in entries:
         paragraph = document.add_paragraph(text, style=style)
@@ -72,11 +76,16 @@ def build_semantic_stress_sample(path: Path) -> list[str]:
     document.add_paragraph("")
     document.add_heading("2.1 Vascular invasion", level=2)
     document.add_paragraph("Subsection body paragraph.")
-    document.add_paragraph("Author Contributions")
+    document.add_paragraph("CRediT authorship contribution statement")
     document.add_paragraph("")
     document.add_paragraph("")
-    document.add_paragraph("J.L. drafted the manuscript; A.S. supervised it.")
-    document.add_paragraph("CRediT: Conceptualization, J.L.; Supervision, A.S.")
+    document.add_paragraph(
+        "J.L.: Conceptualization, Methodology, Writing – original draft."
+    )
+    document.add_paragraph("")
+    document.add_paragraph(
+        "A.S.: Supervision, Writing – review & editing."
+    )
     document.add_paragraph("Funding: No external funding was received.")
     document.add_heading("References", level=1)
     document.add_paragraph("1. Reference list retained as supplied.")
@@ -104,8 +113,12 @@ def apply_profile(
         "Manuscript Authors",
         "--affiliation-style",
         "Manuscript Affiliation",
+        "--author-note-style",
+        "Manuscript Author Note",
         "--correspondence-style",
         "Manuscript Correspondence",
+        "--orcid-style",
+        "Manuscript ORCID",
     )
 
 
@@ -186,7 +199,7 @@ class SemanticRhythmTests(unittest.TestCase):
                 "Keywords: liver cancer; metastasis",
                 "2. Metastatic programs",
                 "2.1 Vascular invasion",
-                "Author Contributions",
+                "CRediT authorship contribution statement",
             ):
                 paragraph = by_text[text]
                 self.assertAlmostEqual(float(paragraph.paragraph_format.line_spacing), 2.0)
@@ -209,6 +222,23 @@ class SemanticRhythmTests(unittest.TestCase):
             self.assertEqual(
                 document.paragraphs[first_index + 1].text, second_reference.text
             )
+            first_credit = by_text[
+                "J.L.: Conceptualization, Methodology, Writing – original draft."
+            ]
+            second_credit = by_text[
+                "A.S.: Supervision, Writing – review & editing."
+            ]
+            first_credit_index = next(
+                index
+                for index, paragraph in enumerate(document.paragraphs)
+                if paragraph.text == first_credit.text
+            )
+            self.assertEqual(
+                document.paragraphs[first_credit_index + 1].text,
+                second_credit.text,
+            )
+            self.assertEqual(first_credit.style.name, "Manuscript CRediT Entry")
+            self.assertEqual(second_credit.style.name, "Manuscript CRediT Entry")
 
     def test_semantic_audit_rejects_each_reported_regression_class(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
@@ -232,6 +262,14 @@ class SemanticRhythmTests(unittest.TestCase):
             if previous is not None:
                 previous.getparent().remove(previous)
             section._p.addnext(OxmlElement("w:p"))
+            first_credit = by_text[
+                "J.L.: Conceptualization, Methodology, Writing – original draft."
+            ]
+            second_credit = by_text[
+                "A.S.: Supervision, Writing – review & editing."
+            ]
+            first_credit._p.addnext(OxmlElement("w:p"))
+            second_credit.runs[0].text = "A.S.: Oversight."
             document.save(broken)
 
             report = audit_semantic(broken, root / "broken.json")
@@ -242,6 +280,8 @@ class SemanticRhythmTests(unittest.TestCase):
             self.assertIn("KEYWORDS_LABEL_NOT_BOLD", codes)
             self.assertIn("SEMANTIC_BLANK_BEFORE", codes)
             self.assertIn("HEADING_BLANK_AFTER", codes)
+            self.assertIn("CREDIT_ENTRY_BLANK_BETWEEN", codes)
+            self.assertIn("CREDIT_ENTRY_WITHOUT_STANDARD_ROLE", codes)
 
 
 if __name__ == "__main__":

@@ -18,8 +18,12 @@ except ImportError as exc:  # pragma: no cover - environment-dependent error pat
 BODY_FONT_SIZE_PT = 12.0
 HEADING_STYLE_RE = re.compile(r"^(?:heading\s*[1-9]|manuscript heading)$", re.I)
 KEYWORD_LABEL_RE = re.compile(r"^(\s*(?:keywords?|key\s+words)\s*:)", re.I)
+CREDIT_LABEL = (
+    r"cr[eé]dit(?:\s+(?:author(?:ship)?(?:\s+contribution)?\s+statement|"
+    r"contributor\s+roles?))?"
+)
 DECLARATION_LABEL = (
-    r"(?:author\s+contributions?|cr[eé]dit(?:\s+author\s+statement)?|"
+    rf"(?:author\s+contributions?|{CREDIT_LABEL}|"
     r"funding|conflicts?\s+of\s+interest|competing\s+interests?|"
     r"data\s+availability(?:\s+statement)?|acknowledg(?:e)?ments?|"
     r"institutional\s+review\s+board\s+statement|informed\s+consent\s+statement|"
@@ -27,6 +31,37 @@ DECLARATION_LABEL = (
 )
 DECLARATION_HEADING_RE = re.compile(rf"^\s*{DECLARATION_LABEL}\s*:?[\s.]*$", re.I)
 DECLARATION_INLINE_RE = re.compile(rf"^(\s*{DECLARATION_LABEL}\s*:)", re.I)
+CREDIT_HEADING_RE = re.compile(rf"^\s*{CREDIT_LABEL}\s*:?[\s.]*$", re.I)
+CREDIT_INLINE_RE = re.compile(rf"^(\s*{CREDIT_LABEL}\s*:)", re.I)
+
+CREDIT_ROLE_PATTERNS = {
+    label: re.compile(pattern, re.I)
+    for label, pattern in {
+        "Conceptualization": r"\bConceptualization\b",
+        "Data curation": r"\bData\s+curation\b",
+        "Formal analysis": r"\bFormal\s+analysis\b",
+        "Funding acquisition": r"\bFunding\s+acquisition\b",
+        "Investigation": r"\bInvestigation\b",
+        "Methodology": r"\bMethodology\b",
+        "Project administration": r"\bProject\s+administration\b",
+        "Resources": r"\bResources\b",
+        "Software": r"\bSoftware\b",
+        "Supervision": r"\bSupervision\b",
+        "Validation": r"\bValidation\b",
+        "Visualization": r"\bVisualization\b",
+        "Writing – original draft": r"\bWriting\s*[-–—]\s*original\s+draft\b",
+        "Writing – review & editing": (
+            r"\bWriting\s*[-–—]\s*review\s*(?:&|and)\s*editing\b"
+        ),
+    }.items()
+}
+
+
+def credit_role_labels(text: str) -> set[str]:
+    """Return official CRediT role labels recognized in supplied statement text."""
+    return {
+        label for label, pattern in CREDIT_ROLE_PATTERNS.items() if pattern.search(text)
+    }
 
 
 def bold_leading_label(paragraph: Any, pattern: re.Pattern[str]) -> bool:
