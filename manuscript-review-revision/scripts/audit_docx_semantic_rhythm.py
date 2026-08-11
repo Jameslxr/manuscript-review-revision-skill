@@ -32,6 +32,7 @@ from docx_semantic_rules import (  # noqa: E402
 )
 from audit_docx_front_matter import paragraph_font_sizes_pt  # noqa: E402
 from audit_docx_manuscript_style import (  # noqa: E402
+    DEFAULT_BODY_STYLES,
     automatic_spacing_sources,
     effective_line_spacing,
     effective_spacing,
@@ -52,6 +53,9 @@ ROLE_STYLE_RE = {
     "correspondence": re.compile(
         r"^(?:manuscript\s+)?(?:correspondence|corresponding\s+author)$", re.I
     ),
+    "reference": re.compile(
+        r"^(?:manuscript\s+)?(?:reference|bibliograph(?:y|ic))$", re.I
+    ),
 }
 
 
@@ -64,7 +68,14 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("document", type=Path)
     parser.add_argument("--expected-line-spacing", default="double")
+    parser.add_argument("--expected-font-name", default="Times New Roman")
     parser.add_argument("--expected-body-font-size", type=float, default=12.0)
+    parser.add_argument("--expected-title-font-size", type=float, default=15.0)
+    parser.add_argument(
+        "--expected-table-font-size",
+        type=float,
+        help="Expected table-cell size; defaults to the body size.",
+    )
     parser.add_argument("--body-style", action="append", default=[])
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--output-json", type=Path)
@@ -205,17 +216,107 @@ def next_nonblank_role(
     return None
 
 
+def visible_run_text(run: Any) -> str:
+    return "".join(str(node.text or "") for node in run.xpath(".//w:t"))
+
+
+def paragraph_xml_font_sizes_pt(paragraph: Any) -> list[float]:
+    fallback: float | None = None
+    if paragraph.style is not None:
+        for style in iter_style_chain(paragraph.style):
+            if style.font.size is not None:
+                fallback = float(style.font.size.pt)
+                break
+    values: list[float] = []
+    for run in paragraph._p.xpath(".//w:r"):
+        if not visible_run_text(run).strip():
+            continue
+        size_nodes = run.xpath("./w:rPr/w:sz")
+        value: float | None = fallback
+        if size_nodes:
+            raw = size_nodes[0].get(qn("w:val"))
+            try:
+                value = float(raw) / 2
+            except (TypeError, ValueError):
+                value = None
+        if value is not None:
+            values.append(value)
+    return values
+
+
+def paragraph_xml_font_names(paragraph: Any) -> list[str]:
+    fallback: str | None = None
+    if paragraph.style is not None:
+        for style in iter_style_chain(paragraph.style):
+            if style.font.name:
+                fallback = str(style.font.name)
+                break
+    values: list[str] = []
+    for run in paragraph._p.xpath(".//w:r"):
+        if not visible_run_text(run).strip():
+            continue
+        font_nodes = run.xpath("./w:rPr/w:rFonts")
+        if not font_nodes:
+            if fallback:
+                values.append(fallback)
+            continue
+        fonts = {
+            str(font_nodes[0].get(qn(f"w:{key}")) or "").strip()
+            for key in ("ascii", "hAnsi", "eastAsia", "cs")
+        }
+        fonts.discard("")
+        values.extend(sorted(fonts))
+    return values
+
+
+def typography_record(
+    paragraph: Any,
+    *,
+    location: str,
+    expected_font_name: str,
+    expected_font_size: float,
+) -> tuple[list[dict[str, object]], dict[str, object]]:
+    sizes = paragraph_xml_font_sizes_pt(paragraph)
+    names = paragraph_xml_font_names(paragraph)
+    record = {
+        "location": location,
+        "style": paragraph.style.name if paragraph.style is not None else "",
+        "text_preview": paragraph.text.strip()[:100],
+        "expected_font_name": expected_font_name,
+        "expected_font_size_pt": expected_font_size,
+        "actual_font_names": sorted(set(names)),
+        "actual_font_sizes_pt": sorted(set(sizes)),
+    }
+    issues: list[dict[str, object]] = []
+    if not sizes or any(abs(size - expected_font_size) > 0.01 for size in sizes):
+        issues.append({**record, "code": "VISIBLE_FONT_SIZE_MISMATCH"})
+    if not names or any(name.casefold() != expected_font_name.casefold() for name in names):
+        issues.append({**record, "code": "VISIBLE_FONT_NAME_MISMATCH"})
+    return issues, record
+
+
 def audit(
     path: Path,
     *,
     expected_line_spacing: object = "double",
+    expected_font_name: str = "Times New Roman",
     expected_body_font_size: float = 12.0,
+    expected_title_font_size: float = 15.0,
+    expected_table_font_size: float | None = None,
     body_style_names: set[str] | None = None,
 ) -> dict[str, object]:
-    if expected_body_font_size <= 0:
-        raise ValueError("expected body font size must be positive")
+    if not expected_font_name.strip():
+        raise ValueError("expected font name must be non-empty")
+    resolved_table_font_size = (
+        expected_body_font_size
+        if expected_table_font_size is None
+        else expected_table_font_size
+    )
+    if min(expected_body_font_size, expected_title_font_size, resolved_table_font_size) <= 0:
+        raise ValueError("expected font sizes must be positive")
     spacing_spec = parse_line_spacing_spec(expected_line_spacing)
     body_styles = {
+        *(normalize_style_token(value) for value in DEFAULT_BODY_STYLES),
         normalize_style_token("Manuscript Body"),
         *(body_style_names or set()),
     }
@@ -245,6 +346,45 @@ def audit(
         roles[paragraph._p] = role
     issues: list[dict[str, object]] = []
     inspected: list[dict[str, object]] = []
+    typography_inspected: list[dict[str, object]] = []
+
+    for index, paragraph in enumerate(paragraphs, start=1):
+        if not paragraph.text.strip():
+            continue
+        role = roles[paragraph._p]
+        expected_size = (
+            expected_title_font_size if role == "title" else expected_body_font_size
+        )
+        paragraph_issues, record = typography_record(
+            paragraph,
+            location=f"paragraph {index}",
+            expected_font_name=expected_font_name,
+            expected_font_size=expected_size,
+        )
+        issues.extend(paragraph_issues)
+        typography_inspected.append(record)
+
+    seen_cells: set[int] = set()
+    for table_index, table in enumerate(document.tables, start=1):
+        for row_index, row in enumerate(table.rows, start=1):
+            for cell_index, cell in enumerate(row.cells, start=1):
+                if id(cell._tc) in seen_cells:
+                    continue
+                seen_cells.add(id(cell._tc))
+                for paragraph_index, paragraph in enumerate(cell.paragraphs, start=1):
+                    if not paragraph.text.strip():
+                        continue
+                    paragraph_issues, record = typography_record(
+                        paragraph,
+                        location=(
+                            f"table {table_index} row {row_index} cell {cell_index} "
+                            f"paragraph {paragraph_index}"
+                        ),
+                        expected_font_name=expected_font_name,
+                        expected_font_size=resolved_table_font_size,
+                    )
+                    issues.extend(paragraph_issues)
+                    typography_inspected.append(record)
 
     same_size_roles = {
         "authors",
@@ -404,10 +544,14 @@ def audit(
         "status": "SEMANTIC_RHYTHM_PASS" if not issues else "FAIL",
         "document": str(path.resolve()),
         "expected_line_spacing": spacing_spec["label"],
+        "expected_font_name": expected_font_name,
         "expected_body_font_size_pt": expected_body_font_size,
+        "expected_title_font_size_pt": expected_title_font_size,
+        "expected_table_font_size_pt": resolved_table_font_size,
         "issue_count": len(issues),
         "issues": issues,
         "inspected": inspected,
+        "typography_inspected": typography_inspected,
         "boundary": (
             "Checks manuscript typography and semantic vertical rhythm only; "
             "rendered-page and journal-source gates remain independent."
@@ -436,7 +580,10 @@ def main() -> int:
         report = audit(
             args.document,
             expected_line_spacing=args.expected_line_spacing,
+            expected_font_name=args.expected_font_name,
             expected_body_font_size=args.expected_body_font_size,
+            expected_title_font_size=args.expected_title_font_size,
+            expected_table_font_size=args.expected_table_font_size,
             body_style_names={normalize_style_token(value) for value in args.body_style},
         )
     except (OSError, ValueError) as exc:

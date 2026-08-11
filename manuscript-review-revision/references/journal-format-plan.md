@@ -38,6 +38,10 @@ Use this authority order:
 3. current exact-journal author guide or policy;
 4. conservative manuscript fallback.
 
+Load [journal-typography-resolution.md](journal-typography-resolution.md) for
+font and line spacing. Read the full source sentence and scope. Example-only
+language such as `e.g.` is not an official override.
+
 An earlier profile, a publisher-wide default, a search snippet, or one
 published PDF is not current journal-specific authority. If official sources
 are inaccessible or contradictory, mark the affected plan rule
@@ -47,7 +51,7 @@ are inaccessible or contradictory, mark the affected plan rule
 
 Create `01a_journal_format_plan.json` with:
 
-- `schema_version`: `1.0`
+- `schema_version`: `1.1`
 - `target_journal`
 - `article_type`
 - `submission_stage`
@@ -128,7 +132,13 @@ Resolve these machine-usable fields before editing DOCX:
 - `anonymization_mode`
 - `body_font_family`
 - `body_font_size_pt`
+- `title_font_size_pt`
+- `table_font_size_pt`
 - `font_basis`
+- `font_rule_strength`
+- `font_source_excerpt`
+- `line_spacing_rule_strength`
+- `line_spacing_source_excerpt`
 - `text_color_hex`
 - `space_before_pt`
 - `space_after_pt`
@@ -158,9 +168,12 @@ stage. Use `left`, `unblinded`, and `upper-right` as conservative fallbacks only
 when no current exact source specifies another value. Record official-template
 or official-guide decisions with their corresponding basis and source URL.
 
-Use concrete conservative values for unspecified font, page size, margins, and
-columns, mark their basis `CONSERVATIVE_FALLBACK`, and keep them distinct from
-official journal rules. Never inherit Word theme defaults.
+Use concrete conservative values for unspecified or example-only typography:
+Times New Roman, Title 15 pt bold, every other visible manuscript paragraph 12
+pt, table text 12 pt, headings/subheadings 12 pt bold, and double line spacing.
+Mark their basis `CONSERVATIVE_FALLBACK` and keep them distinct from official
+journal rules. Only `MANDATORY` or `EXPLICIT_REQUIREMENT` evidence may use an
+official typography basis. Never inherit Word theme defaults.
 
 Validate the plan:
 

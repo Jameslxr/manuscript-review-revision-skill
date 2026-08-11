@@ -1,7 +1,7 @@
 ---
 name: manuscript-review-revision
 description: |
-  Run a journal-aware, review-first workflow for biomedical and scientific manuscripts. Support target-journal confirmation or recommendation, official-guideline research, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce natural empty paragraphs, zero paragraph spacing, one manuscript-wide line-spacing token, exact semantic front-matter block gaps, compact official-role CRediT blocks, body-sized semantic roles, left-aligned front matter, continuous Word line and page numbering, and rendered-page QA. Use for integrated review, revision, response, retargeting, submission preparation, or journal-specific formatting. For format-only DOCX repair, prefer `manuscript-docx-formatting`. Require the exact target journal before full review; never revise before the review gate and user authorization.
+  Run a journal-aware, review-first workflow for biomedical and scientific manuscripts. Support target-journal confirmation or recommendation, official-guideline research, source-strength-aware typography resolution, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce natural empty paragraphs, zero paragraph spacing, one manuscript-wide line-spacing token, exact semantic front-matter block gaps, compact official-role CRediT blocks, body-sized semantic roles, left-aligned front matter, continuous Word line and page numbering, and rendered-page QA. Use for integrated review, revision, response, retargeting, submission preparation, or journal-specific formatting. For format-only DOCX repair, prefer `manuscript-docx-formatting`. Require the exact target journal before full review; never revise before the review gate and user authorization.
 ---
 
 # Manuscript Review & Revision
@@ -42,6 +42,12 @@ supplementary text.
   affiliations, author notes, correspondence, ORCID/identifiers, Keywords,
   every heading/subheading, and all declaration/CRediT paragraphs. These roles
   use the resolved body font size (12 pt fallback), except the title.
+- Resolve typography and line spacing from binding/direct official wording,
+  not illustrative examples. `e.g.`, `for example`, `for instance`, and `such
+  as` do not override the fallback. When no binding/direct rule exists, use
+  Times New Roman, Title 15 pt bold, every other visible manuscript paragraph
+  12 pt, headings/subheadings 12 pt bold, and double line spacing. Preserve
+  supplied capitalization unless an official rule explicitly requires case.
 - In a manuscript, place exactly one structurally empty Enter-created paragraph
   between every adjacent present front-matter block: Title, Authors,
   Affiliations, optional Author notes, Correspondence, optional ORCID/identifiers,
@@ -157,6 +163,11 @@ Before reviewing, inspect the invocation for an exact target journal.
 - Do not start full review until the primary target is fixed.
 
 For every fixed target and every manuscript run, browse current official journal sources anew. Resolve article type and submission stage from the command or manuscript; ask only when ambiguity would materially change the rules. Record URLs and access dates. Do not reuse a cached journal profile as current evidence. If current official sources cannot be inspected, mark journal-specific work `NOT ASSESSABLE`.
+
+Load
+[references/journal-typography-resolution.md](references/journal-typography-resolution.md)
+whenever font or line spacing is resolved. Read the complete sentence and its
+scope; never promote an example-only value to a journal requirement.
 
 For full scientific review, load
 [references/evidence-calibration.md](references/evidence-calibration.md),
@@ -342,7 +353,8 @@ experiment, effect estimate, causal result, or safety outcome.
 
 Load [references/journal-discovery-and-profile.md](references/journal-discovery-and-profile.md),
 [references/journal-format-plan.md](references/journal-format-plan.md), and
-[references/manuscript-formatting.md](references/manuscript-formatting.md). For
+[references/manuscript-formatting.md](references/manuscript-formatting.md), and
+[references/journal-typography-resolution.md](references/journal-typography-resolution.md). For
 a manuscript, also load
 [references/front-matter-contract.md](references/front-matter-contract.md).
 
@@ -364,7 +376,8 @@ a manuscript, also load
   `scripts/enforce_docx_line_page_numbers.py`,
   `scripts/audit_docx_manuscript_style.py`,
   `scripts/audit_docx_front_matter.py`, and
-  `scripts/audit_docx_semantic_rhythm.py` with the resolved role/style inputs.
+  `scripts/audit_docx_semantic_rhythm.py` with the resolved role/style,
+  font-family, title-size, body-size, table-size, and line-spacing inputs.
 - Compare content, render and inspect every page, fix failures, then rerun from
   normalization. A mechanical XML pass is not a release.
 
@@ -443,6 +456,7 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 | [references/platform-compatibility.md](references/platform-compatibility.md) | Resolving host tools, subagents, bundled scripts, or install-specific behavior |
 | [references/journal-discovery-and-profile.md](references/journal-discovery-and-profile.md) | Target journal is unknown or any journal-specific task begins |
 | [references/journal-format-plan.md](references/journal-format-plan.md) | Translating official journal requirements into a per-manuscript executable format and package plan |
+| [references/journal-typography-resolution.md](references/journal-typography-resolution.md) | Classifying binding/direct versus example-only font and line-spacing language and resolving fallbacks |
 | [references/multi-agent-review.md](references/multi-agent-review.md) | Planning, running, or synthesizing reviewer agents |
 | [references/journal-tier-rubrics.md](references/journal-tier-rubrics.md) | Calibrating reviewer strictness or selecting specialist roles |
 | [references/evidence-calibration.md](references/evidence-calibration.md) | Building accepted-paper tolerance cards, applying the blocking test, and separating inherent limitations from fatal flaws |

@@ -240,6 +240,142 @@ class SemanticRhythmTests(unittest.TestCase):
             self.assertEqual(first_credit.style.name, "Manuscript CRediT Entry")
             self.assertEqual(second_credit.style.name, "Manuscript CRediT Entry")
 
+    def test_custom_ten_point_body_and_table_are_normalized_to_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "custom-source.docx"
+            output = root / "custom-normalized.docx"
+            document = Document()
+            custom = add_style(document, "Journal Main Text", 10)
+            title = document.add_paragraph("Custom-style manuscript")
+            title.style = document.styles["Title"]
+            title.runs[0].font.size = Pt(18)
+            document.add_heading("Abstract", level=1)
+            document.add_paragraph("Custom abstract body.", style=custom)
+            document.add_heading("Introduction", level=1)
+            document.add_paragraph("Custom main-text body.", style=custom)
+            table = document.add_table(rows=1, cols=1)
+            table.cell(0, 0).paragraphs[0].add_run("Custom table text.")
+            table.cell(0, 0).paragraphs[0].style = custom
+            document.save(source)
+
+            result = run_script(
+                "apply_manuscript_profile.py",
+                source,
+                "--out",
+                output,
+                "--title-paragraph",
+                "1",
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            normalized = Document(output)
+            for paragraph in normalized.paragraphs[1:]:
+                for run in paragraph.runs:
+                    if run.text.strip():
+                        self.assertAlmostEqual(run.font.size.pt, 12.0)
+            table_run = normalized.tables[0].cell(0, 0).paragraphs[0].runs[0]
+            self.assertAlmostEqual(table_run.font.size.pt, 12.0)
+
+            audited = run_script(
+                "audit_docx_semantic_rhythm.py",
+                output,
+                "--expected-line-spacing",
+                "double",
+                "--json",
+            )
+            self.assertEqual(audited.returncode, 0, audited.stdout + audited.stderr)
+
+    def test_explicit_journal_typography_values_are_parameterized(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.docx"
+            output = root / "normalized.docx"
+            build_semantic_stress_sample(source)
+            result = run_script(
+                "apply_manuscript_profile.py",
+                source,
+                "--out",
+                output,
+                "--line-spacing",
+                "1.5",
+                "--font-name",
+                "Times New Roman",
+                "--body-font-size",
+                "10",
+                "--title-font-size",
+                "15",
+                "--table-font-size",
+                "10",
+                "--body-style",
+                "Normal",
+                "--title-style",
+                "Manuscript Title",
+                "--authors-style",
+                "Manuscript Authors",
+                "--affiliation-style",
+                "Manuscript Affiliation",
+                "--author-note-style",
+                "Manuscript Author Note",
+                "--correspondence-style",
+                "Manuscript Correspondence",
+                "--orcid-style",
+                "Manuscript ORCID",
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            audited = run_script(
+                "audit_docx_semantic_rhythm.py",
+                output,
+                "--expected-line-spacing",
+                "1.5",
+                "--expected-body-font-size",
+                "10",
+                "--expected-title-font-size",
+                "15",
+                "--expected-table-font-size",
+                "10",
+                "--json",
+            )
+            self.assertEqual(audited.returncode, 0, audited.stdout + audited.stderr)
+
+    def test_semantic_audit_cannot_skip_unclassified_ten_point_text(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "source.docx"
+            normalized = root / "normalized.docx"
+            broken = root / "broken.docx"
+            build_semantic_stress_sample(source)
+            result = apply_profile(source, normalized)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            document = Document(normalized)
+            target = next(
+                paragraph
+                for paragraph in document.paragraphs
+                if paragraph.text == "First main-text paragraph."
+            )
+            custom = add_style(document, "Journal Main Text", 10)
+            custom.font.name = "Times New Roman"
+            custom.paragraph_format.space_before = Pt(0)
+            custom.paragraph_format.space_after = Pt(0)
+            custom.paragraph_format.line_spacing = 2.0
+            target.style = custom
+            for run in target.runs:
+                run.font.size = None
+                run.font.name = None
+            document.save(broken)
+            audited = run_script(
+                "audit_docx_semantic_rhythm.py",
+                broken,
+                "--expected-line-spacing",
+                "double",
+                "--json",
+            )
+            self.assertEqual(audited.returncode, 1)
+            report = json.loads(audited.stdout)
+            self.assertIn(
+                "VISIBLE_FONT_SIZE_MISMATCH",
+                {issue["code"] for issue in report["issues"]},
+            )
+
     def test_semantic_audit_rejects_each_reported_regression_class(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

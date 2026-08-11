@@ -1,5 +1,5 @@
 name: manuscript-review-revision
-version: 1.9.0
+version: 1.10.0
 description: >
   Declarative routing manifest for journal-aware, review-first manuscript
   assessment and authorized revision across compatible Agent Skills hosts.
@@ -13,6 +13,8 @@ references:
       path: references/journal-discovery-and-profile.md
     - condition: converting current journal requirements into an executable manuscript-format and submission-package plan
       path: references/journal-format-plan.md
+    - condition: resolving journal font, title/body/table sizes, or line spacing from official source language
+      path: references/journal-typography-resolution.md
     - condition: planning, dispatching, validating, or synthesizing independent reviewer agents
       path: references/multi-agent-review.md
     - condition: calibrating editorial strictness or selecting the optional specialist seat

@@ -36,6 +36,7 @@ from audit_docx_manuscript_style import (  # noqa: E402
     DEFAULT_BODY_STYLES,
     normalize_style_token,
     paragraph_is_body,
+    paragraph_is_nonbody,
     paragraph_is_structurally_empty,
     parse_line_spacing_spec,
 )
@@ -52,24 +53,31 @@ from docx_semantic_rules import (  # noqa: E402
 )
 
 
-PROFILE_STYLES = {
-    "title": ("Manuscript Title", 15.0, True, 1.0),
-    "authors": ("Manuscript Authors", BODY_FONT_SIZE_PT, False, 1.0),
-    "affiliation": ("Manuscript Affiliation", BODY_FONT_SIZE_PT, False, 1.0),
-    "author_note": ("Manuscript Author Note", BODY_FONT_SIZE_PT, False, 1.0),
-    "correspondence": (
-        "Manuscript Correspondence",
-        BODY_FONT_SIZE_PT,
-        False,
-        1.0,
-    ),
-    "orcid": ("Manuscript ORCID", BODY_FONT_SIZE_PT, False, 1.0),
-    "keywords": ("Manuscript Keywords", BODY_FONT_SIZE_PT, False, 1.0),
-    "heading": ("Manuscript Heading", BODY_FONT_SIZE_PT, True, 1.0),
-    "credit-entry": ("Manuscript CRediT Entry", BODY_FONT_SIZE_PT, False, 1.0),
-    "body": ("Manuscript Body", BODY_FONT_SIZE_PT, False, 2.0),
-    "reference": ("Manuscript Reference", BODY_FONT_SIZE_PT, False, 1.0),
-}
+TITLE_FONT_SIZE_PT = 15.0
+DEFAULT_FONT_NAME = "Times New Roman"
+
+
+def profile_styles(
+    body_font_size: float, title_font_size: float
+) -> dict[str, tuple[str, float, bool, float]]:
+    return {
+        "title": ("Manuscript Title", title_font_size, True, 1.0),
+        "authors": ("Manuscript Authors", body_font_size, False, 1.0),
+        "affiliation": ("Manuscript Affiliation", body_font_size, False, 1.0),
+        "author_note": ("Manuscript Author Note", body_font_size, False, 1.0),
+        "correspondence": (
+            "Manuscript Correspondence",
+            body_font_size,
+            False,
+            1.0,
+        ),
+        "orcid": ("Manuscript ORCID", body_font_size, False, 1.0),
+        "keywords": ("Manuscript Keywords", body_font_size, False, 1.0),
+        "heading": ("Manuscript Heading", body_font_size, True, 1.0),
+        "credit-entry": ("Manuscript CRediT Entry", body_font_size, False, 1.0),
+        "body": ("Manuscript Body", body_font_size, False, 2.0),
+        "reference": ("Manuscript Reference", body_font_size, False, 1.0),
+    }
 
 
 def parse_args() -> argparse.Namespace:
@@ -87,6 +95,18 @@ def parse_args() -> argparse.Namespace:
         default="left",
     )
     parser.add_argument("--line-spacing", default="double")
+    parser.add_argument("--font-name", default=DEFAULT_FONT_NAME)
+    parser.add_argument(
+        "--body-font-size", type=float, default=BODY_FONT_SIZE_PT
+    )
+    parser.add_argument(
+        "--title-font-size", type=float, default=TITLE_FONT_SIZE_PT
+    )
+    parser.add_argument(
+        "--table-font-size",
+        type=float,
+        help="Table-cell font size; defaults to the resolved body font size.",
+    )
     parser.add_argument(
         "--abstract-start", choices=("integrated", "new-page"), default="integrated"
     )
@@ -168,13 +188,14 @@ def ensure_style(
     bold: bool,
     line_spacing: dict[str, object],
     alignment: Any,
+    font_name: str = DEFAULT_FONT_NAME,
 ) -> Any:
     try:
         style = document.styles[name]
     except KeyError:
         style = document.styles.add_style(name, WD_STYLE_TYPE.PARAGRAPH)
         style.base_style = None
-    set_font_name(style.font, "Times New Roman")
+    set_font_name(style.font, font_name)
     style.font.size = Pt(size_pt)
     style.font.bold = bold
     style.font.color.rgb = RGBColor(0, 0, 0)
@@ -201,11 +222,96 @@ def format_paragraph(
     paragraph.paragraph_format.space_after = Pt(0)
     set_line_spacing(paragraph.paragraph_format, line_spacing)
     remove_auto_spacing(paragraph._p.get_or_add_pPr())
+    font_name = style.font.name or DEFAULT_FONT_NAME
     for run in paragraph.runs:
-        set_font_name(run.font, "Times New Roman")
+        set_font_name(run.font, font_name)
         run.font.size = Pt(size_pt)
         run.font.bold = bold
         run.font.color.rgb = RGBColor(0, 0, 0)
+
+
+def format_run_xml_typography(
+    run: Any, *, font_name: str, font_size: float
+) -> None:
+    r_pr = run.find(qn("w:rPr"))
+    if r_pr is None:
+        r_pr = OxmlElement("w:rPr")
+        run.insert(0, r_pr)
+    r_fonts = r_pr.find(qn("w:rFonts"))
+    if r_fonts is None:
+        r_fonts = OxmlElement("w:rFonts")
+        r_pr.insert(0, r_fonts)
+    for attribute in ("ascii", "hAnsi", "eastAsia", "cs"):
+        r_fonts.set(qn(f"w:{attribute}"), font_name)
+    half_points = str(int(round(font_size * 2)))
+    for tag in ("w:sz", "w:szCs"):
+        nodes = r_pr.findall(qn(tag))
+        node = nodes[0] if nodes else OxmlElement(tag)
+        if not nodes:
+            r_pr.append(node)
+        node.set(qn("w:val"), half_points)
+        for duplicate in nodes[1:]:
+            r_pr.remove(duplicate)
+    color_nodes = r_pr.findall(qn("w:color"))
+    color = color_nodes[0] if color_nodes else OxmlElement("w:color")
+    if not color_nodes:
+        r_pr.append(color)
+    color.set(qn("w:val"), "000000")
+    for duplicate in color_nodes[1:]:
+        r_pr.remove(duplicate)
+
+
+def apply_visible_typography(
+    document: Any,
+    *,
+    title_nodes: set[Any],
+    font_name: str,
+    body_font_size: float,
+    title_font_size: float,
+    table_font_size: float,
+    line_spacing: dict[str, object],
+) -> dict[str, int]:
+    """Apply the resolved font contract to every visible manuscript run."""
+
+    top_level_count = 0
+    for paragraph in document.paragraphs:
+        size = title_font_size if paragraph._p in title_nodes else body_font_size
+        paragraph.paragraph_format.space_before = Pt(0)
+        paragraph.paragraph_format.space_after = Pt(0)
+        set_line_spacing(paragraph.paragraph_format, line_spacing)
+        remove_auto_spacing(paragraph._p.get_or_add_pPr())
+        if paragraph.text.strip():
+            top_level_count += 1
+        for run in paragraph._p.xpath(".//w:r"):
+            format_run_xml_typography(
+                run, font_name=font_name, font_size=size
+            )
+
+    table_count = 0
+    seen_cells: set[int] = set()
+    for table in document.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                if id(cell._tc) in seen_cells:
+                    continue
+                seen_cells.add(id(cell._tc))
+                for paragraph in cell.paragraphs:
+                    paragraph.paragraph_format.space_before = Pt(0)
+                    paragraph.paragraph_format.space_after = Pt(0)
+                    set_line_spacing(paragraph.paragraph_format, line_spacing)
+                    remove_auto_spacing(paragraph._p.get_or_add_pPr())
+                    if paragraph.text.strip():
+                        table_count += 1
+                    for run in paragraph._p.xpath(".//w:r"):
+                        format_run_xml_typography(
+                            run,
+                            font_name=font_name,
+                            font_size=table_font_size,
+                        )
+    return {
+        "top_level_visible_paragraphs": top_level_count,
+        "table_visible_paragraphs": table_count,
+    }
 
 
 def paragraph_is_abstract(paragraph: Any) -> bool:
@@ -579,6 +685,10 @@ def apply_profile(
     *,
     front_matter_alignment: str,
     line_spacing_token: str,
+    font_name: str,
+    body_font_size: float,
+    title_font_size: float,
+    table_font_size: float | None,
     abstract_start: str,
     body_style_tokens: set[str],
     explicit_styles: dict[str, set[str]],
@@ -586,6 +696,15 @@ def apply_profile(
 ) -> dict[str, object]:
     if document_path.resolve() == output_path.resolve():
         raise ValueError("--out must differ from the input path; preserve the source DOCX.")
+    if not font_name.strip():
+        raise ValueError("font name must be non-empty")
+    if body_font_size <= 0 or title_font_size <= 0:
+        raise ValueError("body and title font sizes must be positive")
+    resolved_table_font_size = (
+        body_font_size if table_font_size is None else table_font_size
+    )
+    if resolved_table_font_size <= 0:
+        raise ValueError("table font size must be positive")
     document = Document(str(document_path))
     original_text_stream = "".join(text_node_values(document))
     flattened_tables = flatten_recognized_front_matter_tables(
@@ -594,8 +713,9 @@ def apply_profile(
 
     alignment = ALIGNMENT_VALUES[front_matter_alignment]
     body_spacing = parse_line_spacing_spec(line_spacing_token)
+    profile_definitions = profile_styles(body_font_size, title_font_size)
     styles: dict[str, Any] = {}
-    for role, (name, size, bold, _) in PROFILE_STYLES.items():
+    for role, (name, size, bold, _) in profile_definitions.items():
         role_alignment = alignment if role in ROLE_ORDER else WD_ALIGN_PARAGRAPH.LEFT
         styles[role] = ensure_style(
             document,
@@ -604,6 +724,7 @@ def apply_profile(
             bold=bold,
             line_spacing=body_spacing,
             alignment=role_alignment,
+            font_name=font_name,
         )
 
     records, abstract = front_matter_records(
@@ -612,7 +733,7 @@ def apply_profile(
     role_counts = {role: 0 for role in ROLE_ORDER}
     for paragraph, role in records:
         role_counts[role] += 1
-        _, size, bold, _ = PROFILE_STYLES[role]
+        _, size, bold, _ = profile_definitions[role]
         format_paragraph(
             paragraph,
             styles[role],
@@ -626,7 +747,7 @@ def apply_profile(
         format_paragraph(
             abstract,
             styles["heading"],
-            size_pt=12.0,
+            size_pt=body_font_size,
             bold=True,
             alignment=WD_ALIGN_PARAGRAPH.LEFT,
             line_spacing=body_spacing,
@@ -663,7 +784,7 @@ def apply_profile(
             format_paragraph(
                 paragraph,
                 styles["keywords"],
-                size_pt=BODY_FONT_SIZE_PT,
+                size_pt=body_font_size,
                 bold=False,
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
                 line_spacing=body_spacing,
@@ -681,7 +802,7 @@ def apply_profile(
             format_paragraph(
                 paragraph,
                 styles["heading"],
-                size_pt=12.0,
+                size_pt=body_font_size,
                 bold=True,
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
                 line_spacing=body_spacing,
@@ -703,7 +824,7 @@ def apply_profile(
             format_paragraph(
                 paragraph,
                 styles["body"],
-                size_pt=BODY_FONT_SIZE_PT,
+                size_pt=body_font_size,
                 bold=False,
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
                 line_spacing=body_spacing,
@@ -726,7 +847,7 @@ def apply_profile(
             format_paragraph(
                 paragraph,
                 styles["credit-entry"],
-                size_pt=BODY_FONT_SIZE_PT,
+                size_pt=body_font_size,
                 bold=False,
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
                 line_spacing=body_spacing,
@@ -735,23 +856,33 @@ def apply_profile(
             continue
         if reference_section_seen and paragraph.text.strip():
             credit_block_active = False
-            if not re.search(r"bibliograph|reference", style_name, re.I):
-                format_paragraph(
-                    paragraph,
-                    styles["reference"],
-                    size_pt=BODY_FONT_SIZE_PT,
-                    bold=False,
-                    alignment=WD_ALIGN_PARAGRAPH.LEFT,
-                    line_spacing=body_spacing,
-                )
-                paragraph.paragraph_format.left_indent = Inches(0.5)
-                paragraph.paragraph_format.first_line_indent = Inches(-0.5)
+            format_paragraph(
+                paragraph,
+                styles["reference"],
+                size_pt=body_font_size,
+                bold=False,
+                alignment=WD_ALIGN_PARAGRAPH.LEFT,
+                line_spacing=body_spacing,
+            )
+            paragraph.paragraph_format.left_indent = Inches(0.5)
+            paragraph.paragraph_format.first_line_indent = Inches(-0.5)
             continue
         if paragraph_is_body(paragraph, normalized_body_tokens, excluded):
             format_paragraph(
                 paragraph,
                 styles["body"],
-                size_pt=BODY_FONT_SIZE_PT,
+                size_pt=body_font_size,
+                bold=False,
+                alignment=WD_ALIGN_PARAGRAPH.LEFT,
+                line_spacing=body_spacing,
+            )
+            body_paragraphs.append(paragraph)
+            continue
+        if paragraph.text.strip() and not paragraph_is_nonbody(paragraph, excluded):
+            format_paragraph(
+                paragraph,
+                styles["body"],
+                size_pt=body_font_size,
                 bold=False,
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
                 line_spacing=body_spacing,
@@ -780,6 +911,19 @@ def apply_profile(
         line_spacing=body_spacing,
     )
 
+    title_nodes = {
+        paragraph._p for paragraph, role in records if role == "title"
+    }
+    typography_counts = apply_visible_typography(
+        document,
+        title_nodes=title_nodes,
+        font_name=font_name.strip(),
+        body_font_size=body_font_size,
+        title_font_size=title_font_size,
+        table_font_size=resolved_table_font_size,
+        line_spacing=body_spacing,
+    )
+
     for section in document.sections:
         section.top_margin = Inches(1)
         section.bottom_margin = Inches(1)
@@ -800,8 +944,13 @@ def apply_profile(
         "output": str(output_path.resolve()),
         "front_matter_alignment": front_matter_alignment,
         "line_spacing": body_spacing["label"],
+        "font_name": font_name.strip(),
+        "body_font_size_pt": body_font_size,
+        "title_font_size_pt": title_font_size,
+        "table_font_size_pt": resolved_table_font_size,
         "role_counts": role_counts,
         "flattened_front_matter_tables": flattened_tables,
+        "typography_counts": typography_counts,
     }
 
 
@@ -818,6 +967,10 @@ def main() -> int:
             args.out,
             front_matter_alignment=args.front_matter_alignment,
             line_spacing_token=args.line_spacing,
+            font_name=args.font_name,
+            body_font_size=args.body_font_size,
+            title_font_size=args.title_font_size,
+            table_font_size=args.table_font_size,
             abstract_start=args.abstract_start,
             body_style_tokens=body_style_tokens,
             explicit_styles=explicit_styles,
