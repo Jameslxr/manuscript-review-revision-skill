@@ -23,6 +23,7 @@ Report:
 | reporting, ethics, and declarations |  |  |  |  |
 | journal-specific manuscript format |  |  |  |  |
 | combined DOCX format release |  |  |  |  |
+| submission-package DOCX format release |  |  |  |  |
 | rendered visual QA |  |  |  |  |
 | submission-package completeness |  |  |  |  |
 
@@ -84,6 +85,10 @@ Return `RELEASE FAIL` when:
   section/Keywords/CRediT blank-line boundary, lacks the front-matter or
   semantic-rhythm audit, changes unauthorized text during formatting, or does
   not reach `FORMAT_RELEASE_PASS`;
+- any editable cover letter, response letter, or other submission-package DOCX
+  mixes fonts, sizes, line spacing, or paragraph spacing across roles; lacks
+  the required natural blank boundaries, package audit, preservation check, or
+  rendered-page review; or does not reach `PACKAGE_FORMAT_RELEASE_PASS`;
 - a revision changed core claims without the scientifically responsible
   re-review.
 

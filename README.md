@@ -6,7 +6,7 @@
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.6.1-2563eb)
+![Version](https://img.shields.io/badge/version-v1.7.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
 
 ## 简要说明
@@ -176,7 +176,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 
 ## 当前版本与验证
 
-当前版本为 **Beta**。1.6.1 在 1.6.0 的完整 DOCX 发布门上新增语义纵向节奏：作者、单位、通信作者、Keywords、标题、小标题和 CRediT/声明区统一使用期刊解析出的全局行距及正文基准字号；Keywords 标签加粗；section/subsection/声明区采用确定的真实空段落矩阵，并由独立审计 fail-closed 验证。1.5.0 加入的录用尺度校准、四类问题判定和分层引用审计保持不变；既有复测曾保持 18/18 个预埋问题检出。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
+当前版本为 **Beta**。1.7.0 新增独立的可编辑投稿包排版通道：cover letter、response letter 和其他 submission text 现在使用角色识别、全文统一行距/字号、真实空段落、连续行号/页码及 fail-closed package release gate；同时加入“期刊官方措辞优先、实际 AI 用途为准”的 AI 使用声明规则。1.6.1 的 manuscript 语义纵向节奏门及 1.5.0 的录用尺度校准、四类问题判定和分层引用审计保持不变；既有复测曾保持 18/18 个预埋问题检出。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
 
 当前自动测试覆盖：
 

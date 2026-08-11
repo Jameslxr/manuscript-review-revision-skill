@@ -8,8 +8,9 @@
 4. [Literal body-paragraph separation](#literal-body-paragraph-separation)
 5. [Continuous line and page numbering](#continuous-line-and-page-numbering)
 6. [DOCX workflow](#docx-workflow)
-7. [Output separation](#output-separation)
-8. [Mechanical audit boundary](#mechanical-audit-boundary)
+7. [Submission-package files](#submission-package-files)
+8. [Output separation](#output-separation)
+9. [Mechanical audit boundary](#mechanical-audit-boundary)
 
 ## Source precedence
 
@@ -135,6 +136,14 @@ and do not claim simultaneous template compliance.
 15. Validate plan-to-output closure with `validate_journal_format_audit.py`.
 16. For a manuscript, combine structural, front-matter, semantic-rhythm, preservation, journal, and render results with `validate_format_release.py`; require `FORMAT_RELEASE_PASS`.
 17. Fix and re-render after every layout-sensitive change.
+
+## Submission-package files
+
+Load [submission-package-contract.md](submission-package-contract.md) for cover
+letters, response letters, highlights, declarations, review proposals, and
+other editable submission text. Do not run the manuscript normalizer or
+fabricate front matter. Use the dedicated package normalizer, whole-document
+package audit, and package release validator.
 
 Codex may use an installed document/PDF capability. Claude Code may use an
 available office converter, renderer, script, or MCP tool. If rendering is

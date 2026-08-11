@@ -24,6 +24,11 @@ Resolve issues in this order:
 
 Do not use language polishing to conceal unresolved evidence or logic.
 
+When an AI-use statement is added or revised, load
+[ai-use-declaration.md](ai-use-declaration.md). Current mandatory journal
+wording outranks the journal-neutral template, and the statement must describe
+the actual tool and actual scope of use.
+
 For each issue, use the recorded resolution mode. Do not imply that a new
 experiment, cohort, or analysis is mandatory when claim narrowing, limitation
 disclosure, justified non-action, or retargeting leaves a defensible paper.
