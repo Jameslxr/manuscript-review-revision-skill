@@ -333,6 +333,8 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
 - 审稿表格和状态标签不得进入 clean manuscript；
 - 任何模式只要修改 DOCX，就对整份输出强制正文段前/段后间距为 0，并在相邻正文段之间插入一个真正的空段落；不允许用 Word paragraph spacing 模拟，也不允许期刊模板绕过该个人输出门槛；
 - 同一全局门槛还要求每个 section 连续逐行编号、禁止段落 suppress line numbers，并在所有 active page story 中使用连续动态 `PAGE` 字段；
+- 空行必须是真正无空格/Tab 的空段落；连续 Key Points、bullet 或 numbered items 之间不插空行；
+- 所有表格独立解析当前期刊方案；无明确规则时采用可编辑三线表、重复粗体表头、无竖线/底色，并完成内容/统计及逐页渲染检查；
 - 行距、字体、页边距、匿名化、章节顺序和投稿材料从本次通过验证的 `01a_journal_format_plan.json` 读取；真实空段落、连续行号和连续页码由 `USER_GLOBAL_INVARIANT` 固定；
 - manuscript 的标题、作者、单位、通讯信息、匿名状态、首页对齐和页码位置必须从本次 format plan 解析；没有精确官方覆盖时使用左对齐、unblinded、upper-right 的保守 profile；
 - DOCX 必须经过机械样式/编号检查和逐页渲染检查；manuscript 还必须通过独立首页审计、内容保留比较和 `FORMAT_RELEASE_PASS`。
@@ -349,6 +351,10 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
 - `RELEASE FAIL`
 - `RELEASE NOT ASSESSABLE`
 
+中立通用路线将第三行替换为 `NEUTRAL MANUSCRIPT PASS | FAIL | NOT
+ASSESSABLE`，并把期刊专属门标记为 `NOT_APPLICABLE`；该状态只表示达到
+冻结的严格通用稿件标准，不代表任一期刊投稿合规。
+
 已知且未解决的科学、伦理、数据、引用或投稿包缺陷导致 `RELEASE FAIL`。少于 5 个独立审稿 Agents 或缺少任务收据只会使工作流保证及总体状态成为 `NOT ASSESSABLE`，不会被写成稿件本身的科学缺陷。只有稿件就绪度和工作流保证都通过时才返回 `RELEASE PASS`。
 
 该状态只表示稿件是否通过当前证据支持的投稿前检查，不预测编辑或期刊是否接收。
@@ -361,10 +367,17 @@ PDF、figure 或 Nature Skills。Claude Code 应使用非 fork 的 `Agent` 子 A
 使用 $manuscript-review-revision，我上传了 manuscript。
 ```
 
-如果没有提供目标期刊，Skill 会先询问：
+如果没有提供稿件路线，Skill 会先询问：
 
 ```text
-本次目标期刊是什么？如果尚未确定，请回复“不确定，请推荐期刊”。
+本次采用哪种稿件方案：中立通用稿件、指定目标期刊，还是尚未确定并需要推荐期刊？
+```
+
+中立通用稿件时：
+
+```text
+使用 $manuscript-review-revision。
+采用中立通用稿件方案；按严格通用标准先审稿，不绑定期刊。
 ```
 
 已知目标期刊时：

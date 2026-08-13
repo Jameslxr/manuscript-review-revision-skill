@@ -19,6 +19,10 @@ MANUSCRIPT_FIELDS = {
     "mechanical_status",
     "paragraph_separation",
     "line_spacing",
+    "table_line_spacing",
+    "table_font_size_pt",
+    "table_rule_scheme",
+    "table_status",
     "line_numbering",
     "page_numbering",
     "page_number_position",
@@ -97,8 +101,8 @@ def validate(plan: object, audit: object, plan_path: Path, audit_path: Path) -> 
         if field not in audit:
             errors.append(f"Missing audit field: {field}")
 
-    if str(audit.get("schema_version", "")).strip() != "1.0":
-        errors.append("audit schema_version must be '1.0'.")
+    if str(audit.get("schema_version", "")).strip() != "1.1":
+        errors.append("audit schema_version must be '1.1'.")
 
     for field in ("target_journal", "article_type", "submission_stage"):
         audit_value = str(audit.get(field, "")).strip()
@@ -138,6 +142,13 @@ def validate(plan: object, audit: object, plan_path: Path, audit_path: Path) -> 
         style.get("paragraph_separation", "")
     ).strip().lower()
     expected_line_spacing = str(style.get("line_spacing", "")).strip().lower()
+    expected_table_line_spacing = str(
+        style.get("table_line_spacing", "")
+    ).strip().lower()
+    expected_table_font_size = style.get("table_font_size_pt")
+    expected_table_rule_scheme = str(
+        style.get("table_rule_scheme", "")
+    ).strip().lower()
     expected_line_numbering = str(style.get("line_numbering", "")).strip().lower()
     expected_page_numbering = str(style.get("page_numbering", "")).strip().lower()
     expected_page_number_position = str(
@@ -209,6 +220,24 @@ def validate(plan: object, audit: object, plan_path: Path, audit_path: Path) -> 
         actual_line_spacing = str(manuscript.get("line_spacing", "")).strip().lower()
         if actual_line_spacing != expected_line_spacing:
             errors.append(f"{prefix}.line_spacing does not match style_contract.")
+        actual_table_line_spacing = str(
+            manuscript.get("table_line_spacing", "")
+        ).strip().lower()
+        if actual_table_line_spacing != expected_table_line_spacing:
+            errors.append(
+                f"{prefix}.table_line_spacing does not match style_contract."
+            )
+        if manuscript.get("table_font_size_pt") != expected_table_font_size:
+            errors.append(
+                f"{prefix}.table_font_size_pt does not match style_contract."
+            )
+        actual_table_rule_scheme = str(
+            manuscript.get("table_rule_scheme", "")
+        ).strip().lower()
+        if actual_table_rule_scheme != expected_table_rule_scheme:
+            errors.append(
+                f"{prefix}.table_rule_scheme does not match style_contract."
+            )
         actual_line_numbering = str(
             manuscript.get("line_numbering", "")
         ).strip().lower()
@@ -238,6 +267,11 @@ def validate(plan: object, audit: object, plan_path: Path, audit_path: Path) -> 
         format_release_status = str(
             manuscript.get("format_release_status", "")
         ).strip().upper()
+        table_status = str(manuscript.get("table_status", "")).strip().upper()
+        if table_status not in AUDIT_STATUSES:
+            errors.append(
+                f"{prefix}.table_status must be one of {sorted(AUDIT_STATUSES)}."
+            )
 
         issue_count = manuscript.get("issue_count")
         if not isinstance(issue_count, int) or isinstance(issue_count, bool) or issue_count < 0:
@@ -280,6 +314,10 @@ def validate(plan: object, audit: object, plan_path: Path, audit_path: Path) -> 
             if format_release_status != "FORMAT_RELEASE_PASS":
                 errors.append(
                     f"overall_status PASS requires {prefix} FORMAT_RELEASE_PASS."
+                )
+            if table_status != "PASS":
+                errors.append(
+                    f"overall_status PASS requires {prefix} table_status PASS."
                 )
 
     if clean_count != 1:

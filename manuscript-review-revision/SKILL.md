@@ -1,7 +1,7 @@
 ---
 name: manuscript-review-revision
 description: |
-  Run a journal-aware, review-first workflow for biomedical and scientific manuscripts. Support target-journal confirmation or recommendation, official-guideline research, source-strength-aware typography resolution, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce natural empty paragraphs, zero paragraph spacing, one manuscript-wide line-spacing token, exact semantic front-matter block gaps, compact official-role CRediT blocks, body-sized semantic roles, left-aligned front matter, continuous Word line and page numbering, and rendered-page QA. Use for integrated review, revision, response, retargeting, submission preparation, or journal-specific formatting. For format-only DOCX repair, prefer `manuscript-docx-formatting`. Require the exact target journal before full review; never revise before the review gate and user authorization.
+  Run a review-first workflow for biomedical and scientific manuscripts using either a named target-journal route or a journal-neutral general-manuscript route. Support target-journal confirmation or recommendation, neutral high-standard review, official-guideline research, source-strength-aware typography and table resolution, source-linked format plans, five independent reviewers, scientific/statistical review, claim-reference verification, authorized revision and reviewer responses, DOCX/PDF formatting, and fail-closed release auditing. Enforce genuinely empty paragraphs with no spaces or tabs, zero paragraph spacing, semantic list rhythm, top-journal table presentation, one manuscript-wide line-spacing token, exact semantic front-matter block gaps, compact official-role CRediT blocks, body-sized semantic roles, left-aligned front matter, continuous Word line and page numbering, and rendered-page QA. Use for integrated review, revision, response, retargeting, submission preparation, neutral coauthor drafts, or journal-specific formatting. For format-only DOCX repair, prefer `manuscript-docx-formatting`. Fix the manuscript route before full review; never revise before the review gate and user authorization.
 ---
 
 # Manuscript Review & Revision
@@ -10,7 +10,7 @@ description: |
 
 Treat review, revision, and formatting as separate phases. Use this non-negotiable order:
 
-`target journal -> journal profile -> journal format plan -> acceptance-tolerance card -> frozen input -> independent review -> synthesis -> user gate -> scientific revision -> reference/figure closure -> language -> formatting -> release gate`
+`manuscript route -> route profile -> conditional format/tolerance plan -> frozen input -> independent review -> synthesis -> user gate -> scientific revision -> reference/figure closure -> language -> formatting -> release gate`
 
 - Keep the manuscript read-only through review.
 - Do not turn a polished file into a submission-ready claim.
@@ -36,6 +36,10 @@ supplementary text.
   values alone are not sufficient.
 - Insert exactly one structurally empty paragraph between adjacent body-prose
   paragraphs. Never simulate it with paragraph spacing or a manual line break.
+- A blank paragraph must contain no spaces, tabs, nonbreaking spaces, or other
+  whitespace-only text nodes. If a draft uses whitespace to simulate an empty
+  line, delete that whitespace and retain one truly empty paragraph. Never keep
+  both paragraph spacing and an empty paragraph.
 - Give body prose and empty separators the explicit required line-spacing
   token; never inherit Word defaults and never disable the line-spacing check.
 - For manuscripts, apply that same resolved token to title, authors,
@@ -46,6 +50,14 @@ supplementary text.
   specifies otherwise, use 10 pt table-cell text with single line spacing and
   0/0 pt paragraph spacing; keep table titles/captions at the body size and
   manuscript line-spacing token.
+- Resolve table presentation independently from table typography. Load
+  [references/table-formatting.md](references/table-formatting.md). When no
+  binding/direct current journal rule specifies another scheme, convert every
+  editable table to the journal-neutral three-line profile: top rule,
+  header-bottom rule, bottom rule, no vertical/internal body rules, no cell
+  shading, bold repeating header row, top-aligned cells, and rendered-page QA.
+  Do not invent or silently rewrite table data, units, statistics, titles, or
+  notes; unresolved content defects fail the table gate.
 - Resolve typography and line spacing from binding/direct official wording,
   not illustrative examples. `e.g.`, `for example`, `for instance`, and `such
   as` do not override the fallback. When no binding/direct rule exists, use
@@ -67,6 +79,10 @@ supplementary text.
   empty paragraph before Keywords, exactly one after Keywords and before each
   new section/subsection/declaration block, and none between a heading and its
   first body paragraph.
+- Treat bullet and numbered lists as semantic blocks, not ordinary body-prose
+  pairs. Keep a heading directly attached to its first item, use no blank
+  paragraph between consecutive items or nested Key Points, and use at most one
+  true empty paragraph around the list block when it meets surrounding prose.
 - Enable Word-native line numbering in every section with `countBy=1` and
   `restart=continuous`. Remove paragraph-level `suppressLineNumbers`; no section
   or paragraph may opt out.
@@ -157,24 +173,36 @@ before using tools or bundled scripts.
 - If a required capability is unavailable, mark the affected gate
   `NOT ASSESSABLE`; do not imitate a completed capability in one conversation.
 
-## Step 0: establish the target journal
+## Step 0: establish the manuscript route
 
-Before reviewing, inspect the invocation for an exact target journal.
+Before reviewing, inspect the invocation for one of three routes.
 
-- If absent, ask only: `本次目标期刊是什么？如果尚未确定，请回复“不确定，请推荐期刊”。` Then stop.
+- `TARGET_JOURNAL`: an exact target journal is named.
+- `JOURNAL_NEUTRAL`: the user explicitly requests a neutral, general,
+  journal-independent, portable, or coauthor-ready manuscript.
+- `JOURNAL_RECOMMENDATION`: the user is unsure and requests recommendations.
+- If the route is absent, ask only: `本次采用哪种稿件方案：中立通用稿件、指定目标期刊，还是尚未确定并需要推荐期刊？` Then stop.
 - If an abbreviation is ambiguous, confirm the exact journal name and stop.
-- If the exact journal is present, do not ask again.
+- If the exact journal or a neutral route is present, do not ask again.
 - If the user is unsure, load [references/journal-discovery-and-profile.md](references/journal-discovery-and-profile.md), run `journal-recommendation`, return a verified Top 5, and pause for the user to select a primary target.
-- Do not start full review until the primary target is fixed.
+- Do not start full review until either a primary target or the neutral route is fixed.
 
-For every fixed target and every manuscript run, browse current official journal sources anew. Resolve article type and submission stage from the command or manuscript; ask only when ambiguity would materially change the rules. Record URLs and access dates. Do not reuse a cached journal profile as current evidence. If current official sources cannot be inspected, mark journal-specific work `NOT ASSESSABLE`.
+For `JOURNAL_NEUTRAL`, load
+[references/journal-neutral-manuscript.md](references/journal-neutral-manuscript.md).
+Do not browse or invent journal rules, do not create a journal-specific
+acceptance-tolerance card, and do not claim submission compliance. Review
+against rigorous general biomedical validity, reporting, evidence, and clarity
+standards. Format with the neutral house profile and label the result
+`JOURNAL_NEUTRAL`; it may be coauthor-ready but is not journal-submission-ready.
+
+For every `TARGET_JOURNAL` run, browse current official journal sources anew. Resolve article type and submission stage from the command or manuscript; ask only when ambiguity would materially change the rules. Record URLs and access dates. Do not reuse a cached journal profile as current evidence. If current official sources cannot be inspected, mark journal-specific work `NOT ASSESSABLE`.
 
 Load
 [references/journal-typography-resolution.md](references/journal-typography-resolution.md)
 whenever font or line spacing is resolved. Read the complete sentence and its
 scope; never promote an example-only value to a journal requirement.
 
-For full scientific review, load
+For full `TARGET_JOURNAL` scientific review, load
 [references/evidence-calibration.md](references/evidence-calibration.md),
 inspect recent accepted same-type papers, and create
 `01b_acceptance_tolerance_card.json`. Official rules and scientific validity
@@ -190,12 +218,12 @@ python3 "$SKILL_ROOT/scripts/validate_acceptance_tolerance.py" \
 Record:
 
 - manuscript path, modification time, SHA-256, and apparent version
-- target journal, article type, and stage
+- manuscript route; target journal when applicable; article type and stage
 - main text, references, figures, tables, legends, supplements, source data, response letter, and tracked version available
 - absent, stale, or mismatched materials
 
-Create `00_input_inventory.json`, `01_journal_profile.json`, and
-`01a_journal_format_plan.json`. The journal profile records the official rules;
+For `TARGET_JOURNAL`, create `00_input_inventory.json`,
+`01_journal_profile.json`, and `01a_journal_format_plan.json`. The journal profile records the official rules;
 the format plan converts each applicable rule into an implementation and a
 verification method for this exact journal, article type, and stage. Validate
 both. Load
@@ -208,9 +236,14 @@ python3 "$SKILL_ROOT/scripts/validate_journal_format_plan.py" \
   01a_journal_format_plan.json --require-pass
 ```
 
-Do not begin `format-manuscript` unless the format-plan validator passes with
+Do not begin target-journal `format-manuscript` unless the format-plan validator passes with
 `--require-pass`. A generic statement such as “follow journal style” is not a
 format plan.
+
+For `JOURNAL_NEUTRAL`, create `00_input_inventory.json` and
+`01_neutral_manuscript_profile.json` using the exact contract in
+`journal-neutral-manuscript.md`. Do not fabricate journal URLs or place neutral
+fallbacks in an artifact labeled as official journal guidance.
 
 Do not silently combine manuscript, figures, or supplements from different versions.
 
@@ -240,6 +273,11 @@ Load [references/multi-agent-review.md](references/multi-agent-review.md),
 [references/concern-ledger-and-adjudication.md](references/concern-ledger-and-adjudication.md)
 completely. Load the applicable sections of
 [references/biomedical-review-gates.md](references/biomedical-review-gates.md).
+
+In `JOURNAL_NEUTRAL`, replace journal-fit/tier calibration with portability,
+scientific defensibility, reporting completeness, and claim-ceiling review.
+Do not use accepted-paper precedent as an acceptance proxy. Keep the same five
+independent core seats and all receipt/budget requirements.
 
 - Spawn at least five actual independent reviewer agents with the host's
   non-fork, isolated subagent/delegation mechanism when available.
@@ -333,7 +371,7 @@ Apply:
 4. figure-text-legend-data closure
 5. article architecture
 6. paragraph and sentence language
-7. target-journal formatting
+7. route-specific formatting
 
 Preserve the original. Produce a tracked/review copy, a clean revised copy, and `revision_log.tsv`. Do not state that a change was made unless it is present in the delivered manuscript.
 
@@ -356,18 +394,24 @@ experiment, effect estimate, causal result, or safety outcome.
 
 ## Step 7: format as a submission manuscript
 
-Load [references/journal-discovery-and-profile.md](references/journal-discovery-and-profile.md),
-[references/journal-format-plan.md](references/journal-format-plan.md), and
-[references/manuscript-formatting.md](references/manuscript-formatting.md), and
-[references/journal-typography-resolution.md](references/journal-typography-resolution.md). For
+Always load [references/manuscript-formatting.md](references/manuscript-formatting.md),
+[references/journal-typography-resolution.md](references/journal-typography-resolution.md), and
+[references/table-formatting.md](references/table-formatting.md). For
+a `TARGET_JOURNAL` run, also load
+[references/journal-discovery-and-profile.md](references/journal-discovery-and-profile.md)
+and [references/journal-format-plan.md](references/journal-format-plan.md). For
+a `JOURNAL_NEUTRAL` run, load
+[references/journal-neutral-manuscript.md](references/journal-neutral-manuscript.md). For
 a manuscript, also load
 [references/front-matter-contract.md](references/front-matter-contract.md).
 
-- Treat the official journal template and current stage-specific guidance as authority.
-- Reconfirm that `01a_journal_format_plan.json` matches the release-candidate
+- In `TARGET_JOURNAL`, treat the official journal template and current
+  stage-specific guidance as authority. In `JOURNAL_NEUTRAL`, use the frozen
+  neutral profile and do not run or claim the journal-specific plan gate.
+- In `TARGET_JOURNAL`, reconfirm that `01a_journal_format_plan.json` matches the release-candidate
   manuscript's exact journal, article type, stage, and current
   `01_journal_profile.json` SHA-256.
-- Execute every plan check individually. Record the source rule, concrete
+- In `TARGET_JOURNAL`, execute every plan check individually. Record the source rule, concrete
   implementation, verification evidence, and final status in
   `07_format_audit.json`; do not collapse them into a generic format pass.
 - Use restrained black manuscript styling unless a current official source
@@ -382,13 +426,14 @@ a manuscript, also load
   `scripts/audit_docx_manuscript_style.py`,
   `scripts/audit_docx_front_matter.py`, and
   `scripts/audit_docx_semantic_rhythm.py` with the resolved role/style,
-  font-family, title-size, body-size, table-size, manuscript-spacing, and
-  table-spacing inputs.
+  font-family, title-size, body-size, table-size, manuscript-spacing,
+  table-spacing, and table-rule-scheme inputs.
 - Compare content, render and inspect every page, fix failures, then rerun from
   normalization. A mechanical XML pass is not a release.
 
-After all plan checks, mechanical audits, and page inspections are recorded,
-validate closure from the plan to the delivered files:
+For `TARGET_JOURNAL`, after all plan checks, mechanical audits, and page
+inspections are recorded, validate closure from the plan to the delivered
+files:
 
 ```bash
 python3 "$SKILL_ROOT/scripts/validate_journal_format_audit.py" \
@@ -408,6 +453,9 @@ the combined validator returns `FORMAT_RELEASE_PASS`. For cover letters,
 response letters, and editable package text without manuscript front matter,
 load [references/submission-package-contract.md](references/submission-package-contract.md)
 and require `PACKAGE_FORMAT_RELEASE_PASS` without fabricating a title block.
+For a neutral manuscript, pass `--journal-status NOT_APPLICABLE`, require every
+other mechanical/content/render gate, and report `NEUTRAL_FORMAT_PASS`; never
+rename it `RELEASE PASS` for a journal submission.
 
 ## Step 8: run the release gate
 
@@ -418,8 +466,10 @@ capacity or task receipts makes workflow assurance `NOT ASSESSABLE`; it is not
 itself a scientific defect in the manuscript.
 
 Return the manuscript-readiness status, workflow-assurance status, and exactly
-one overall state: `RELEASE PASS`, `RELEASE FAIL`, or
-`RELEASE NOT ASSESSABLE`, using the mapping in `release-gates.md`.
+one route-appropriate overall state from `release-gates.md`: `RELEASE PASS`,
+`RELEASE FAIL`, or `RELEASE NOT ASSESSABLE` for a target journal; `NEUTRAL
+MANUSCRIPT PASS`, `NEUTRAL MANUSCRIPT FAIL`, or `NEUTRAL MANUSCRIPT NOT
+ASSESSABLE` for a general manuscript.
 
 Never predict acceptance.
 
@@ -429,9 +479,9 @@ Use this stable order when the corresponding phase runs:
 
 ```text
 00_input_inventory.json
-01_journal_profile.json
-01a_journal_format_plan.json
-01b_acceptance_tolerance_card.json
+01_journal_profile.json OR 01_neutral_manuscript_profile.json
+01a_journal_format_plan.json (target-journal route only)
+01b_acceptance_tolerance_card.json (target-journal route only)
 02_shared_fact_base.md
 03_review_panel_plan.json
 reviews/reviewer_01.md ...
@@ -461,6 +511,7 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 |---|---|
 | [references/platform-compatibility.md](references/platform-compatibility.md) | Resolving host tools, subagents, bundled scripts, or install-specific behavior |
 | [references/journal-discovery-and-profile.md](references/journal-discovery-and-profile.md) | Target journal is unknown or any journal-specific task begins |
+| [references/journal-neutral-manuscript.md](references/journal-neutral-manuscript.md) | The user selects a neutral/general manuscript route |
 | [references/journal-format-plan.md](references/journal-format-plan.md) | Translating official journal requirements into a per-manuscript executable format and package plan |
 | [references/journal-typography-resolution.md](references/journal-typography-resolution.md) | Classifying binding/direct versus example-only font and line-spacing language and resolving fallbacks |
 | [references/multi-agent-review.md](references/multi-agent-review.md) | Planning, running, or synthesizing reviewer agents |
@@ -474,6 +525,7 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 | [references/ai-use-declaration.md](references/ai-use-declaration.md) | Adding, revising, or checking an AI-use statement |
 | [references/credit-authorship-contract.md](references/credit-authorship-contract.md) | Adding, revising, formatting, or auditing a CRediT authorship contribution statement |
 | [references/manuscript-formatting.md](references/manuscript-formatting.md) | Creating or checking DOCX/PDF/LaTeX submission files |
+| [references/table-formatting.md](references/table-formatting.md) | Creating, normalizing, or auditing any manuscript table |
 | [references/generated-docx-release-contract.md](references/generated-docx-release-contract.md) | Closing every generated or modified DOCX against the embedded formatting lane before delivery |
 | [references/submission-package-contract.md](references/submission-package-contract.md) | Formatting or auditing cover letters, response letters, and editable package text |
 | [references/front-matter-contract.md](references/front-matter-contract.md) | Normalizing or auditing manuscript title, authors, affiliations, correspondence, anonymization, or first-page layout |
@@ -482,6 +534,10 @@ Keep review artifacts factual and utilitarian. The submission manuscript must no
 ## Boundaries
 
 - Official instructions, specific editor directions, and supplied templates outrank generalized style guidance.
+- Neutral mode is deliberately journal-independent. It cannot establish
+  article-type eligibility, journal limits, template compliance, or submission
+  readiness; retargeting reopens the journal profile, format plan, tolerance
+  calibration, and affected review axes.
 - A journal profile or format plan from an earlier manuscript, article type,
   stage, or access date is routing evidence only; refresh it before claiming
   current journal-specific compliance.

@@ -1,8 +1,9 @@
 name: manuscript-review-revision
-version: 1.10.1
+version: 1.11.0
 description: >
-  Declarative routing manifest for journal-aware, review-first manuscript
-  assessment and authorized revision across compatible Agent Skills hosts.
+  Declarative routing manifest for target-journal or journal-neutral,
+  review-first manuscript assessment and authorized revision across compatible
+  Agent Skills hosts.
 
 always_load:
   - references/platform-compatibility.md
@@ -11,10 +12,14 @@ references:
   on_demand:
     - condition: target journal is unknown or journal requirements must be refreshed
       path: references/journal-discovery-and-profile.md
+    - condition: the user selects a neutral, general, journal-independent manuscript route
+      path: references/journal-neutral-manuscript.md
     - condition: converting current journal requirements into an executable manuscript-format and submission-package plan
       path: references/journal-format-plan.md
     - condition: resolving journal font, title/body/table sizes, or line spacing from official source language
       path: references/journal-typography-resolution.md
+    - condition: creating, normalizing, or auditing any manuscript table
+      path: references/table-formatting.md
     - condition: planning, dispatching, validating, or synthesizing independent reviewer agents
       path: references/multi-agent-review.md
     - condition: calibrating editorial strictness or selecting the optional specialist seat

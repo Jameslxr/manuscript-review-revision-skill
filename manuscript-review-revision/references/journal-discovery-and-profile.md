@@ -1,5 +1,10 @@
 # Journal discovery and live profile
 
+Use this file only for `TARGET_JOURNAL` or `JOURNAL_RECOMMENDATION`. If the
+author selects a journal-neutral general manuscript, load
+[journal-neutral-manuscript.md](journal-neutral-manuscript.md) and do not turn
+neutral fallbacks into an invented journal profile.
+
 ## Mandatory source order
 
 Use current primary sources in this order:

@@ -6,11 +6,13 @@
 2. [Submission manuscript visual contract](#submission-manuscript-visual-contract)
 3. [Manuscript front matter](#manuscript-front-matter)
 4. [Literal body-paragraph separation](#literal-body-paragraph-separation)
-5. [Continuous line and page numbering](#continuous-line-and-page-numbering)
-6. [DOCX workflow](#docx-workflow)
-7. [Submission-package files](#submission-package-files)
-8. [Output separation](#output-separation)
-9. [Mechanical audit boundary](#mechanical-audit-boundary)
+5. [Lists and compact semantic blocks](#lists-and-compact-semantic-blocks)
+6. [High-standard tables](#high-standard-tables)
+7. [Continuous line and page numbering](#continuous-line-and-page-numbering)
+8. [DOCX workflow](#docx-workflow)
+9. [Submission-package files](#submission-package-files)
+10. [Output separation](#output-separation)
+11. [Mechanical audit boundary](#mechanical-audit-boundary)
 
 ## Source precedence
 
@@ -86,6 +88,8 @@ Use this invariant for every modified DOCX:
 - Remove or disable `beforeAutospacing` and `afterAutospacing` in paragraph and body-style OOXML; a visible `0 pt` value does not close the gate while automatic spacing remains enabled.
 - Resolve body line spacing as an exact manuscript token. Use the exact journal/template value when specified; otherwise use `double` as the conservative review-manuscript fallback. Never inherit Word's default `1.08`/`1.15` line spacing and never disable this check.
 - Insert exactly one structurally empty paragraph between adjacent body-prose paragraphs. In Word with formatting marks visible, the structure is `body text¶`, `¶`, `next body text¶`.
+- A separator must contain no space, tab, nonbreaking space, or whitespace-only
+  run. If found, remove the whitespace and retain one truly empty `<w:p>`.
 - Give the empty separator paragraph effective `spaceBefore=0 pt`, `spaceAfter=0 pt`, and the same line-spacing token as the surrounding body style. This is the structure produced by pressing `Enter` twice in consistently styled body text.
 - Use real semantic styles: `Title`/author/affiliation, `Heading`, `Normal` or `Body Text`, `Caption`, `List Paragraph`, and `Bibliography` as applicable. Do not style title blocks, lists, captions, or references as body prose merely to obtain spacing.
 - Do not substitute `spaceAfter`, `spaceBefore`, CSS/HTML margins, or a manual line break (`Shift+Enter`, `<w:br>`) for the empty paragraph.
@@ -109,6 +113,35 @@ default. Apply it to every modified DOCX. If an exact journal template
 conflicts, record the conflict in `01_journal_profile.json` and
 `07_format_audit.json`; do not bypass the invariant or claim simultaneous
 template compliance.
+
+## Lists and compact semantic blocks
+
+Treat bullets and numbered paragraphs as list items even when numbering is
+inherited from the paragraph style. Do not classify them as body prose merely
+to force prose-to-prose gaps.
+
+- Use no empty paragraph between consecutive items, subitems, or Key Points.
+- Use no empty paragraph between a list-introducing heading and its first item.
+- Use one true empty paragraph between the whole list block and surrounding
+  ordinary prose; a following heading supplies that block boundary.
+- Keep 0/0 pt paragraph spacing on every list item. Do not combine list-item
+  spacing with blank separator paragraphs.
+- Preserve numbering, indentation, and item text. Do not flatten lists into
+  typed hyphens or rewrite content during format-only work.
+
+## High-standard tables
+
+Load [table-formatting.md](table-formatting.md) for every table. Resolve the
+scheme from current binding/direct journal evidence. If none exists, use the
+journal-neutral three-line scheme, not Word's default full grid: top,
+header-bottom, and bottom rules; no vertical/internal body rules or shading;
+bold repeating header; top-aligned cells; editable structure; 10 pt single
+spaced cell text with 0/0 pt paragraph spacing.
+
+Table content/statistics and rendered layout are independent gates. Missing
+units, undefined abbreviations, inconsistent precision, unclear denominators,
+unsupported P values, or cross-artifact mismatches cannot be repaired by visual
+styling and cannot receive a table pass until resolved.
 
 ## Continuous line and page numbering
 
@@ -147,7 +180,9 @@ and do not claim simultaneous template compliance.
    prose-style arguments plus the resolved `--font-name`, `--body-font-size`,
    `--title-font-size`, `--table-font-size`, and `--line-spacing` values.
    Also pass `--table-line-spacing`; use `single` when no binding/direct
-   table-specific rule resolves another token.
+   table-specific rule resolves another token. Pass `--table-rule-scheme` with
+   the plan's `three-line`, `full-grid`, or source-backed `preserve-official`
+   value.
 6. Run `enforce_docx_line_page_numbers.py` on every modified DOCX with the resolved page-number position.
 7. Run `python3 "$SKILL_ROOT/scripts/audit_docx_manuscript_style.py" manuscript.numbered.docx --paragraph-separation literal-blank --expected-line-spacing double` on every modified DOCX, replacing only the spacing token with the validated `style_contract` value and passing all prose/non-body styles explicitly.
 8. For a manuscript, run `audit_docx_front_matter.py` with the resolved blinded/unblinded mode, front-matter alignment, role arguments, page-number position, body size, and global line-spacing token.
@@ -156,7 +191,8 @@ and do not claim simultaneous template compliance.
    manuscript token outside tables, the independently resolved table-cell token,
    exact 15/12/10 pt fallbacks when no official override exists, body-sized
    author/affiliation/Keywords/declaration/reference roles, a bold Keywords
-   label, and exact semantic blank-line boundaries.
+   label, compact list blocks, exact semantic blank-line boundaries, and the
+   resolved table-rule scheme.
 10. Compare extracted text before and after; any unauthorized text change fails content preservation.
 11. Render DOCX with a reliable renderer available in the current host and inspect every page at 100% zoom.
 12. Check title/heading color, clipping, overlap, tables, captions, page breaks, orphan headings, figures, headers/footers, visible continuous line numbers, dynamic page numbers, and references.
@@ -199,13 +235,15 @@ Do not strip comments, tracked changes, citation fields, author identity, or met
 The style script flags explicit non-black or theme-colored title/heading text,
 title/heading shading, decorative paragraph borders, non-zero effective
 body-paragraph spacing, missing literal blank separators, multiple blank
-separators, missing or restarted section line numbering, suppressed line
+separators, whitespace inside a nominal blank, missing or restarted section line numbering, suppressed line
 numbers, and missing dynamic page fields in active page stories. It also checks
 the resolved body and separator line spacing against an explicit multiple
 (`single`, `1.15`, `1.5`, `double`) or point rule (`exact:24pt`,
 `at-least:14pt`). It inspects top-level body prose and does not treat table-cell
 paragraphs as adjacent body paragraphs. It cannot prove compliance with a
-journal template or visual correctness. Always combine it with official-source
+journal template or visual correctness. The semantic audit additionally checks
+compact lists plus the resolved table-rule scheme, header repetition/emphasis,
+and cell shading. Always combine both with official-source
 review and rendered page inspection.
 
 The journal-format plan validator checks that all required rule categories have

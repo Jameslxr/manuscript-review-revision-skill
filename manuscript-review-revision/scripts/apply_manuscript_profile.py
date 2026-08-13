@@ -12,6 +12,7 @@ from typing import Any
 
 try:
     from docx import Document
+    from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
     from docx.enum.style import WD_STYLE_TYPE
     from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
     from docx.oxml import OxmlElement
@@ -36,6 +37,7 @@ from audit_docx_manuscript_style import (  # noqa: E402
     DEFAULT_BODY_STYLES,
     normalize_style_token,
     paragraph_is_body,
+    paragraph_is_list,
     paragraph_is_nonbody,
     paragraph_is_structurally_empty,
     parse_line_spacing_spec,
@@ -115,6 +117,16 @@ def parse_args() -> argparse.Namespace:
         help="Table-cell line spacing; defaults to single.",
     )
     parser.add_argument(
+        "--table-rule-scheme",
+        choices=("three-line", "full-grid", "preserve-official"),
+        default="three-line",
+        help=(
+            "Table border/presentation scheme. Defaults to a journal-neutral "
+            "three-line table; use preserve-official only with a verified exact "
+            "journal template or instruction."
+        ),
+    )
+    parser.add_argument(
         "--abstract-start", choices=("integrated", "new-page"), default="integrated"
     )
     parser.add_argument(
@@ -153,6 +165,24 @@ def parse_args() -> argparse.Namespace:
 
 def text_node_values(document: Any) -> list[str]:
     return [str(node.text or "") for node in document.element.body.xpath(".//w:t")]
+
+
+def clear_whitespace_only_blank_paragraphs(document: Any) -> int:
+    """Remove spaces/tabs from blank top-level paragraphs without touching prose."""
+
+    cleaned = 0
+    for paragraph in document.paragraphs:
+        if not paragraph_is_structurally_empty(paragraph):
+            continue
+        whitespace_nodes = list(paragraph._p.xpath(".//w:t | .//w:tab"))
+        if not whitespace_nodes:
+            continue
+        for node in whitespace_nodes:
+            parent = node.getparent()
+            if parent is not None:
+                parent.remove(node)
+        cleaned += 1
+    return cleaned
 
 
 def set_font_name(font: Any, name: str) -> None:
@@ -296,13 +326,13 @@ def apply_visible_typography(
             )
 
     table_count = 0
-    seen_cells: set[int] = set()
+    seen_cells: set[Any] = set()
     for table in document.tables:
         for row in table.rows:
             for cell in row.cells:
-                if id(cell._tc) in seen_cells:
+                if cell._tc in seen_cells:
                     continue
-                seen_cells.add(id(cell._tc))
+                seen_cells.add(cell._tc)
                 for paragraph in cell.paragraphs:
                     paragraph.paragraph_format.space_before = Pt(0)
                     paragraph.paragraph_format.space_after = Pt(0)
@@ -321,6 +351,109 @@ def apply_visible_typography(
     return {
         "top_level_visible_paragraphs": top_level_count,
         "table_visible_paragraphs": table_count,
+    }
+
+
+def set_table_border(
+    borders: Any,
+    edge: str,
+    *,
+    value: str,
+    size: int = 8,
+) -> None:
+    nodes = borders.findall(qn(f"w:{edge}"))
+    node = nodes[0] if nodes else OxmlElement(f"w:{edge}")
+    if not nodes:
+        borders.append(node)
+    node.set(qn("w:val"), value)
+    node.set(qn("w:color"), "000000")
+    node.set(qn("w:sz"), str(size))
+    node.set(qn("w:space"), "0")
+    for duplicate in nodes[1:]:
+        borders.remove(duplicate)
+
+
+def apply_table_presentation(document: Any, rule_scheme: str) -> dict[str, int | str]:
+    """Apply an editable, restrained table scheme to every manuscript table."""
+
+    if rule_scheme == "preserve-official":
+        return {
+            "table_count": len(document.tables),
+            "header_rows_normalized": 0,
+            "shaded_cells_cleared": 0,
+            "rule_scheme": rule_scheme,
+        }
+
+    header_rows_normalized = 0
+    shaded_cells_cleared = 0
+    for table in document.tables:
+        table.style = None
+        table.alignment = WD_TABLE_ALIGNMENT.LEFT
+        table_properties = table._tbl.tblPr
+        existing_borders = table_properties.findall(qn("w:tblBorders"))
+        borders = existing_borders[0] if existing_borders else OxmlElement("w:tblBorders")
+        if not existing_borders:
+            table_properties.append(borders)
+        for duplicate in existing_borders[1:]:
+            table_properties.remove(duplicate)
+
+        if rule_scheme == "three-line":
+            values = {
+                "top": "single",
+                "bottom": "single",
+                "left": "nil",
+                "right": "nil",
+                "insideH": "nil",
+                "insideV": "nil",
+            }
+        else:
+            values = {edge: "single" for edge in (
+                "top", "bottom", "left", "right", "insideH", "insideV"
+            )}
+        for edge, value in values.items():
+            set_table_border(borders, edge, value=value)
+
+        for row in table.rows:
+            row_properties = row._tr.get_or_add_trPr()
+            for duplicate in list(row_properties.findall(qn("w:tblHeader"))):
+                row_properties.remove(duplicate)
+            for cell in row.cells:
+                cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+                cell_properties = cell._tc.get_or_add_tcPr()
+                for cell_borders in list(cell_properties.findall(qn("w:tcBorders"))):
+                    cell_properties.remove(cell_borders)
+                for shading in list(cell_properties.findall(qn("w:shd"))):
+                    cell_properties.remove(shading)
+                    shaded_cells_cleared += 1
+
+        if not table.rows:
+            continue
+        header_properties = table.rows[0]._tr.get_or_add_trPr()
+        header = OxmlElement("w:tblHeader")
+        header.set(qn("w:val"), "true")
+        header_properties.append(header)
+        header_rows_normalized += 1
+        for cell in table.rows[0].cells:
+            if rule_scheme == "three-line":
+                cell_properties = cell._tc.get_or_add_tcPr()
+                cell_borders = OxmlElement("w:tcBorders")
+                bottom = OxmlElement("w:bottom")
+                bottom.set(qn("w:val"), "single")
+                bottom.set(qn("w:color"), "000000")
+                bottom.set(qn("w:sz"), "8")
+                bottom.set(qn("w:space"), "0")
+                cell_borders.append(bottom)
+                cell_properties.append(cell_borders)
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    if run.text.strip():
+                        run.font.bold = True
+
+    return {
+        "table_count": len(document.tables),
+        "header_rows_normalized": header_rows_normalized,
+        "shaded_cells_cleared": shaded_cells_cleared,
+        "rule_scheme": rule_scheme,
     }
 
 
@@ -550,8 +683,13 @@ def adjacent_blank_nodes_after(document: Any, node: Any) -> list[Any]:
 
 
 def format_separator(node: Any, document: Any, style: Any, line_spacing: dict[str, object]) -> None:
+    paragraph = Paragraph(node, document._body)
+    for whitespace in list(paragraph._p.xpath(".//w:t | .//w:tab")):
+        parent = whitespace.getparent()
+        if parent is not None:
+            parent.remove(whitespace)
     format_paragraph(
-        Paragraph(node, document._body),
+        paragraph,
         style,
         size_pt=BODY_FONT_SIZE_PT,
         bold=False,
@@ -638,6 +776,7 @@ def normalize_semantic_vertical_rhythm(
     keyword_nodes: set[Any],
     declaration_inline_nodes: set[Any],
     credit_entry_nodes: set[Any],
+    list_nodes: set[Any],
     separator_style: Any,
     line_spacing: dict[str, object],
 ) -> None:
@@ -674,6 +813,28 @@ def normalize_semantic_vertical_rhythm(
                 document, node, 0, separator_style, line_spacing
             )
 
+    # Lists are compact semantic blocks: never put an empty paragraph between
+    # bullet/numbered items. Separate the whole block from surrounding prose,
+    # but keep a heading directly attached to its first item.
+    for node in ordered:
+        if node not in list_nodes:
+            continue
+        previous = previous_nonblank_paragraph(document, node)
+        if previous not in list_nodes:
+            desired_before = 0 if previous in heading_nodes else 1
+            set_blank_count_before(
+                document, node, desired_before, separator_style, line_spacing
+            )
+        following = next_nonblank_paragraph(document, node)
+        if following in list_nodes:
+            set_blank_count_after(
+                document, node, 0, separator_style, line_spacing
+            )
+        elif following is not None and following not in heading_nodes:
+            set_blank_count_after(
+                document, node, 1, separator_style, line_spacing
+            )
+
     # Every new section/subsection/declaration block has exactly one empty line
     # before it, except Abstract (handled by the front-matter contract) and
     # consecutive headings, which remain together.
@@ -700,6 +861,7 @@ def apply_profile(
     title_font_size: float,
     table_font_size: float | None,
     table_line_spacing_token: str,
+    table_rule_scheme: str,
     abstract_start: str,
     body_style_tokens: set[str],
     explicit_styles: dict[str, set[str]],
@@ -717,6 +879,9 @@ def apply_profile(
     if resolved_table_font_size <= 0:
         raise ValueError("table font size must be positive")
     document = Document(str(document_path))
+    whitespace_only_blank_paragraphs_cleaned = clear_whitespace_only_blank_paragraphs(
+        document
+    )
     original_text_stream = "".join(text_node_values(document))
     flattened_tables = flatten_recognized_front_matter_tables(
         document, explicit_styles
@@ -778,6 +943,7 @@ def apply_profile(
     keyword_nodes: set[Any] = set()
     declaration_inline_nodes: set[Any] = set()
     credit_entry_nodes: set[Any] = set()
+    list_nodes: set[Any] = set()
     if abstract is not None:
         heading_nodes.add(abstract._p)
     abstract_seen = False
@@ -790,6 +956,11 @@ def apply_profile(
         if not abstract_seen:
             continue
         style_name = paragraph.style.name if paragraph.style is not None else ""
+        if re.search(r"caption", style_name, re.I) or re.match(
+            r"^\s*(?:table|figure)\s+\d+\b", paragraph.text, re.I
+        ):
+            paragraph.paragraph_format.keep_with_next = True
+            paragraph.paragraph_format.keep_together = True
         if re.search(r"keyword", style_name, re.I) or re.match(
             r"^\s*keywords?\s*:", paragraph.text, re.I
         ):
@@ -819,6 +990,8 @@ def apply_profile(
                 alignment=WD_ALIGN_PARAGRAPH.LEFT,
                 line_spacing=body_spacing,
             )
+            paragraph.paragraph_format.keep_with_next = True
+            paragraph.paragraph_format.keep_together = True
             heading_nodes.add(paragraph._p)
             credit_block_active = bool(CREDIT_HEADING_RE.fullmatch(paragraph.text))
             if re.fullmatch(
@@ -829,6 +1002,11 @@ def apply_profile(
                 reference_section_seen = True
             elif reference_section_seen:
                 reference_section_seen = False
+            continue
+        if paragraph_is_list(paragraph):
+            list_nodes.add(paragraph._p)
+            reference_section_seen = False
+            credit_block_active = False
             continue
         if DECLARATION_INLINE_RE.match(paragraph.text):
             reference_section_seen = False
@@ -919,10 +1097,12 @@ def apply_profile(
         keyword_nodes=keyword_nodes,
         declaration_inline_nodes=declaration_inline_nodes,
         credit_entry_nodes=credit_entry_nodes,
+        list_nodes=list_nodes,
         separator_style=styles["body"],
         line_spacing=body_spacing,
     )
 
+    table_presentation = apply_table_presentation(document, table_rule_scheme)
     title_nodes = {
         paragraph._p for paragraph, role in records if role == "title"
     }
@@ -962,8 +1142,13 @@ def apply_profile(
         "title_font_size_pt": title_font_size,
         "table_font_size_pt": resolved_table_font_size,
         "table_line_spacing": table_spacing["label"],
+        "table_rule_scheme": table_rule_scheme,
         "role_counts": role_counts,
+        "whitespace_only_blank_paragraphs_cleaned": (
+            whitespace_only_blank_paragraphs_cleaned
+        ),
         "flattened_front_matter_tables": flattened_tables,
+        "table_presentation": table_presentation,
         "typography_counts": typography_counts,
     }
 
@@ -986,6 +1171,7 @@ def main() -> int:
             title_font_size=args.title_font_size,
             table_font_size=args.table_font_size,
             table_line_spacing_token=args.table_line_spacing,
+            table_rule_scheme=args.table_rule_scheme,
             abstract_start=args.abstract_start,
             body_style_tokens=body_style_tokens,
             explicit_styles=explicit_styles,

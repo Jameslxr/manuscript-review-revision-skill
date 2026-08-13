@@ -2,23 +2,22 @@
 
 [English](README_EN.md)
 
-这是一个用于科学论文审稿和修改的 Agent Skill，可安装在 Codex、Claude Code 及其他兼容 Agent Skills 的环境中。它会先确认目标期刊，并根据期刊定位安排 5–6 个相互独立的审稿角色。完成科学审查并取得作者授权后，才会进入内容修改、文献核查、语言润色和投稿格式检查。如果只需要 DOCX 排版而不需要科学审稿，请使用独立的 [Manuscript DOCX Formatting Skill](https://github.com/Jameslxr/manuscript-docx-formatting)。
+这是一个用于科学论文审稿和修改的 Agent Skill，可安装在 Codex、Claude Code 及其他兼容 Agent Skills 的环境中。它会先确认采用中立通用稿件、指定目标期刊还是期刊推荐路线，再安排 5–6 个相互独立的审稿角色。完成科学审查并取得作者授权后，才会进入内容修改、文献核查、语言润色和格式检查。如果只需要 DOCX 排版而不需要科学审稿，请使用独立的 [Manuscript DOCX Formatting Skill](https://github.com/Jameslxr/manuscript-docx-formatting)。
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.9.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.11.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
-
 ## 简要说明
 
 | 需要处理的问题 | 处理原则 |
 |---|---|
-| 不同期刊的审稿标准并不相同 | 先确认目标期刊、文章类型和投稿阶段，再结合官网规则与近期同类型录用论文校准审稿尺度 |
+| 稿件可能尚未绑定期刊 | 先选择中立通用、指定期刊或推荐期刊；中立稿按严格通用标准处理但不声称投稿合规 |
 | 过早润色可能掩盖尚未解决的科学问题 | 独立科学审稿完成前不修改原稿 |
 | 单一审稿视角可能遗漏重要问题 | 安排 5 个固定独立审稿角色；高风险研究最多增加 1 个专项角色，并限制职责与输出预算 |
 | 同一篇稿件多次交给通用大模型，审稿意见可能前后不一致，甚至相互矛盾 | 固定稿件、期刊要求和角色职责；记录每个 Agent 的任务收据和输出哈希，再逐条汇总共识与分歧 |
 | 文献存在并不代表它支持当前表述 | 分别核对文献真实性、引用格式及其对具体论断的支持程度 |
-| 输出文件可能不符合正式投稿的排版习惯 | 每个最终 DOCX 都强制经过内嵌排版门、逐页检查及交付目录哈希收口；漏检任一文件即失败 |
+| 输出文件可能不符合正式投稿的排版习惯 | 每个最终 DOCX 都检查纯空行、语义列表、顶刊级表格、逐页布局及交付目录哈希；漏检任一文件即失败 |
 | 研究不可能在每个方面都达到理想配置 | 区分致命缺陷、投稿前可修正问题、可接受的固有局限和可选增强；只有收窄结论后仍无法成立的问题才阻断 |
 
 ## 主要用途
@@ -37,20 +36,20 @@
 |---|---|
 | 目标期刊已知 | `使用 $manuscript-review-revision。目标期刊：Journal of Hepatology。先审稿，不修改原稿。` |
 | 目标期刊未知 | `使用 $manuscript-review-revision。目标期刊不确定，请推荐 5 本候选期刊。` |
-| 只审稿 | `只运行 scientific-review；综合结论后暂停。` |
+| 中立通用稿 | `使用 $manuscript-review-revision。采用中立通用稿件方案；先审稿，不绑定期刊。` |
 | 文献专项核查 | `运行 reference-audit，逐句核对文献是否真实、格式是否正确，以及是否支持对应表述。` |
 | 授权修改 | `我已审阅 05_review_verdict.md，同意进入 revise-manuscript。` |
 
-如果命令中没有写明目标期刊，程序首先会询问：
+如果命令中没有写明稿件方案，程序首先会询问：
 
 ```text
-本次目标期刊是什么？如果尚未确定，请回复“不确定，请推荐期刊”。
+本次采用哪种稿件方案：中立通用稿件、指定目标期刊，还是尚未确定并需要推荐期刊？
 ```
 
 ## 需要准备的材料
 
 - 稿件全文，或需要审查的具体章节；
-- 拟投期刊；尚未确定时可直接要求推荐；
+- 稿件方案：中立通用、指定期刊，或尚未确定并要求推荐；
 - 文章类型和投稿阶段（如果已知）；
 - 图、表、图注、补充材料和参考文献；
 - 已知限制，例如无法补充实验、仅进行初次投稿审稿或只需要问题诊断；
@@ -65,7 +64,7 @@
 ```mermaid
 flowchart TB
     START(["1 · 上传稿件和现有材料"])
-    TARGET{"2 · 是否已经确定<br/>目标期刊？"}
+    TARGET{"2 · 选择稿件方案<br/>中立 · 指定 · 推荐"}
     REC["3A · 根据研究主题、稿件质量和证据强度<br/>推荐 5 本候选期刊"]
     PICK["3B · 作者选择 1 本目标期刊"]
     RULES["4 · 查阅期刊官网和近期同类论文<br/>确认硬性要求与实际录用尺度"]
@@ -82,7 +81,7 @@ flowchart TB
     RETURN["否：列出未解决问题<br/>继续修改"]
     MISSING(["材料不足：暂停<br/>列出仍需补充的材料"])
 
-    subgraph S1["第一阶段 · 确定目标期刊"]
+    subgraph S1["第一阶段 · 确定稿件路线"]
         direction LR
         START --> TARGET
         TARGET -- "已确定" --> RULES
@@ -103,6 +102,7 @@ flowchart TB
     end
 
     RULES --> CHECK
+    TARGET -- "中立通用" --> CHECK
     AUTH -- "不同意" --> STOP
     AUTH -- "同意" --> REVISE
 
@@ -129,7 +129,7 @@ flowchart TB
 
 | 工作阶段 | 主要文件 |
 |---|---|
-| 期刊要求与录用尺度 | `00_input_inventory.json`、`01_journal_profile.json`、`01a_journal_format_plan.json`、`01b_acceptance_tolerance_card.json` |
+| 路线 profile | `00_input_inventory.json`；指定期刊用 `01_journal_profile.json` 等，中立稿用 `01_neutral_manuscript_profile.json` |
 | 独立审稿 | `03_review_panel_plan.json`、各 reviewer 报告、`reviews/concern_ledger.tsv` |
 | 审稿意见汇总 | `04_cross_review_matrix.tsv`、`05_review_verdict.md` |
 | 文献核查 | `06_reference_audit.tsv` |
@@ -138,7 +138,7 @@ flowchart TB
 
 ## 使用限制
 
-- 在目标期刊确定前，不开展完整审稿；
+- 在中立通用或目标期刊路线确定前，不开展完整审稿；中立稿不声称期刊投稿合规；
 - Panel 固定 5 个核心席位、最多 1 个有明确触发原因的专项席位；未完成时工作流保证为 `NOT ASSESSABLE`，但不会被误写成稿件本身的科学缺陷；
 - 未获得作者明确授权时，不修改、润色或重新排版原稿；
 - 不虚构实验、结果、文献、期刊要求、审稿人身份或并未完成的修改；
@@ -176,7 +176,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 
 ## 当前版本与验证
 
-当前版本为 **Beta**。1.9.0 将内嵌首页契约从单一 Title–Authors 空行扩展为一直到 Abstract 的完整语义模块矩阵，新增可选 Author-note 和 ORCID 角色、同一模块内多段紧凑检查，并拒绝旧 compact 覆盖。1.8.1 的交付目录 SHA-256 收口及此前投稿包、CRediT、语义节奏、录用尺度和引用审计规则均保持不变。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
+当前版本为 **Beta**。1.11.0 新增中立通用稿件路线、无空格/Tab 的真实空行、紧凑 Key Points/list 语义和期刊感知的三线表/官方表格方案；此前首页、交付目录 SHA-256、投稿包、CRediT、录用尺度和引用审计规则保持不变。这些结果只适用于相应测试，不代表对所有稿件或模型的普遍性能保证。完整方法和边界见 `benchmarks/` 与 [验证文档](docs/VALIDATION.md)。
 
 当前自动测试覆盖：
 
@@ -185,7 +185,7 @@ Claude Code：/manuscript-review-revision 我上传了稿件。
 - 单个 reviewer 不能把自己的意见标记为共识；每个问题必须记录四类判定、处理方式和收窄结论后的可辩护性，且可接受局限或可选增强不能被标成 `BLOCKING`；
 - 仅有文献元数据时不能标记为直接支持；核心/支持性 Claim 必须完整核查，普通背景 Claim 的未完成抽查只产生提示；
 - 标题或章节使用蓝色等非黑色样式时，格式检查不通过；
-- 手工 paragraph spacing、首页相邻语义模块缺少/重复真实空段落、同一多段模块内部出现空行、首页居中/混合对齐、语义角色字号偏小、角色行距混用、Keywords 未加粗、section/CRediT 空行错误、行号或动态页码不完整，或任一交付 DOCX 没有当前哈希对应的最终 PASS 时，综合格式发布门不通过；
+- 手工 paragraph spacing、空行残留空格/Tab、bullet point 之间空行、表格未满足三线表或当前期刊方案、首页语义空行/对齐/字号错误、行距混用、Keywords 未加粗、行号或动态页码不完整，或任一交付 DOCX 没有当前哈希对应的最终 PASS 时，综合格式发布门不通过；
 - 合规的黑色标题和完整审计记录可以通过相应检查。
 
 [查看可复现验证命令与边界](docs/VALIDATION.md)

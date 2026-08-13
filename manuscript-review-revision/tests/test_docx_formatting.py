@@ -118,6 +118,24 @@ class StandaloneFormattingTests(unittest.TestCase):
             self.assertIn("MECHANICAL_PASS", audited.stdout)
             self.assertTrue(report.exists())
 
+    def test_blank_separator_with_spaces_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "blank-with-spaces.docx"
+            document = Document()
+            set_double_zero_spacing(document)
+            document.add_paragraph("First paragraph.")
+            separator = document.add_paragraph("   ")
+            separator.paragraph_format.space_before = Pt(0)
+            separator.paragraph_format.space_after = Pt(0)
+            separator.paragraph_format.line_spacing = 2.0
+            document.add_paragraph("Second paragraph.")
+            apply_required_numbering(document)
+            document.save(path)
+
+            result = run_script("audit_docx_manuscript_style.py", path)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("BLANK_PARAGRAPH_CONTAINS_WHITESPACE", result.stdout)
+
     def test_missing_line_and_page_numbering_fail(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "unnumbered.docx"
