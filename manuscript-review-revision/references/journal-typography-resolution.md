@@ -3,6 +3,10 @@
 Use this contract whenever an official source, editor instruction, or template
 may change manuscript font or line spacing.
 
+This file resolves typography and line spacing only. Resolve table borders,
+header treatment, shading, editability, content, and rendered layout separately
+under [table-formatting.md](table-formatting.md).
+
 ## Read the rule in context
 
 Inspect the complete sentence, its heading, the exact article type, and the

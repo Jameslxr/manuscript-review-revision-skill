@@ -8,6 +8,11 @@ assurance so that a host limitation is never mislabeled as a scientific flaw.
 
 ## Manuscript-readiness gates
 
+First report `MANUSCRIPT ROUTE: TARGET_JOURNAL | JOURNAL_NEUTRAL`. In the
+neutral route, replace the current-journal-profile and journal-format-plan rows
+with the frozen neutral-profile row; mark journal-only eligibility, limits,
+format, and package checks `NOT_APPLICABLE`, not `PASS`.
+
 Report:
 
 | Gate | Status | Evidence inspected | Blocking defects | Required correction |
@@ -75,7 +80,8 @@ Return `RELEASE FAIL` when:
 - required ethics, reporting, registration, data/code, authorship, funding, or
   COI material is missing, without an allowed restriction or access mechanism;
 - any delivered DOCX uses paragraph spacing in place of the required literal
-  empty paragraphs, has unclassified non-empty paragraph styles, omits
+  empty paragraphs, contains spaces or tabs inside a nominal blank, inserts
+  blank paragraphs between consecutive list items, has unclassified non-empty paragraph styles, omits
   continuous Word-native line numbering in any section, suppresses line
   numbers, omits a dynamic page number on any active page story, restarts page
   numbering, or failed whole-document structural/rendered visual QA;
@@ -90,6 +96,9 @@ Return `RELEASE FAIL` when:
   or an invalid section/Keywords/CRediT blank-line boundary, lacks the front-matter or
   semantic-rhythm audit, changes unauthorized text during formatting, or does
   not reach `FORMAT_RELEASE_PASS`;
+- any material table lacks the resolved official or journal-neutral rule
+  scheme, editable structure, compact typography, title/note/unit/statistical
+  clarity, cross-artifact consistency, or rendered-page closure;
 - any editable cover letter, response letter, or other submission-package DOCX
   mixes fonts, sizes, line spacing, or paragraph spacing across roles; lacks
   the required natural blank boundaries, package audit, preservation check, or
@@ -108,7 +117,7 @@ leaves the bounded manuscript defensible is not a mandatory blocker.
 
 ## Final output
 
-Report all three lines:
+For `TARGET_JOURNAL`, report all three lines:
 
 - `MANUSCRIPT READINESS: PASS | FAIL | NOT ASSESSABLE`
 - `WORKFLOW ASSURANCE: PASS | NOT ASSESSABLE`
@@ -119,3 +128,14 @@ known manuscript-readiness blocker. Use `RELEASE NOT ASSESSABLE` when readiness
 or promised workflow assurance cannot be completed. List manuscript blockers
 before optional improvements, and list workflow limitations separately. Never
 predict acceptance.
+
+For `JOURNAL_NEUTRAL`, report:
+
+- `MANUSCRIPT READINESS: PASS | FAIL | NOT ASSESSABLE`
+- `WORKFLOW ASSURANCE: PASS | NOT ASSESSABLE`
+- `NEUTRAL MANUSCRIPT PASS | NEUTRAL MANUSCRIPT FAIL | NEUTRAL MANUSCRIPT NOT ASSESSABLE`
+
+A neutral pass means the manuscript satisfies the frozen rigorous general
+biomedical and neutral-format profile. It is `coauthor-review-ready`, not
+`submission-system-ready`, and does not predict compliance or acceptance at a
+later target journal.

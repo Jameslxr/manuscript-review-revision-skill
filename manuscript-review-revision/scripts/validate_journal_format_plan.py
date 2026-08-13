@@ -34,6 +34,10 @@ STYLE_FIELDS = {
     "line_spacing",
     "line_spacing_basis",
     "table_line_spacing",
+    "table_rule_scheme",
+    "table_rule_basis",
+    "table_rule_strength",
+    "table_rule_source_excerpt",
     "line_numbering",
     "line_numbering_basis",
     "page_numbering",
@@ -179,8 +183,8 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
         if field not in plan:
             errors.append(f"Missing top-level field: {field}")
 
-    if str(plan.get("schema_version", "")).strip() != "1.2":
-        errors.append("schema_version must be '1.2'.")
+    if str(plan.get("schema_version", "")).strip() != "1.3":
+        errors.append("schema_version must be '1.3'.")
 
     for field in ("target_journal", "article_type"):
         if not non_empty_string(plan.get(field)):
@@ -248,6 +252,7 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
     style_basis_fields = (
         "paragraph_separation_basis",
         "line_spacing_basis",
+        "table_rule_basis",
         "line_numbering_basis",
         "page_numbering_basis",
         "page_number_position_basis",
@@ -334,6 +339,12 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
             "style_contract.table_line_spacing must be an explicit multiple or "
             "point rule."
         )
+    table_rule_scheme = normalized_token(style.get("table_rule_scheme", ""))
+    if table_rule_scheme not in {"three-line", "full-grid", "preserve-official"}:
+        errors.append(
+            "style_contract.table_rule_scheme must be three-line, full-grid, "
+            "or preserve-official."
+        )
 
     if not non_empty_string(style.get("body_font_family")):
         errors.append("style_contract.body_font_family must be non-empty.")
@@ -351,21 +362,30 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
     line_strength = str(
         style.get("line_spacing_rule_strength", "")
     ).strip().upper()
+    table_rule_strength = str(
+        style.get("table_rule_strength", "")
+    ).strip().upper()
     for field, strength in (
         ("font_rule_strength", font_strength),
         ("line_spacing_rule_strength", line_strength),
+        ("table_rule_strength", table_rule_strength),
     ):
         if strength not in RULE_STRENGTH_VALUES:
             errors.append(
                 f"style_contract.{field} must be one of "
                 f"{sorted(RULE_STRENGTH_VALUES)}."
             )
-    for field in ("font_source_excerpt", "line_spacing_source_excerpt"):
+    for field in (
+        "font_source_excerpt",
+        "line_spacing_source_excerpt",
+        "table_rule_source_excerpt",
+    ):
         if not non_empty_string(style.get(field)):
             errors.append(f"style_contract.{field} must be non-empty.")
 
     font_basis = style_basis_values.get("font_basis", "")
     line_basis = style_basis_values.get("line_spacing_basis", "")
+    table_rule_basis = style_basis_values.get("table_rule_basis", "")
     if font_strength in OFFICIAL_RULE_STRENGTHS and font_basis not in OFFICIAL_BASIS_VALUES:
         errors.append(
             "Binding/direct font evidence requires an official font_basis."
@@ -416,8 +436,44 @@ def validate(plan: object, require_pass: bool = False) -> dict[str, object]:
             "Official line_spacing_basis requires MANDATORY or "
             "EXPLICIT_REQUIREMENT evidence."
         )
+    if (
+        table_rule_strength in OFFICIAL_RULE_STRENGTHS
+        and table_rule_basis not in OFFICIAL_BASIS_VALUES
+    ):
+        errors.append(
+            "Binding/direct table-rule evidence requires an official "
+            "table_rule_basis."
+        )
+    if table_rule_strength in FALLBACK_RULE_STRENGTHS:
+        if table_rule_basis != "CONSERVATIVE_FALLBACK":
+            errors.append(
+                "Example-only or unspecified table-rule evidence requires "
+                "table_rule_basis CONSERVATIVE_FALLBACK."
+            )
+        if table_rule_scheme != "three-line":
+            errors.append(
+                "Example-only or unspecified table-rule evidence requires the "
+                "journal-neutral three-line table scheme."
+            )
+    if (
+        table_rule_basis in OFFICIAL_BASIS_VALUES
+        and table_rule_strength not in OFFICIAL_RULE_STRENGTHS
+    ):
+        errors.append(
+            "Official table_rule_basis requires MANDATORY or "
+            "EXPLICIT_REQUIREMENT evidence."
+        )
+    if table_rule_scheme == "preserve-official" and (
+        table_rule_basis not in OFFICIAL_BASIS_VALUES
+        or table_rule_strength not in OFFICIAL_RULE_STRENGTHS
+    ):
+        errors.append(
+            "preserve-official table rules require binding/direct official evidence."
+        )
     if plan_status == "PASS" and (
-        font_strength == "NOT_ASSESSABLE" or line_strength == "NOT_ASSESSABLE"
+        font_strength == "NOT_ASSESSABLE"
+        or line_strength == "NOT_ASSESSABLE"
+        or table_rule_strength == "NOT_ASSESSABLE"
     ):
         errors.append(
             "plan_status PASS cannot use NOT_ASSESSABLE typography evidence."

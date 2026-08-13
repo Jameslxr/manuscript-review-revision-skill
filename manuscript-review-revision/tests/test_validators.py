@@ -320,7 +320,7 @@ def write_format_plan(
     path.write_text(
         json.dumps(
             {
-                "schema_version": "1.2",
+                "schema_version": "1.3",
                 "target_journal": "Example Journal",
                 "article_type": "Original Article",
                 "submission_stage": "initial",
@@ -341,6 +341,12 @@ def write_format_plan(
                     "line_spacing": "double",
                     "line_spacing_basis": "CONSERVATIVE_FALLBACK",
                     "table_line_spacing": "single",
+                    "table_rule_scheme": "three-line",
+                    "table_rule_basis": "CONSERVATIVE_FALLBACK",
+                    "table_rule_strength": "UNSPECIFIED",
+                    "table_rule_source_excerpt": (
+                        "No binding table-rule scheme appears in the current guide."
+                    ),
                     "line_spacing_rule_strength": "UNSPECIFIED",
                     "line_spacing_source_excerpt": (
                         "No binding line-spacing value appears in the current guide."
@@ -389,6 +395,7 @@ def write_format_audit(
     front_matter_status: str = "PASS",
     content_preservation_status: str = "PASS",
     format_release_status: str = "FORMAT_RELEASE_PASS",
+    table_status: str = "PASS",
     page_number_position: str | None = None,
     overall_status: str = "PASS",
 ) -> None:
@@ -414,7 +421,7 @@ def write_format_audit(
     audit_path.write_text(
         json.dumps(
             {
-                "schema_version": "1.0",
+                "schema_version": "1.1",
                 "target_journal": plan["target_journal"],
                 "article_type": plan["article_type"],
                 "submission_stage": plan["submission_stage"],
@@ -430,6 +437,16 @@ def write_format_audit(
                             "paragraph_separation"
                         ],
                         "line_spacing": plan["style_contract"]["line_spacing"],
+                        "table_line_spacing": plan["style_contract"][
+                            "table_line_spacing"
+                        ],
+                        "table_font_size_pt": plan["style_contract"][
+                            "table_font_size_pt"
+                        ],
+                        "table_rule_scheme": plan["style_contract"][
+                            "table_rule_scheme"
+                        ],
+                        "table_status": table_status,
                         "line_numbering": plan["style_contract"][
                             "line_numbering"
                         ],
@@ -663,6 +680,17 @@ class ValidatorTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("single table-cell spacing", result.stdout)
 
+    def test_unspecified_table_rules_require_three_line_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "format-plan-table-rules.json"
+            write_format_plan(path)
+            plan = json.loads(path.read_text(encoding="utf-8"))
+            plan["style_contract"]["table_rule_scheme"] = "full-grid"
+            path.write_text(json.dumps(plan), encoding="utf-8")
+            result = run_script("validate_journal_format_plan.py", path)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("three-line table scheme", result.stdout)
+
     def test_explicit_twelve_point_and_one_point_five_rules_pass(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "format-plan-explicit-typography.json"
@@ -826,6 +854,29 @@ class ValidatorTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn("Journal format audit validation: PASS", result.stdout)
             self.assertIn("Plan checks: 20", result.stdout)
+
+    def test_journal_format_audit_requires_table_gate_and_matching_scheme(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            plan_path = root / "format-plan.json"
+            audit_path = root / "format-audit.json"
+            write_format_plan(plan_path)
+            write_format_audit(plan_path, audit_path, table_status="FAIL")
+            result = run_script(
+                "validate_journal_format_audit.py", plan_path, audit_path
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("table_status PASS", result.stdout)
+
+            audit = json.loads(audit_path.read_text(encoding="utf-8"))
+            audit["manuscripts"][0]["table_status"] = "PASS"
+            audit["manuscripts"][0]["table_rule_scheme"] = "full-grid"
+            audit_path.write_text(json.dumps(audit), encoding="utf-8")
+            result = run_script(
+                "validate_journal_format_audit.py", plan_path, audit_path
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("table_rule_scheme", result.stdout)
 
     def test_journal_format_audit_requires_every_plan_check(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

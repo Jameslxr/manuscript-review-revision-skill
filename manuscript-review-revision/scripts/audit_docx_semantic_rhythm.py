@@ -39,6 +39,7 @@ from audit_docx_manuscript_style import (  # noqa: E402
     iter_style_chain,
     line_spacing_matches,
     normalize_style_token,
+    paragraph_is_list,
     paragraph_is_structurally_empty,
     parse_line_spacing_spec,
 )
@@ -82,6 +83,15 @@ def parse_args() -> argparse.Namespace:
         default="single",
         help="Expected table-cell line spacing; defaults to single.",
     )
+    parser.add_argument(
+        "--expected-table-rule-scheme",
+        choices=("three-line", "full-grid", "preserve-official"),
+        default="three-line",
+        help=(
+            "Expected table presentation. The journal-neutral fallback is a "
+            "three-line table with no vertical rules or shading."
+        ),
+    )
     parser.add_argument("--body-style", action="append", default=[])
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--output-json", type=Path)
@@ -119,6 +129,8 @@ def classify_role(paragraph: Any, body_styles: set[str]) -> str | None:
         or DECLARATION_HEADING_RE.fullmatch(paragraph.text)
     ):
         return "heading"
+    if paragraph_is_list(paragraph):
+        return "list-item"
     if CREDIT_INLINE_RE.match(paragraph.text):
         return "credit-inline"
     if DECLARATION_INLINE_RE.match(paragraph.text):
@@ -301,6 +313,56 @@ def typography_record(
     return issues, record
 
 
+def table_border_values(table: Any) -> dict[str, str]:
+    values: dict[str, str] = {}
+    nodes = table._tbl.tblPr.findall(qn("w:tblBorders"))
+    if not nodes:
+        return values
+    borders = nodes[0]
+    for edge in ("top", "bottom", "left", "right", "insideH", "insideV"):
+        edge_nodes = borders.findall(qn(f"w:{edge}"))
+        if edge_nodes:
+            values[edge] = str(edge_nodes[0].get(qn("w:val")) or "").casefold()
+    return values
+
+
+def border_is_visible(value: str | None) -> bool:
+    return bool(value) and value not in {"nil", "none", "0"}
+
+
+def first_row_repeats(table: Any) -> bool:
+    if not table.rows:
+        return False
+    row_properties = table.rows[0]._tr.trPr
+    if row_properties is None:
+        return False
+    nodes = row_properties.findall(qn("w:tblHeader"))
+    if not nodes:
+        return False
+    value = str(nodes[0].get(qn("w:val")) or "true").casefold()
+    return value not in {"0", "false", "off", "none"}
+
+
+def table_has_cell_shading(table: Any) -> bool:
+    for shading in table._tbl.xpath(".//w:tcPr/w:shd"):
+        fill = str(shading.get(qn("w:fill")) or "").strip().upper()
+        if fill not in {"", "AUTO", "FFFFFF", "CLEAR", "NIL"}:
+            return True
+    return False
+
+
+def table_header_is_bold(table: Any) -> bool:
+    if not table.rows:
+        return False
+    visible_runs = []
+    for cell in table.rows[0].cells:
+        for paragraph in cell.paragraphs:
+            visible_runs.extend(run for run in paragraph.runs if run.text.strip())
+    return bool(visible_runs) and all(
+        effective_bold(run, run._parent) for run in visible_runs
+    )
+
+
 def audit(
     path: Path,
     *,
@@ -310,6 +372,7 @@ def audit(
     expected_title_font_size: float = 15.0,
     expected_table_font_size: float | None = 10.0,
     expected_table_line_spacing: object = "single",
+    expected_table_rule_scheme: str = "three-line",
     body_style_names: set[str] | None = None,
 ) -> dict[str, object]:
     if not expected_font_name.strip():
@@ -323,6 +386,12 @@ def audit(
         raise ValueError("expected font sizes must be positive")
     spacing_spec = parse_line_spacing_spec(expected_line_spacing)
     table_spacing_spec = parse_line_spacing_spec(expected_table_line_spacing)
+    if expected_table_rule_scheme not in {
+        "three-line",
+        "full-grid",
+        "preserve-official",
+    }:
+        raise ValueError("unsupported expected table rule scheme")
     body_styles = {
         *(normalize_style_token(value) for value in DEFAULT_BODY_STYLES),
         normalize_style_token("Manuscript Body"),
@@ -372,13 +441,72 @@ def audit(
         issues.extend(paragraph_issues)
         typography_inspected.append(record)
 
-    seen_cells: set[int] = set()
+    seen_cells: set[Any] = set()
     for table_index, table in enumerate(document.tables, start=1):
+        table_record = {"table": table_index}
+        if expected_table_rule_scheme != "preserve-official":
+            borders = table_border_values(table)
+            visible = {
+                edge: border_is_visible(borders.get(edge))
+                for edge in ("top", "bottom", "left", "right", "insideH", "insideV")
+            }
+            if expected_table_rule_scheme == "three-line":
+                if not visible["top"] or not visible["bottom"]:
+                    issues.append(
+                        {
+                            **table_record,
+                            "code": "TABLE_OUTER_HORIZONTAL_RULES_MISSING",
+                            "detail": borders,
+                        }
+                    )
+                if any(visible[edge] for edge in ("left", "right", "insideV", "insideH")):
+                    issues.append(
+                        {
+                            **table_record,
+                            "code": "TABLE_NON_MINIMAL_RULES",
+                            "detail": borders,
+                        }
+                    )
+                header_bottom_values = []
+                if table.rows:
+                    for cell in table.rows[0].cells:
+                        nodes = cell._tc.xpath("./w:tcPr/w:tcBorders/w:bottom")
+                        header_bottom_values.append(
+                            str(nodes[0].get(qn("w:val")) or "").casefold()
+                            if nodes
+                            else ""
+                        )
+                if not header_bottom_values or not all(
+                    border_is_visible(value) for value in header_bottom_values
+                ):
+                    issues.append(
+                        {
+                            **table_record,
+                            "code": "TABLE_HEADER_RULE_MISSING",
+                            "detail": header_bottom_values,
+                        }
+                    )
+            elif not all(visible.values()):
+                issues.append(
+                    {
+                        **table_record,
+                        "code": "TABLE_FULL_GRID_INCOMPLETE",
+                        "detail": borders,
+                    }
+                )
+            if not first_row_repeats(table):
+                issues.append(
+                    {**table_record, "code": "TABLE_HEADER_NOT_REPEATING"}
+                )
+            if not table_header_is_bold(table):
+                issues.append({**table_record, "code": "TABLE_HEADER_NOT_BOLD"})
+            if table_has_cell_shading(table):
+                issues.append({**table_record, "code": "TABLE_CELL_SHADING"})
         for row_index, row in enumerate(table.rows, start=1):
             for cell_index, cell in enumerate(row.cells, start=1):
-                if id(cell._tc) in seen_cells:
+                if cell._tc in seen_cells:
                     continue
-                seen_cells.add(id(cell._tc))
+                seen_cells.add(cell._tc)
                 for paragraph_index, paragraph in enumerate(cell.paragraphs, start=1):
                     location = (
                         f"table {table_index} row {row_index} cell {cell_index} "
@@ -453,6 +581,7 @@ def audit(
         "credit-heading",
         "credit-inline",
         "credit-entry",
+        "list-item",
     }
     for index, paragraph in enumerate(paragraphs, start=1):
         role = roles[paragraph._p]
@@ -594,6 +723,40 @@ def audit(
                         }
                     )
 
+        if role == "list-item":
+            previous_role = previous_nonblank_role(document, paragraph._p, roles)
+            next_role = next_nonblank_role(document, paragraph._p, roles)
+            before = adjacent_blank_count(document, paragraph._p, -1)
+            after = adjacent_blank_count(document, paragraph._p, 1)
+            if previous_role == "list-item" and before != 0:
+                issues.append(
+                    {**record, "code": "LIST_ITEM_BLANK_BETWEEN", "detail": before}
+                )
+            elif previous_role == "heading" and before != 0:
+                issues.append(
+                    {**record, "code": "LIST_BLOCK_BLANK_AFTER_HEADING", "detail": before}
+                )
+            elif previous_role not in {None, "heading", "list-item"} and before != 1:
+                issues.append(
+                    {
+                        **record,
+                        "code": "LIST_BLOCK_BLANK_BEFORE",
+                        "detail": {"expected": 1, "actual": before},
+                    }
+                )
+            if next_role == "list-item" and after != 0:
+                issues.append(
+                    {**record, "code": "LIST_ITEM_BLANK_BETWEEN", "detail": after}
+                )
+            elif next_role not in {None, "heading", "list-item"} and after != 1:
+                issues.append(
+                    {
+                        **record,
+                        "code": "LIST_BLOCK_BLANK_AFTER",
+                        "detail": {"expected": 1, "actual": after},
+                    }
+                )
+
     return {
         "status": "SEMANTIC_RHYTHM_PASS" if not issues else "FAIL",
         "document": str(path.resolve()),
@@ -603,6 +766,7 @@ def audit(
         "expected_title_font_size_pt": expected_title_font_size,
         "expected_table_font_size_pt": resolved_table_font_size,
         "expected_table_line_spacing": table_spacing_spec["label"],
+        "expected_table_rule_scheme": expected_table_rule_scheme,
         "issue_count": len(issues),
         "issues": issues,
         "inspected": inspected,
@@ -640,6 +804,7 @@ def main() -> int:
             expected_title_font_size=args.expected_title_font_size,
             expected_table_font_size=args.expected_table_font_size,
             expected_table_line_spacing=args.expected_table_line_spacing,
+            expected_table_rule_scheme=args.expected_table_rule_scheme,
             body_style_names={normalize_style_token(value) for value in args.body_style},
         )
     except (OSError, ValueError) as exc:

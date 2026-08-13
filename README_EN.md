@@ -2,23 +2,22 @@
 
 [中文说明](README.md)
 
-This Agent Skill supports scientific manuscript review and revision in Codex, Claude Code, and other compatible Agent Skills hosts. It first confirms the target journal and assigns 5–6 independent reviewer roles suited to that journal. Scientific revision, reference checking, language editing, and submission formatting begin only after the review is complete and the author explicitly approves revision. For DOCX formatting without scientific review, use the standalone [Manuscript DOCX Formatting Skill](https://github.com/Jameslxr/manuscript-docx-formatting).
+This Agent Skill supports scientific manuscript review and revision in Codex, Claude Code, and other compatible Agent Skills hosts. It first selects a journal-neutral, named-target, or journal-recommendation route and assigns 5–6 independent reviewer roles. Scientific revision, reference checking, language editing, and formatting begin only after review and explicit author approval. For DOCX formatting without scientific review, use the standalone [Manuscript DOCX Formatting Skill](https://github.com/Jameslxr/manuscript-docx-formatting).
 
 [![Validate skill](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml/badge.svg)](https://github.com/Jameslxr/manuscript-review-revision-skill/actions/workflows/validate.yml)
 ![Maturity](https://img.shields.io/badge/maturity-Beta-f59e0b)
-![Version](https://img.shields.io/badge/version-v1.9.0-2563eb)
+![Version](https://img.shields.io/badge/version-v1.11.0-2563eb)
 [![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f)](LICENSE)
-
 ## Summary
 
 | Review consideration | Approach |
 |---|---|
-| Review criteria vary across journals | Confirms the target, article type, and stage, then calibrates severity from official rules and recent accepted same-type papers |
+| A manuscript may not yet be tied to a journal | Selects a neutral, named-target, or recommendation route; neutral work uses rigorous general standards without claiming submission compliance |
 | Editing too early can obscure unresolved scientific issues | Keeps the manuscript unchanged until the independent scientific review is complete |
 | A single review perspective can miss important problems | Uses five fixed independent roles, at most one risk-triggered specialist, and explicit scope and output budgets |
 | Repeated reviews of the same manuscript by a general-purpose model may be inconsistent or internally contradictory | Freezes the manuscript, journal rules, and roles; records task receipts and output hashes before synthesizing consensus and disagreement concern by concern |
 | An existing reference may not support the statement where it is cited | Checks reference validity, citation format, and support for the specific statement separately |
-| Generated files may not follow standard manuscript conventions | Every final DOCX must pass the embedded formatting lane, rendered-page review, and delivery-root hash closure; one uncovered file fails the release |
+| Generated files may not follow manuscript conventions | Every final DOCX checks true blanks, semantic lists, high-standard tables, rendered pages, and delivery-root hash closure |
 | No study can satisfy every ideal design feature | Separates fatal flaws, correctable issues, acceptable inherent limitations, and optional strengthening; only problems that survive honest claim narrowing can block |
 
 ## Main Uses
@@ -37,20 +36,20 @@ This Agent Skill supports scientific manuscript review and revision in Codex, Cl
 |---|---|
 | Target journal known | `Use $manuscript-review-revision. Target: Journal of Hepatology. Review first; do not revise.` |
 | Target journal unknown | `Use $manuscript-review-revision. The target is uncertain; recommend five candidate journals.` |
-| Review only | `Run scientific-review only and pause after synthesis.` |
+| Neutral manuscript | `Use $manuscript-review-revision. Use the journal-neutral general-manuscript route; review first.` |
 | Reference audit | `Run reference-audit and check whether each reference is valid, correctly formatted, and supports the cited statement.` |
 | Authorize revision | `I reviewed 05_review_verdict.md and authorize revise-manuscript.` |
 
-If no target journal is supplied, the first response asks only:
+If no manuscript route is supplied, the first response asks only:
 
 ```text
-What is the target journal? If it is not yet decided, reply: “Uncertain; recommend journals.”
+Which manuscript route should I use: journal-neutral general manuscript, named target journal, or undecided with journal recommendations?
 ```
 
 ## Required Materials
 
 - the full manuscript or sections to review;
-- the target journal, or permission to recommend one;
+- the route: journal-neutral, named target, or undecided with recommendations;
 - article type and submission stage when known;
 - figures, tables, legends, supplements, and references;
 - constraints such as no new experiments, diagnosis only, or review only;
@@ -65,7 +64,7 @@ Orange boxes require a decision from the author. Blue boxes show work performed 
 ```mermaid
 flowchart TB
     START(["1 · Upload the manuscript<br/>and available supporting files"])
-    TARGET{"2 · Is the target<br/>journal decided?"}
+    TARGET{"2 · Select manuscript route<br/>neutral · target · recommend"}
     REC["3A · Recommend 5 journals based on<br/>topic, manuscript quality, and evidence"]
     PICK["3B · The author selects 1 target journal"]
     RULES["4 · Review the journal website and recent comparators<br/>to separate mandatory rules from observed tolerance"]
@@ -82,7 +81,7 @@ flowchart TB
     RETURN["No: list unresolved issues<br/>and continue revision"]
     MISSING(["Insufficient material: pause<br/>and state exactly what is missing"])
 
-    subgraph S1["Stage 1 · Select the target journal"]
+    subgraph S1["Stage 1 · Select the manuscript route"]
         direction LR
         START --> TARGET
         TARGET -- "Decided" --> RULES
@@ -103,6 +102,7 @@ flowchart TB
     end
 
     RULES --> CHECK
+    TARGET -- "Journal-neutral" --> CHECK
     AUTH -- "No" --> STOP
     AUTH -- "Yes" --> REVISE
 
@@ -129,7 +129,7 @@ Step 6 assigns five fixed independent roles for journal fit, domain science, stu
 
 | Stage | Main files |
 |---|---|
-| Journal requirements and tolerance | `00_input_inventory.json`, `01_journal_profile.json`, `01a_journal_format_plan.json`, `01b_acceptance_tolerance_card.json` |
+| Route profile | `00_input_inventory.json`; target journals use `01_journal_profile.json` etc., neutral manuscripts use `01_neutral_manuscript_profile.json` |
 | Independent review | `03_review_panel_plan.json`, reviewer reports, and `reviews/concern_ledger.tsv` |
 | Review synthesis | `04_cross_review_matrix.tsv`, `05_review_verdict.md` |
 | Reference audit | `06_reference_audit.tsv` |
@@ -138,7 +138,7 @@ Step 6 assigns five fixed independent roles for journal fit, domain science, stu
 
 ## Limitations
 
-- Full review does not begin until the target journal is fixed.
+- Full review does not begin until a neutral or target-journal route is fixed; neutral work does not claim journal submission compliance.
 - A panel has five core seats and at most one explicitly triggered specialist; an incomplete panel makes workflow assurance `NOT ASSESSABLE` but is not mislabeled as a scientific manuscript defect.
 - No revision, polishing, or formatting occurs without explicit author authorization.
 - The skill does not invent experiments, results, citations, journal rules, reviewer identities, or completed changes.
@@ -176,7 +176,7 @@ Do not copy only `SKILL.md`; the workflow also needs `references/` and `scripts/
 
 ## Current Status And Validation
 
-The current release is **Beta**. Version 1.9.0 expands the embedded front-matter contract from one Title–Authors gap to an exact semantic-block matrix through Abstract, including optional Author-note and ORCID roles, compact multi-paragraph blocks, and rejection of the legacy compact override. Version 1.8.1's delivery-root SHA-256 closure and the earlier package, CRediT, semantic-rhythm, acceptance-tolerance, and citation controls remain intact. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
+The current release is **Beta**. Version 1.11.0 adds a journal-neutral route, genuinely empty paragraphs without spaces/tabs, compact Key Points/list semantics, and journal-aware three-line or official table schemes. Earlier front-matter, delivery-root SHA-256, package, CRediT, acceptance-tolerance, and citation controls remain intact. These bounded results are not a universal performance claim; see `benchmarks/` and [validation notes](docs/VALIDATION.md).
 
 Current automated coverage includes:
 
@@ -185,7 +185,7 @@ Current automated coverage includes:
 - one reviewer cannot label a concern as consensus; every concern records its four-class type, defensibility after claim narrowing, and resolution mode, while acceptable limitations and optional strengthening cannot be `BLOCKING`;
 - metadata-only evidence cannot be direct support; material/supporting claims require complete checks, while incomplete sampled context rows remain advisory;
 - blue or otherwise non-black manuscript headings fail;
-- manual paragraph spacing, missing/duplicated semantic front-matter block gaps, a blank within a multi-paragraph front-matter role, centered or mixed-alignment neutral front matter, undersized semantic roles, mixed role line spacing, an unbold Keywords label, invalid section/CRediT blanks, incomplete line or dynamic page numbering, or any delivered DOCX without a current hash-bound terminal PASS blocks the combined release gate;
+- manual paragraph spacing, spaces/tabs in nominal blanks, blanks between bullet items, tables outside the resolved three-line or journal scheme, invalid front-matter rhythm/alignment/sizing, mixed line spacing, an unbold Keywords label, incomplete line or dynamic page numbering, or any delivered DOCX without a current hash-bound terminal PASS blocks the combined release gate;
 - compliant black headings and complete audit records can pass.
 
 [Read the reproducible validation scope](docs/VALIDATION.md)

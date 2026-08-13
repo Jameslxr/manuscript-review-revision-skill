@@ -180,9 +180,21 @@ def paragraph_primary_style_tokens(paragraph: Any) -> set[str]:
 
 def paragraph_is_list(paragraph: Any) -> bool:
     paragraph_properties = paragraph._p.pPr
-    return paragraph_properties is not None and bool(
-        paragraph_properties.xpath("./w:numPr")
-    )
+    if paragraph_properties is not None and paragraph_properties.xpath("./w:numPr"):
+        return True
+    if paragraph.style is None:
+        return False
+    for style in iter_style_chain(paragraph.style):
+        paragraph_properties = style.element.pPr
+        if paragraph_properties is not None and paragraph_properties.xpath("./w:numPr"):
+            return True
+        tokens = {
+            normalize_style_token(style.name),
+            normalize_style_token(style.style_id),
+        }
+        if any(re.search(r"(?:^|\s)(?:list|bullet|number)(?:\s|$)", token) for token in tokens):
+            return True
+    return False
 
 
 def paragraph_is_nonbody(paragraph: Any, excluded_styles: set[str]) -> bool:
@@ -233,6 +245,16 @@ def paragraph_is_structurally_empty(paragraph: Any) -> bool:
         ".//w:endnoteReference"
     )
     return not content_nodes
+
+
+def paragraph_has_whitespace_artifacts(paragraph: Any) -> bool:
+    """Return true when an otherwise blank paragraph contains spaces or tabs."""
+
+    if paragraph.text.strip():
+        return False
+    if any(str(node.text or "") for node in paragraph._p.xpath(".//w:t")):
+        return True
+    return bool(paragraph._p.xpath(".//w:tab"))
 
 
 def effective_spacing(paragraph: Any, field: str) -> tuple[float, str]:
@@ -592,12 +614,31 @@ def audit_body_paragraph_rhythm(
     unclassified_count = 0
     body_style_names: set[str] = set()
     excluded_style_names: set[str] = set()
+    blank_with_whitespace_count = 0
 
     for block_index, block in enumerate(blocks):
         if block["kind"] != "paragraph":
             continue
         paragraph = block["paragraph"]
         assert paragraph is not None
+        if paragraph_is_structurally_empty(paragraph):
+            if paragraph_has_whitespace_artifacts(paragraph):
+                blank_with_whitespace_count += 1
+                issues.append(
+                    {
+                        **paragraph_record(
+                            paragraph,
+                            int(block["paragraph_index"]),
+                            "blank-paragraph",
+                        ),
+                        "code": "BLANK_PARAGRAPH_CONTAINS_WHITESPACE",
+                        "detail": (
+                            "A real blank line must contain no spaces or tabs. "
+                            "Remove the whitespace and keep the empty paragraph."
+                        ),
+                    }
+                )
+            continue
         if not paragraph.text.strip():
             continue
 
@@ -777,6 +818,7 @@ def audit_body_paragraph_rhythm(
         "adjacent_body_pair_count": body_pair_count,
         "excluded_nonbody_paragraph_count": excluded_nonbody_count,
         "unclassified_nonempty_paragraph_count": unclassified_count,
+        "blank_paragraph_with_whitespace_count": blank_with_whitespace_count,
         "body_style_names": sorted(body_style_names),
         "excluded_nonbody_style_names": sorted(excluded_style_names),
     }
@@ -883,6 +925,7 @@ def audit(
         "adjacent_body_pair_count": 0,
         "excluded_nonbody_paragraph_count": 0,
         "unclassified_nonempty_paragraph_count": 0,
+        "blank_paragraph_with_whitespace_count": 0,
         "body_style_names": [],
         "excluded_nonbody_style_names": [],
     }

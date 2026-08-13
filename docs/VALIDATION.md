@@ -31,7 +31,7 @@ python3 benchmarks/nature-vs-mrr-v1/score_runs.py \
   --expected-runs 1
 ```
 
-The current suite contains 85 tests covering these representative cases:
+The current suite contains 98 tests covering these representative cases:
 
 1. a complete journal profile passes;
 2. a journal profile with an unresolved mandatory rule fails;
@@ -110,6 +110,16 @@ The current suite contains 85 tests covering these representative cases:
 72. a DOCX write after formatting release invalidates SHA-256 closure;
 73. a wrong embedded profile normalizer or nonpassing terminal release blocks
     delivery.
+74. a nominal blank containing spaces or tabs fails the structural gate and is
+    cleaned to one genuinely empty paragraph by the profile normalizer;
+75. consecutive Key Points, bullet items, and numbered items remain compact
+    without blank paragraphs between items;
+76. the journal-neutral table profile converts a styled grid to an editable
+    three-line table with a bold repeating header and no cell shading;
+77. unspecified or example-only table rules cannot override the three-line
+    fallback in format-plan schema 1.3.
+78. journal format-audit closure requires a passing table gate and exact
+    agreement with the planned table font, spacing, and rule scheme.
 
 ## Syntax checks
 
@@ -191,6 +201,12 @@ dedicated delivery root, require one current SHA-256-bound receipt per DOCX,
 parse the corresponding manuscript or package release report, and fail on
 omissions, post-pass writes, profile mismatches, or nonpassing terminal states.
 
+Version 1.11.0 adds route-aware intake for neutral manuscripts and four focused
+regression classes for whitespace-free blank paragraphs, compact manuscript
+lists, high-standard table presentation, and source-strength-aware table-rule
+resolution. The same formatting regressions also pass in the synchronized
+standalone formatting skill.
+
 This forward test ran in Codex. The repository's Claude Code compatibility is
 currently validated at the Agent Skills layout, installation-documentation,
 resource-path, and capability-contract levels; it has not yet completed a
@@ -198,7 +214,7 @@ Claude Code end-to-end manuscript forward test.
 
 Expected behavior:
 
-- the target journal is fixed before full review;
+- a target-journal or journal-neutral route is fixed before full review;
 - five core roles and at most one risk-triggered specialist are selected;
 - the panel validator accepts completed execution receipts and report hashes;
 - the panel validator enforces axis ownership and per-seat output budgets;

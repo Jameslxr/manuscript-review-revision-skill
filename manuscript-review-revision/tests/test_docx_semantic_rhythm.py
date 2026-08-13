@@ -14,6 +14,7 @@ from docx import Document
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from docx.shared import Pt
 
 
@@ -135,6 +136,109 @@ def audit_semantic(path: Path, report: Path) -> dict[str, object]:
 
 
 class SemanticRhythmTests(unittest.TestCase):
+    def test_profile_cleans_blank_whitespace_and_compacts_key_point_bullets(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "list-source.docx"
+            output = root / "list-normalized.docx"
+            document = Document()
+            document.add_paragraph("Journal-neutral manuscript", style="Title")
+            document.add_heading("Abstract", level=1)
+            document.add_paragraph("Abstract body.")
+            document.add_heading("Key points", level=1)
+            document.add_paragraph("   ")
+            document.add_paragraph("First key point.", style="List Bullet")
+            document.add_paragraph("   ")
+            document.add_paragraph("Second key point.", style="List Bullet")
+            document.add_paragraph("   ")
+            document.add_paragraph("Following prose.")
+            document.save(source)
+
+            result = run_script(
+                "apply_manuscript_profile.py",
+                source,
+                "--out",
+                output,
+                "--title-paragraph",
+                "1",
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            normalized = Document(output)
+            by_text = {paragraph.text: index for index, paragraph in enumerate(normalized.paragraphs)}
+            first = by_text["First key point."]
+            second = by_text["Second key point."]
+            self.assertEqual(second, first + 1)
+            self.assertEqual(normalized.paragraphs[first - 1].text, "Key points")
+            self.assertTrue(
+                normalized.paragraphs[first - 1].paragraph_format.keep_with_next
+            )
+            self.assertEqual(normalized.paragraphs[second + 1].text, "")
+            self.assertEqual(normalized.paragraphs[second + 2].text, "Following prose.")
+            self.assertFalse(
+                any(
+                    paragraph.text and not paragraph.text.strip()
+                    for paragraph in normalized.paragraphs
+                )
+            )
+            audited = run_script(
+                "audit_docx_semantic_rhythm.py",
+                output,
+                "--expected-line-spacing",
+                "double",
+                "--json",
+            )
+            self.assertEqual(audited.returncode, 0, audited.stdout + audited.stderr)
+
+    def test_neutral_table_profile_uses_three_line_rules_and_repeating_header(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            source = root / "table-source.docx"
+            output = root / "table-normalized.docx"
+            document = Document()
+            document.add_paragraph("Journal-neutral manuscript", style="Title")
+            document.add_heading("Abstract", level=1)
+            document.add_paragraph("Abstract body.")
+            document.add_paragraph("Table 1. Synthetic values.", style="Caption")
+            table = document.add_table(rows=2, cols=2)
+            table.style = "Table Grid"
+            table.cell(0, 0).text = "Group"
+            table.cell(0, 1).text = "Value"
+            table.cell(1, 0).text = "A"
+            table.cell(1, 1).text = "1.0"
+            shading = OxmlElement("w:shd")
+            shading.set(qn("w:fill"), "D9EAF7")
+            table.cell(0, 0)._tc.get_or_add_tcPr().append(shading)
+            document.save(source)
+
+            result = run_script(
+                "apply_manuscript_profile.py",
+                source,
+                "--out",
+                output,
+                "--title-paragraph",
+                "1",
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            normalized = Document(output)
+            caption = next(
+                paragraph
+                for paragraph in normalized.paragraphs
+                if paragraph.text == "Table 1. Synthetic values."
+            )
+            self.assertTrue(caption.paragraph_format.keep_with_next)
+            self.assertTrue(caption.paragraph_format.keep_together)
+            audited = run_script(
+                "audit_docx_semantic_rhythm.py",
+                output,
+                "--expected-line-spacing",
+                "double",
+                "--expected-table-rule-scheme",
+                "three-line",
+                "--json",
+            )
+            self.assertEqual(audited.returncode, 0, audited.stdout + audited.stderr)
+            report = json.loads(audited.stdout)
+            self.assertEqual(report["expected_table_rule_scheme"], "three-line")
     def test_one_point_five_resolves_across_every_manuscript_role(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

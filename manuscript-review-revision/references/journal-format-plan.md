@@ -51,7 +51,7 @@ are inaccessible or contradictory, mark the affected plan rule
 
 Create `01a_journal_format_plan.json` with:
 
-- `schema_version`: `1.2`
+- `schema_version`: `1.3`
 - `target_journal`
 - `article_type`
 - `submission_stage`
@@ -122,6 +122,10 @@ Resolve these machine-usable fields before editing DOCX:
 - `line_spacing`
 - `line_spacing_basis`
 - `table_line_spacing`
+- `table_rule_scheme`
+- `table_rule_basis`
+- `table_rule_strength`
+- `table_rule_source_excerpt`
 - `line_numbering`
 - `line_numbering_basis`
 - `page_numbering`
@@ -177,6 +181,16 @@ Mark their basis `CONSERVATIVE_FALLBACK` and keep them distinct from official
 journal rules. Only `MANDATORY` or `EXPLICIT_REQUIREMENT` evidence may use an
 official typography basis. Never inherit Word theme defaults.
 
+Resolve table borders/presentation separately from typography using
+[table-formatting.md](table-formatting.md). When current binding/direct sources
+do not specify a scheme, require `table_rule_scheme=three-line`,
+`table_rule_basis=CONSERVATIVE_FALLBACK`, and a rule strength of `UNSPECIFIED`
+or `EXAMPLE_ONLY`. Use `preserve-official` only with `MANDATORY` or
+`EXPLICIT_REQUIREMENT` evidence and an official source URL. The plan's `tables`
+check must also resolve title/number placement, editable structure, notes,
+units, abbreviations, statistical reporting, cross-artifact consistency, and
+rendered-page inspection; a border pass alone is insufficient.
+
 Validate the plan:
 
 ```bash
@@ -199,10 +213,12 @@ Execute checks in this order:
 6. figures, tables, supplements, cover letter, and all upload files;
 7. mechanical DOCX audit and rendered page-by-page visual inspection.
 
-In `07_format_audit.json`, preserve each plan check ID and record `PASS`,
+In `07_format_audit.json` schema `1.1`, preserve each plan check ID and record `PASS`,
 `FAIL`, or `NOT_ASSESSABLE`, the inspected evidence, and the affected output.
 Also record the plan SHA-256, manuscript SHA-256, audit command, renderer, page
-count, and visual-QA status. A style-script pass cannot close content limits,
+count, visual-QA status, table font/spacing/rule scheme, and a fail-closed
+`table_status` covering table structure, content/statistics, consistency, and
+rendering. A style-script pass cannot close content limits,
 required declarations, figures, tables, or submission-package checks.
 
 Validate the completed audit against the exact plan and output files:
